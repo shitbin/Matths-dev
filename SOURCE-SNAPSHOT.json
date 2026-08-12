@@ -15,7 +15,7 @@
     "path": "ipad"
   },
   "verification": {
-    "webTests": "final regression pending",
+    "webTests": "122/122 passed",
     "webTemplates": 118,
     "ipadContracts": "54/54 passed",
     "signedDeviceBuild": "passed",
