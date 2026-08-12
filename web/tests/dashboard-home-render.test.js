@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const path = require("node:path");
 const ejs = require("ejs");
+const fs = require("node:fs");
 
 const templatePath = path.join(
     __dirname,
@@ -97,6 +98,16 @@ const fixture = {
 };
 
 async function run() {
+    const mainCss = fs.readFileSync(
+        path.join(__dirname, "..", "public", "css", "main.css"),
+        "utf8"
+    );
+    assert.match(
+        mainCss,
+        /@media \(max-width: 560px\)[\s\S]*?\.arena-strip-copy h2,[\s\S]*?\.arena-strip-copy span\s*\{[\s\S]*?text-overflow:\s*clip;[\s\S]*?white-space:\s*normal;/,
+        "모바일 Arena 핵심 제목과 설명은 말줄임 없이 줄바꿈한다"
+    );
+
     const html = await ejs.renderFile(
         templatePath,
         fixture
