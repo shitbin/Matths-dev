@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V1",
+  "createdAt": "2026-08-12T20:30:00+09:00",
+  "upstream": {
+    "repository": "https://github.com/is4553807/Matths.git",
+    "mainCommit": "9b66b856e76ca79a03d1b020b9d09f450338f942",
+    "pushAllowed": false
+  },
+  "web": {
+    "sourceCommit": "ec4f0a05c6c9",
+    "path": "web"
+  },
+  "ipad": {
+    "sourceCommit": "6da8e77",
+    "path": "ipad"
+  },
+  "verification": {
+    "webTests": "122/122",
+    "webTemplates": 118,
+    "ipadContracts": "passed",
+    "signedDeviceBuild": "passed",
+    "physicalDeviceInstall": "passed"
+  }
+}
