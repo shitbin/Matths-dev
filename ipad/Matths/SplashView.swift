@@ -1,10 +1,10 @@
 //  SplashView.swift
 //  Matths
 //
-//  부팅 화면 — 브랜드 네이비 위에 공식 심볼과 워드마크가 함께 자리를 잡는다.
+//  부팅 화면 — 브랜드 네이비 위에 공식 심볼 하나가 자리를 잡는다.
 //
-//  구성: 네이비 전면 → 심볼·워드마크가 첫 프레임부터 함께 보인 채(옅게·살짝 커짐)
-//        각자 짧게 안착(오버슈트 없음) → 전체가 걷히며 홈이 나온다.
+//  구성: 네이비 전면 → 심볼이 첫 프레임부터 보인 채(옅게·살짝 커짐)
+//        짧게 안착(오버슈트 없음) → 전체가 걷히며 홈이 나온다.
 //  3차 리디자인에서 타자기식 글자 등장·괘선을 뺐다: 부팅은 브랜드 모먼트 하나로
 //  족하고, 태그라인·진행 표시도 두지 않는다. 이후 손질에서 opacity 0 출발도
 //  뺐다 — 심볼이 네이비에 묻혀 있는 빈 프레임을 만들지 않는다.
@@ -35,7 +35,6 @@ struct SplashView: View {
     @EnvironmentObject private var store: AppStore
 
     @State private var markSettled = false
-    @State private var wordmarkSettled = false
     @State private var dismissed = false
 
     /// DEBUG 스크린샷용 배속. `-splash slow` 로 4배 느리게 잡을 수 있다.
@@ -51,7 +50,7 @@ struct SplashView: View {
         ZStack {
             Tokens.brandNavy.ignoresSafeArea()
 
-            VStack(spacing: Tokens.Space.s6) {
+            VStack {
                 // 공식 심볼 — 타일이 아닌 풀컬러 단독. 네이비 자체가 타일 역할이라
                 // 타일 위 타일이 되면 로고가 액자에 갇힌다.
                 // 첫 프레임부터 0.68 로 보인 채 출발한다(0 출발 금지) —
@@ -60,15 +59,6 @@ struct SplashView: View {
                     .frame(width: 132, height: 132)
                     .scaleEffect(markSettled ? 1 : 1.18)
                     .opacity(markSettled ? 1 : 0.68)
-
-                // 워드마크 — BrandMark 에는 워드마크 에셋이 없어 공식 표기 텍스트를
-                // 그대로 쓴다. 심볼과 처음부터 함께 보이고 정착 모션만 짧게 남긴다.
-                // 글자별 순차 등장 금지(타이핑 연출은 로딩처럼 읽힌다).
-                Text("Matths")
-                    .font(Font.stat(36))
-                    .foregroundStyle(Tokens.onBrand)
-                    .opacity(wordmarkSettled ? 1 : 0.68)
-                    .offset(y: wordmarkSettled ? 0 : 5)
             }
         }
         .opacity(dismissed ? 0 : 1)
@@ -85,7 +75,6 @@ struct SplashView: View {
         // (총 소요 ≤0.25초 — 모션을 끈 사람을 정지 화면 앞에 세워 두지 않는다)
         if UIAccessibility.isReduceMotionEnabled || !store.motionOn {
             markSettled = true
-            wordmarkSettled = true
             finish()
             return
         }
@@ -98,13 +87,7 @@ struct SplashView: View {
             markSettled = true
         }
 
-        // 2. 워드마크 정착 — 같은 프레임에서 출발해 심볼보다 먼저 자리를 잡는다.
-        // 지연 등장이 아니라 정착이므로 0.2초면 족하다.
-        withAnimation(.easeOut(duration: 0.20 * s)) {
-            wordmarkSettled = true
-        }
-
-        // 3. 퇴장 — 0.55 + 퇴장 0.25 = 총 0.80초 상한.
+        // 2. 퇴장 — 0.55 + 퇴장 0.25 = 총 0.80초 상한.
         // 실제 부트 작업과 연동할 신호가 없는 순수 브랜드 모먼트라(파일 머리 주석)
         // 여기 숫자가 곧 사용자가 기다리는 전부다. 파일 머리의 약속과 같이 움직인다.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.55 * s) { finish() }

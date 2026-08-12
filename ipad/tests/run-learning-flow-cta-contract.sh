@@ -57,6 +57,14 @@ assert "seed: lastExamSeed" not in web_practice
 prebuilt = section(app, "func startExam(problems:", "func startReview(ids:")
 assert "solveStartedAt = examStartedAt" in prebuilt
 
+# 구현된 퀵 연습 route가 숨은 딥링크로만 남지 않도록 평가센터에 명시적 네이티브
+# 진입점이 있어야 한다. 채점 Pro 진입은 함께 유지한다.
+assessment_screen = section(screens, "struct AssessmentScreen: View", "private struct WeeklyMockEntryCard")
+assert 'title: "퀵 연습"' in assessment_screen
+assert "store.route = .quickPractice" in assessment_screen
+assert 'title: "채점 Pro"' in assessment_screen
+assert "store.route = .pro" in assessment_screen
+
 # Route enum의 모든 학습 경로가 실제 RootView 화면에 명시적으로 매핑되어야 한다.
 # default HomeScreen에 조용히 떨어지는 새 route는 빈/오동작 CTA와 같다.
 for route in (

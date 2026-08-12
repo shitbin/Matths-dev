@@ -96,7 +96,10 @@
   </nav>
   <div class="admin-account">
     <div class="admin-account-user">
-      <span><%= user.name %> 관리자</span>
+      <span class="admin-account-identity" title="<%= user.name %> 관리자" aria-label="<%= user.name %> 관리자">
+        <span class="admin-account-full"><%= user.name %> 관리자</span>
+        <span class="admin-account-compact" aria-hidden="true"><%= String(user.name || "관").trim().charAt(0) || "관" %></span>
+      </span>
       <form action="/logout" method="POST">
         <button type="submit">로그아웃</button>
       </form>

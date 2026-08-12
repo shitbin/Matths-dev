@@ -1,4 +1,12 @@
 (() => {
+  const toUserErrorMessage = (
+    error,
+    fallback
+  ) =>
+    window.MatthsFetchErrorMessage
+      ?.toUserMessage(error, fallback) ||
+    fallback;
+
   const form = document.querySelector("[data-study-hall-form]");
   if (!form || form.dataset.submitted === "1") return;
   const hidden = form.querySelector("[data-answers-json]");
@@ -42,10 +50,25 @@
         headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
         body: new URLSearchParams({ answersJson: hidden.value }),
       });
-      if (!response.ok) throw new Error("임시 저장에 실패했습니다.");
+      let result;
+      try {
+        result = await response.json();
+      } catch (error) {
+        if (response.ok) throw error;
+      }
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+            "임시 저장에 실패했습니다."
+        );
+      }
       status.textContent = "임시 저장했습니다. 언제든 이어서 풀 수 있습니다.";
     } catch (error) {
-      status.textContent = error.message || "임시 저장에 실패했습니다.";
+      status.textContent =
+        toUserErrorMessage(
+          error,
+          "임시 저장에 실패했습니다. 잠시 후 다시 시도해주세요."
+        );
     } finally {
       saveButton.disabled = false;
     }

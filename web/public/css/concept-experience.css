@@ -619,8 +619,8 @@
 }
 
 .common-math-step-grid p {
-  font-size: 12px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.625;
   overflow-wrap: anywhere;
   word-break: keep-all;
 }
@@ -640,8 +640,8 @@
 .concept-step-grid p {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.75;
+  font-size: 16px;
+  line-height: 1.625;
 }
 
 .motion-player {

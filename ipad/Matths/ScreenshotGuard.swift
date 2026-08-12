@@ -185,9 +185,86 @@ private struct ProtectedAssessmentSurface: ViewModifier {
     }
 }
 
+/// 보호 화면의 실제 표시 계층. `fullScreenCover`는 앱 루트의 overlay보다 위에
+/// 별도 presentation 계층으로 올라오므로, 루트와 보호 모달이 이 한 구현을 각각
+/// 자기 최상단에 붙인다. 상태와 워터마크 코드는 같은 ScreenshotGuard를 공유한다.
+struct ScreenProtectionLayer: View {
+    @ObservedObject var guardModel: ScreenshotGuard
+    var onCapture: (String) -> Void
+
+    @ViewBuilder var body: some View {
+        if guardModel.isCaptureActive || guardModel.isPrivacyCoverActive {
+            CapturePrivacyCover()
+        } else {
+            ZStack {
+                if guardModel.isShowing {
+                    ScreenshotGuardOverlay(guardModel: guardModel, onCapture: onCapture)
+                }
+                // 경고창이 떠 있는 동안 다시 촬영해도 계정·세션 가명 코드가
+                // 사라지지 않는다. 워터마크는 hit testing/접근성에서 제외된다.
+                if guardModel.protectionEnabled {
+                    ProtectedContentWatermark(
+                        accountCode: guardModel.accountWatermarkCode,
+                        sessionCode: guardModel.watermarkCode)
+                }
+            }
+        }
+    }
+}
+
+private struct ScreenProtectionLayerModifier: ViewModifier {
+    @ObservedObject var guardModel: ScreenshotGuard
+    var onCapture: (String) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                ScreenProtectionLayer(guardModel: guardModel, onCapture: onCapture)
+            }
+            .animation(.easeOut(duration: 0.2), value: guardModel.isShowing)
+    }
+}
+
+private struct ProtectedAssessmentPresentation: ViewModifier {
+    let surface: String
+    @ObservedObject var guardModel: ScreenshotGuard
+    var onCapture: (String) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .modifier(ProtectedAssessmentSurface(surface: surface))
+            .modifier(ScreenProtectionLayerModifier(
+                guardModel: guardModel,
+                onCapture: onCapture))
+    }
+}
+
 extension View {
     func protectedAssessmentSurface(_ surface: String = "assessment") -> some View {
         modifier(ProtectedAssessmentSurface(surface: surface))
+    }
+
+    /// 앱 루트처럼 이미 별도 보호 상태를 관리하는 계층에 공통 표시만 붙인다.
+    func screenProtectionLayer(
+        guardModel: ScreenshotGuard,
+        onCapture: @escaping (String) -> Void
+    ) -> some View {
+        modifier(ScreenProtectionLayerModifier(
+            guardModel: guardModel,
+            onCapture: onCapture))
+    }
+
+    /// fullScreenCover 안에서 보호 등록과 표시 계층을 함께 붙인다. 둘을 따로
+    /// 호출해 워터마크나 앱 전환 덮개 하나를 빠뜨리는 회귀를 막는다.
+    func protectedAssessmentPresentation(
+        _ surface: String = "assessment",
+        guardModel: ScreenshotGuard,
+        onCapture: @escaping (String) -> Void
+    ) -> some View {
+        modifier(ProtectedAssessmentPresentation(
+            surface: surface,
+            guardModel: guardModel,
+            onCapture: onCapture))
     }
 }
 

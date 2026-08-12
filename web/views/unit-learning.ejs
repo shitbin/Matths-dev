@@ -151,12 +151,13 @@
       };
     </script>
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"
-      defer
-    ></script>
+    <%- include("partials/mathjax-runtime") %>
 
     <!-- 사이드바 등 대시보드 공통 기능 -->
+    <script
+      src="/js/fetch-error-message.js"
+      defer
+    ></script>
     <script
       src="/js/main.js"
       defer

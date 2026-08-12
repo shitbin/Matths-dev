@@ -4,9 +4,10 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { createHash } = require("node:crypto");
+const { resolveIpadSourceRoot } = require("../scripts/resolveIpadWorkspace");
 
 const root = path.resolve(__dirname, "..");
-const ipadRoot = path.resolve(root, "..", "ipad-app", "Matths");
+const ipadRoot = resolveIpadSourceRoot(root);
 const read = (file) => fs.readFileSync(file, "utf8");
 const sha256 = (file) => createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 

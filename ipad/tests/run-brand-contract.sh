@@ -82,4 +82,10 @@ if grep -q 'Text("Matths")' "$root/Matths/RootView.swift"; then
   exit 1
 fi
 
+grep -q 'BrandMark()' "$root/Matths/SplashView.swift"
+if grep -q 'Text("Matths")' "$root/Matths/SplashView.swift"; then
+  echo "FAIL: 스플래시에서 공식 브랜드 마크 옆 워드마크를 Text로 재조립하면 안 됩니다." >&2
+  exit 1
+fi
+
 echo "iPad brand and Arena language contracts passed"

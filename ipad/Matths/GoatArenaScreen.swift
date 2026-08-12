@@ -13,6 +13,7 @@ struct GoatArenaScreen: View {
     private typealias Snapshot = ServerAPI.GoatArenaSnapshot
 
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var screenshotGuard: ScreenshotGuard
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -193,7 +194,12 @@ struct GoatArenaScreen: View {
             Task { await load() }
         }) { launch in
             GoatArenaMatchPlayScreen(matchId: launch.id)
-                .protectedAssessmentSurface("goat-arena")
+                .protectedAssessmentPresentation(
+                    "goat-arena-match",
+                    guardModel: screenshotGuard
+                ) { stuckPoint in
+                    store.recordStuckPoint(stuckPoint)
+                }
         }
         .sheet(isPresented: $showsRulebook) {
             GoatArenaRulebookScreen()

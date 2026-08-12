@@ -3,9 +3,10 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { resolveIpadSourceRoot } = require("../scripts/resolveIpadWorkspace");
 
 const repoRoot = path.resolve(__dirname, "..");
-const ipadSourceRoot = path.resolve(repoRoot, "../ipad-app/Matths");
+const ipadSourceRoot = resolveIpadSourceRoot(repoRoot);
 const routeSource = fs.readFileSync(
   path.join(repoRoot, "routes/api-routes.js"),
   "utf8",

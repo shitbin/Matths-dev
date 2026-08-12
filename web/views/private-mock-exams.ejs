@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="/css/product-refresh.css" />
     <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
     <script src="/js/main.js" defer></script>
+    <script src="/js/fetch-error-message.js" defer></script>
     <script src="/js/private-mock-exams.js" defer></script>
   </head>
   <body>
@@ -77,6 +78,32 @@
             <h2><%= examData.eligibility.title %></h2>
             <span><%= examData.eligibility.message %></span>
             <a href="<%= examData.eligibility.ctaHref %>"><%= examData.eligibility.ctaLabel %> <b aria-hidden="true">→</b></a>
+          </section>
+          <section class="private-mock-locked-preview" aria-labelledby="private-mock-preview-title">
+            <header>
+              <div>
+                <p>잠금 해제 전 미리보기</p>
+                <h2 id="private-mock-preview-title">응시 흐름을 먼저 확인하세요.</h2>
+              </div>
+              <span>응시 잠김</span>
+            </header>
+            <div>
+              <article>
+                <small>01 · 시험 일정</small>
+                <strong><%= examData.scheduleLabel %></strong>
+                <span>다음 공개 · <%= formatRelease(examData.nextReleaseAt) %></span>
+              </article>
+              <article>
+                <small>02 · 시험 구성</small>
+                <strong>A·B·C형 · 각 <%= examData.durationMinutes %>분</strong>
+                <span>한 주 최대 3회 응시하고 대표 성적을 선택합니다.</span>
+              </article>
+              <article>
+                <small>03 · 응시 절차</small>
+                <strong>입장 → 답안 저장 → 제출</strong>
+                <span>공개 10분 전부터 시험장에 입장할 수 있습니다.</span>
+              </article>
+            </div>
           </section>
         <% } else { %>
         <section

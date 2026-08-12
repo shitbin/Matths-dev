@@ -45,6 +45,21 @@ let arenaTakeoverOutboxWorker = null;
 let arenaMatchScoringOutboxWorker = null;
 let arenaAttemptDeadlineWorker = null;
 
+// 시험·학습 수식은 외부 CDN 장애나 학교망 차단과 무관하게 동작해야 한다.
+// 공개 범위는 MathJax NewCM 배포 디렉터리 하나로 제한하며 node_modules 전체를
+// 정적 노출하지 않는다. SVG 폰트가 필요할 때 같은 경로의 dynamic 파일을 읽는다.
+const mathJaxBrowserRoot = path.dirname(
+    require.resolve("@mathjax/mathjax-newcm-font/tex-mml-svg-mathjax-newcm.js")
+);
+server.use(
+    "/vendor/mathjax",
+    express.static(mathJaxBrowserRoot, {
+        index: false,
+        dotfiles: "deny",
+        maxAge: isProduction ? "1y" : 0,
+        immutable: isProduction,
+    })
+);
 server.use(express.static("public"));
 server.set('view engine', 'ejs');
 // Toss 웹훅은 원문 Buffer를 provider API 재확인 기록에 사용하므로 전역 JSON

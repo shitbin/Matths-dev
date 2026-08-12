@@ -33,8 +33,9 @@ grep -q 'accountWatermarkCode' "$ROOT/Matths/ScreenshotGuard.swift"
 grep -q 'screenProtectionAccountCode' "$ROOT/Matths/DataScope.swift"
 grep -q '@State private var id = UUID()' "$ROOT/Matths/ScreenshotGuard.swift"
 ! grep -q 'private let id = UUID()' "$ROOT/Matths/ScreenshotGuard.swift"
-grep -q 'watermarkCode' "$ROOT/Matths/MatthsApp.swift"
-grep -q 'accountCode: screenshotGuard.accountWatermarkCode' "$ROOT/Matths/MatthsApp.swift"
+grep -q 'screenProtectionLayer(guardModel: screenshotGuard)' "$ROOT/Matths/MatthsApp.swift"
+grep -q 'protectedAssessmentPresentation' "$ROOT/Matths/GoatArenaScreen.swift"
+grep -q 'guardModel: screenshotGuard' "$ROOT/Matths/GoatArenaScreen.swift"
 grep -q 'ScreenProtectionSelfTest.runIfRequested' "$ROOT/Matths/MatthsApp.swift"
 grep -q 'serverSyncSuppressed: true' "$ROOT/Matths/ScreenProtectionSelfTest.swift"
 grep -q 'MATTHS_SCREEN_PROTECTION_DEVICE_QA_V1' "$ROOT/Matths/ScreenProtectionSelfTest.swift"
@@ -48,8 +49,8 @@ if grep -q '답을 찾으러 갈 시간' "$ROOT/Matths/ScreenshotGuard.swift"; t
   echo "student-blaming screenshot copy must not return" >&2
   exit 1
 fi
-grep -q 'isPrivacyCoverActive' "$ROOT/Matths/MatthsApp.swift"
-grep -q 'protectedAssessmentSurface' "$ROOT/Matths/GoatArenaScreen.swift"
+grep -q 'guardModel.isPrivacyCoverActive' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'protectedAssessmentPresentation' "$ROOT/Matths/GoatArenaScreen.swift"
 for screen in KiceExamScreen AssessmentPaperScreen PlacementExamScreen WeeklyMockScreen; do
   if ! perl -0ne "exit 0 if /${screen}\\(\\)[\\s\\S]{0,140}\\.protectedAssessmentSurface\\([^)]*\\)/; exit 1" \
       "$ROOT/Matths/RootView.swift"; then
@@ -80,18 +81,35 @@ for forbidden in ("email", "school", "accountWatermarkCode", "DataScope.slot", "
         raise SystemExit(f"integrity payload must not include {forbidden}")
 PY
 
-python3 - "$ROOT/Matths/MatthsApp.swift" <<'PY'
+python3 - "$ROOT/Matths/ScreenshotGuard.swift" <<'PY'
 from pathlib import Path
 import sys
 
 source = Path(sys.argv[1]).read_text(encoding="utf-8")
-overlay_start = source.index("if screenshotGuard.isCaptureActive")
-overlay_end = source.index(".animation", overlay_start)
-overlay = source[overlay_start:overlay_end]
-if "else if screenshotGuard.isShowing" in overlay:
+layer_start = source.index("struct ScreenProtectionLayer: View")
+layer_end = source.index("private struct ScreenProtectionLayerModifier", layer_start)
+layer = source[layer_start:layer_end]
+if "else if guardModel.isShowing" in layer:
     raise SystemExit("screenshot alert must not replace the protected-content watermark")
-if overlay.index("screenshotGuard.isShowing") > overlay.index("ProtectedContentWatermark"):
+if layer.index("guardModel.isShowing") > layer.index("ProtectedContentWatermark"):
     raise SystemExit("watermark must render over the screenshot alert and protected content")
+for required in (
+    "guardModel.isCaptureActive",
+    "guardModel.isPrivacyCoverActive",
+    "CapturePrivacyCover()",
+    "guardModel.accountWatermarkCode",
+    "guardModel.watermarkCode",
+    "ScreenshotGuardOverlay",
+):
+    if required not in layer:
+        raise SystemExit(f"shared screen protection layer is missing {required}")
+
+presentation_start = source.index("private struct ProtectedAssessmentPresentation")
+presentation_end = source.index("extension View", presentation_start)
+presentation = source[presentation_start:presentation_end]
+for required in ("ProtectedAssessmentSurface", "ScreenProtectionLayerModifier"):
+    if required not in presentation:
+        raise SystemExit(f"protected full-screen presentation is missing {required}")
 PY
 
 echo "Google auth and supported screen protection contract passed"

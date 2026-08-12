@@ -4,6 +4,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const { createHash } = require("node:crypto");
 const { spawnSync } = require("node:child_process");
 
 const repoRoot = path.resolve(__dirname, "..");
@@ -164,8 +165,35 @@ function loadExtraPages(filename) {
     if (!["public", "student", "parent", "admin"].includes(page.role)) {
       throw new Error(`${page.slug}: 지원하지 않는 role입니다.`);
     }
-    if (page.authProfile && !["student", "studentRanked", "parent", "admin"].includes(page.authProfile)) {
+    if (page.authProfile && !["public", "student", "studentRanked", "parent", "admin"].includes(page.authProfile)) {
       throw new Error(`${page.slug}: 지원하지 않는 authProfile입니다.`);
+    }
+    if (page.evidenceState && !/^[A-Z0-9_:-]{3,80}$/.test(page.evidenceState)) {
+      throw new Error(`${page.slug}: evidenceState 형식이 올바르지 않습니다.`);
+    }
+    if (page.expectedText !== undefined) {
+      if (!Array.isArray(page.expectedText) || page.expectedText.length < 1 || page.expectedText.length > 10) {
+        throw new Error(`${page.slug}: expectedText는 1~10개 문자열 배열이어야 합니다.`);
+      }
+      for (const expected of page.expectedText) {
+        if (typeof expected !== "string" || !expected.trim() || expected.length > 200) {
+          throw new Error(`${page.slug}: expectedText 항목은 1~200자 문자열이어야 합니다.`);
+        }
+      }
+    }
+    if (page.expectedErrorStatus !== undefined) {
+      const expectedStatus = Number(page.expectedErrorStatus);
+      if (!Number.isInteger(expectedStatus) || expectedStatus < 400 || expectedStatus > 599) {
+        throw new Error(`${page.slug}: expectedErrorStatus는 400~599 정수여야 합니다.`);
+      }
+      if (
+        page.evidenceState !== `HTTP_${expectedStatus}` ||
+        !page.expectedText?.includes(`HTTP_${expectedStatus}`)
+      ) {
+        throw new Error(
+          `${page.slug}: expectedErrorStatus는 같은 HTTP evidenceState·expectedText와 함께 써야 합니다.`,
+        );
+      }
     }
   }
   return parsed;
@@ -231,7 +259,9 @@ for (const role of requestedRoles) {
 }
 
 const chrome = findChrome(option("--chrome", ""));
-const extraPages = loadExtraPages(option("--extra-plan", process.env.MATTHS_CAPTURE_EXTRA_PLAN || ""));
+const extraPlanFilename = option("--extra-plan", process.env.MATTHS_CAPTURE_EXTRA_PLAN || "");
+const extraPlanPath = extraPlanFilename ? path.resolve(extraPlanFilename) : "";
+const extraPages = loadExtraPages(extraPlanPath);
 const onlyExtra = process.argv.includes("--only-extra");
 if (onlyExtra && extraPages.length === 0) {
   throw new Error("--only-extra에는 --extra-plan <JSON>이 필요합니다.");
@@ -271,6 +301,13 @@ const manifest = {
   viewportHeight,
   roles: [...requestedRoles],
   captureDriver,
+  extraPlan: extraPlanPath
+    ? {
+        file: path.relative(repoRoot, extraPlanPath),
+        sha256: createHash("sha256").update(fs.readFileSync(extraPlanPath)).digest("hex"),
+        pageCount: extraPages.length,
+      }
+    : null,
   pageCount: plan.length,
   captures: [],
 };
@@ -283,6 +320,7 @@ for (const page of plan) {
     const authProfile = page.authProfile || page.role;
     const filename = `${page.slug}-${width}.png`;
     const screenshot = path.join(pageDirectory, filename);
+    const fullPageScreenshot = path.join(pageDirectory, `${page.slug}-${width}-full.png`);
     const url = new URL(page.route, baseUrl).href;
     const result = captureDriver === "cdp"
       ? spawnSync(
@@ -296,6 +334,7 @@ for (const page of plan) {
             "--height", String(viewportHeight),
             "--wait-ms", "800",
             "--output", screenshot,
+            "--full-output", fullPageScreenshot,
           ],
           {
             cwd: repoRoot,
@@ -337,7 +376,11 @@ for (const page of plan) {
     }
     const html = captureDriver === "cdp" ? exactResult?.html || "" : result.stdout || "";
     const authenticationFailure = hasAuthenticationFailure(html, page.role);
-    const pageFailure = hasPageFailure(html);
+    const rawPageFailure = hasPageFailure(html);
+    const pageFailure = rawPageFailure && !page.expectedErrorStatus;
+    const expectedText = Array.isArray(page.expectedText) ? page.expectedText : [];
+    const missingExpectedText = expectedText.filter((expected) => !html.includes(expected));
+    const contentVerified = missingExpectedText.length === 0;
     const documentStatus = Number(exactResult?.documentStatus);
     const documentStatusOk = captureDriver !== "cdp" || (
       Number.isInteger(documentStatus) &&
@@ -351,12 +394,23 @@ for (const page of plan) {
       exactResult?.innerHeight === viewportHeight;
     const horizontalOverflow = captureDriver === "cdp" &&
       Number(exactResult?.scrollWidth || 0) > Number(exactResult?.innerWidth || width);
+    const intrinsicOverflowElements = captureDriver === "cdp"
+      ? (exactResult?.intrinsicOverflowElements || [])
+      : [];
+    const intrinsicOverflow = captureDriver === "cdp" && intrinsicOverflowElements.some(
+      (item) => Number(item.scrollWidth || 0) - Number(item.clientWidth || 0) > 4,
+    );
+    const fullPageScreenshotExists = captureDriver === "cdp" &&
+      fs.existsSync(fullPageScreenshot) && fs.statSync(fullPageScreenshot).size > 0;
     const ok = result.status === 0 &&
       screenshotExists &&
+      (captureDriver !== "cdp" || fullPageScreenshotExists) &&
       !authenticationFailure &&
       !pageFailure &&
+      contentVerified &&
       documentStatusOk &&
       !horizontalOverflow &&
+      !intrinsicOverflow &&
       (captureDriver !== "cdp" || viewportVerified);
     if (!ok) failures += 1;
     manifest.captures.push({
@@ -364,6 +418,11 @@ for (const page of plan) {
       role: page.role,
       authProfile,
       route: page.route,
+      evidenceState: page.evidenceState || null,
+      expectedErrorStatus: page.expectedErrorStatus || null,
+      expectedText,
+      missingExpectedText,
+      contentVerified,
       url,
       documentUrl: exactResult?.documentUrl || null,
       documentStatus: Number.isInteger(documentStatus) ? documentStatus : null,
@@ -375,12 +434,18 @@ for (const page of plan) {
       innerHeight: exactResult?.innerHeight ?? null,
       scrollWidth: exactResult?.scrollWidth ?? null,
       overflowingElements: exactResult?.overflowingElements || [],
+      intrinsicOverflowElements,
       horizontalOverflow,
+      intrinsicOverflow,
       viewportVerified,
       driver: captureDriver,
       file: path.relative(outputDirectory, screenshot),
+      fullPageFile: captureDriver === "cdp"
+        ? path.relative(outputDirectory, fullPageScreenshot)
+        : null,
       ok,
       authenticationFailure,
+      rawPageFailure,
       pageFailure,
       exitCode: result.status,
       signal: result.signal || null,

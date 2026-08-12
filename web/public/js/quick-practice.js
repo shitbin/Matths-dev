@@ -1,6 +1,14 @@
 document.addEventListener(
   "DOMContentLoaded",
   () => {
+    const toUserErrorMessage = (
+      error,
+      fallback
+    ) =>
+      window.MatthsFetchErrorMessage
+        ?.toUserMessage(error, fallback) ||
+      fallback;
+
     const root =
       document.querySelector(
         "[data-quick-practice]"
@@ -275,7 +283,12 @@ document.addEventListener(
           data.stats
         );
       } catch (error) {
-        showMessage(error.message);
+        showMessage(
+          toUserErrorMessage(
+            error,
+            "문제 결과를 확인하지 못했습니다. 잠시 후 다시 시도해주세요."
+          )
+        );
       } finally {
         expiring = false;
       }
@@ -374,7 +387,12 @@ document.addEventListener(
             100
           );
       } catch (error) {
-        showMessage(error.message);
+        showMessage(
+          toUserErrorMessage(
+            error,
+            "문제를 시작하지 못했습니다. 잠시 후 다시 시도해주세요."
+          )
+        );
       } finally {
         startButton.disabled = false;
         nextButton.disabled = false;
@@ -416,7 +434,12 @@ document.addEventListener(
             data.stats
           );
         } catch (error) {
-          showMessage(error.message);
+          showMessage(
+            toUserErrorMessage(
+              error,
+              "답안을 제출하지 못했습니다. 잠시 후 다시 시도해주세요."
+            )
+          );
         }
       }
     );

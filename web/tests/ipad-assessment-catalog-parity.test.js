@@ -10,6 +10,7 @@ const {
   readCatalog,
   serializedCatalog,
 } = require("../scripts/syncIpadAssessmentCatalog");
+const { resolveIpadSourceRoot } = require("../scripts/resolveIpadWorkspace");
 
 const current = readCatalog(defaultCatalogPath);
 const expected = buildIpadAssessmentCatalog(current);
@@ -50,9 +51,9 @@ for (const course of current.courses) {
 
 console.log("iPad assessment catalog parity contract passed");
 
-const bundlePath = path.resolve(
-  __dirname,
-  "../../ipad-app/Matths/LessonWeb/webgen-bundle.js",
+const bundlePath = path.join(
+  resolveIpadSourceRoot(path.resolve(__dirname, "..")),
+  "LessonWeb/webgen-bundle.js",
 );
 delete global.MatthsWebGen;
 delete require.cache[require.resolve(bundlePath)];

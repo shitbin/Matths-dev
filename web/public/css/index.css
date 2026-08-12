@@ -1356,6 +1356,17 @@ summary:focus-visible {
   }
 }
 
+@media (min-width: 901px) and (max-width: 1050px) {
+  .arena-hero h1 {
+    white-space: normal;
+  }
+
+  .arena-hero h1 span,
+  .arena-hero h1 strong {
+    display: block;
+  }
+}
+
 @media (max-width: 900px) {
   .arena-hero {
     min-height: auto;

@@ -10,12 +10,13 @@ const esbuild = require("esbuild");
 const {
   loadCurriculum,
 } = require("../services/curriculumService");
+const { resolveIpadSourceRoot } = require("./resolveIpadWorkspace");
 
 const repoRoot = path.resolve(__dirname, "..");
 const entryPath = path.join(__dirname, "ipadWebgenBridgeEntry.js");
-const defaultOutputPath = path.resolve(
-  repoRoot,
-  "../ipad-app/Matths/LessonWeb/webgen-bundle.js",
+const defaultOutputPath = path.join(
+  resolveIpadSourceRoot(repoRoot),
+  "LessonWeb/webgen-bundle.js",
 );
 
 function staticCurriculumPlugin() {

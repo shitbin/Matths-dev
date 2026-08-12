@@ -80,12 +80,23 @@ extension ServerAPI {
             var accelerationEndsAt: String?
         }
 
+        struct MatchTarget: Codable, Identifiable {
+            var id: String
+            var divisionLabel: String
+            var matchTypeLabel: String
+            var occurredAt: String?
+        }
+
         var generatedAt: String
         var wallet: Wallet
         var policy: Policy
         var items: [Item]
         var effects: [Effect]
         var purchases: [Purchase]
+        // 이전 서버 응답에는 이 필드가 없으므로 optional로 디코딩한다.
+        // 새 서버에서는 학생에게 내부 경기 ID를 입력시키지 않고 선택지를 제공한다.
+        var analysisTargets: [MatchTarget]? = nil
+        var defenseProtectionTargets: [MatchTarget]? = nil
         var invitations: [Invitation]
     }
 

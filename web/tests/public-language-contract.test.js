@@ -414,6 +414,10 @@ const legalCSS = fs.readFileSync(
   "utf8",
 );
 assert.match(legalCSS, /\.legal-document p,[\s\S]*?font-size:\s*16px/);
-assert.match(legalCSS, /@media \(max-width: 960px\)[\s\S]*?\.legal-document tr/);
+assert.match(
+  legalCSS,
+  /@media \(max-width: 1100px\)[\s\S]*?\.legal-document tr/,
+  "개인정보 표는 목적 열이 잘리기 전에 1100px부터 카드형으로 전환한다",
+);
 
 console.log("public language and legal responsive contracts passed");

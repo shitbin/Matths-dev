@@ -140,7 +140,7 @@
   > small {
   color: var(--tier-accent);
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.5px;
 }
 
@@ -188,7 +188,7 @@
   margin: 7px 0 0;
   color: var(--tier-text);
   font-size: 22px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .tier-my-ranking dd small {
@@ -568,7 +568,7 @@
   color: var(--tier-accent);
   font-size: 12px;
   font-style: normal;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .tier-ranking-row

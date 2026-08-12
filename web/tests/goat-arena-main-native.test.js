@@ -422,7 +422,8 @@ function exerciseRouteOrder() {
 }
 
 function exerciseIPadNativeBoundary() {
-  const ipadRoot = path.join(__dirname, "..", "..", "ipad-app", "Matths");
+  const { resolveIpadSourceRoot } = require("../scripts/resolveIpadWorkspace");
+  const ipadRoot = resolveIpadSourceRoot(path.resolve(__dirname, ".."));
   const arenaScreen = fs.readFileSync(
     path.join(ipadRoot, "GoatArenaScreen.swift"),
     "utf8"

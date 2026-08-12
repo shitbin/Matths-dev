@@ -6,9 +6,10 @@ const path = require("node:path");
 const {
   buildPlacementPresentation,
 } = require("../controllers/ipadPlacementController");
+const { resolveIpadRoot } = require("../scripts/resolveIpadWorkspace");
 
 const root = path.resolve(__dirname, "..");
-const ipadRoot = path.resolve(root, "../ipad-app");
+const ipadRoot = resolveIpadRoot(root);
 const placementSource = fs.readFileSync(
   path.join(ipadRoot, "Matths/PlacementExamScreen.swift"),
   "utf8",
@@ -60,7 +61,7 @@ assert.match(
 );
 assert.match(
   appSource,
-  /RankPromotionOverlay[\s\S]*\.overlay\s*\{[\s\S]*screenshotGuard\.isCaptureActive/,
+  /RankPromotionOverlay[\s\S]*(?:\.screenProtectionLayer\(guardModel:\s*screenshotGuard\)|\.overlay\s*\{[\s\S]*screenshotGuard\.isCaptureActive)/,
   "화면 캡처·앱 전환 privacy cover는 승급 장식보다 위에 있어야 합니다.",
 );
 assert.match(badgeSource, /private func playTierSound\(\)/);

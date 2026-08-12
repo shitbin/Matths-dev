@@ -1,4 +1,14 @@
 (() => {
+  const toUserErrorMessage = (
+    error,
+    fallback
+  ) =>
+    window.MatthsFetchErrorMessage
+      ?.toUserMessage(
+        error,
+        fallback
+      ) || fallback;
+
   const root = document.querySelector(
     "[data-arena-match-attempt]"
   );
@@ -181,7 +191,12 @@
           ].slice(-200);
           saveState.textContent = "저장 실패";
           if (!keepalive) {
-            showError(error.message);
+            showError(
+              toUserErrorMessage(
+                error,
+                "답안을 저장하지 못했습니다. 입력한 답은 화면에 남아 있으며 연결되면 다시 저장할 수 있습니다."
+              )
+            );
           }
           if (error.status === 423) {
             window.location.reload();
@@ -341,7 +356,12 @@
       submitButton.disabled = false;
       submitButton.textContent =
         finalQuestion ? "풀이 완료" : "다음 문제";
-      showError(error.message);
+      showError(
+        toUserErrorMessage(
+          error,
+          "현재 답안을 확정하지 못했습니다. 입력한 답은 화면에 남아 있습니다. 잠시 후 다시 시도해주세요."
+        )
+      );
     }
   };
 

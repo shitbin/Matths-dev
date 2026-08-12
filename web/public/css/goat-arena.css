@@ -23,8 +23,8 @@
   color-scheme: dark;
 }
 
-.arena-error-main{min-height:calc(100vh - 92px);display:grid;place-items:center;padding:48px 24px}.arena-access-error-card{width:min(660px,100%);padding:54px;text-align:center;background:radial-gradient(circle at 50% 0,rgba(80,197,255,.15),transparent 22rem),linear-gradient(145deg,rgba(19,23,52,.98),rgba(10,12,28,.98));border:1px solid rgba(125,145,255,.2);border-radius:28px;box-shadow:0 35px 100px rgba(0,0,0,.42)}.arena-access-error-card>span{width:86px;height:86px;display:grid;place-items:center;margin:0 auto 24px;color:#fff;background:linear-gradient(135deg,#8f39e6,#3d61ff,#21bad5);border-radius:25px;font-size:30px;font-weight:950}.arena-access-error-card>p,.arena-account-confirm-card>p{margin:0 0 10px;color:#7997ff;font-size: 12px;font-weight:900;letter-spacing:.18em}.arena-access-error-card h1,.arena-account-confirm-card h1{margin:0;color:#f5f7ff;font-size:clamp(30px,5vw,52px);letter-spacing:-.055em}.arena-access-error-card>div{margin:18px auto 30px;color:#9ca6c3;font-size:13px;line-height:1.8}.arena-access-error-card>a{min-height:50px;display:inline-flex;align-items:center;padding:0 24px;color:#fff;background:linear-gradient(100deg,#8740e7,#3d61ff,#20a7ce);border-radius:13px;font-size:12px;font-weight:850;text-decoration:none}
-.arena-payback-account-section{margin-top:28px;padding:34px;background:linear-gradient(145deg,rgba(18,22,49,.96),rgba(10,13,30,.96));border:1px solid rgba(128,145,222,.18);border-radius:24px}.arena-payback-account-section>header{display:flex;align-items:flex-end;justify-content:space-between;gap:34px}.arena-payback-account-section>header small{color:#899bff;font-size: 12px;font-weight:900;letter-spacing:.14em}.arena-payback-account-section>header h2{margin:8px 0 0;color:#f3f5ff;font-size:28px}.arena-payback-account-section>header>p{max-width:610px;margin:0;color:#8e98b5;font-size:12px;line-height:1.75}.arena-account-form{display:grid;grid-template-columns:1fr 1fr 1.4fr auto;gap:12px;margin-top:24px}.arena-account-form label{display:grid;gap:8px}.arena-account-form label>span{color:#b8c1dc;font-size: 12px;font-weight:800}.arena-account-form input{min-width:0;min-height:48px;padding:0 13px;color:#f4f6ff;background:#090c1d;border:1px solid rgba(125,144,217,.22);border-radius:11px;font:inherit}.arena-account-form button{align-self:end;min-height:48px;padding:0 18px;color:#fff;background:linear-gradient(100deg,#8942e7,#3b64ff,#22aacf);border:0;border-radius:11px;font:inherit;font-size:12px;font-weight:850;cursor:pointer}.arena-account-security{margin:14px 0 0;color:#707b99;font-size: 12px}.arena-linked-account{display:flex;align-items:center;gap:14px;margin-top:22px;padding:18px;background:rgba(59,102,255,.08);border:1px solid rgba(76,121,255,.2);border-radius:15px}.arena-linked-account>span{width:34px;height:34px;display:grid;place-items:center;color:#06101e;background:#5de1bf;border-radius:50%;font-weight:950}.arena-linked-account small,.arena-linked-account p{display:block;margin:0;color:#7f8ba8;font-size: 12px}.arena-linked-account strong{display:block;margin:5px 0;color:#edf1ff;font-size:14px}.arena-account-feedback{margin-top:20px;padding:13px 15px;border-radius:11px;font-size: 12px;line-height:1.6}.arena-account-feedback.is-success{color:#a9f4d8;background:rgba(34,191,144,.1);border:1px solid rgba(66,218,172,.25)}.arena-account-feedback.is-warning{color:#ffe4a9;background:rgba(230,166,39,.1);border:1px solid rgba(239,183,66,.25)}.arena-account-feedback.is-error{color:#ffb6c1;background:rgba(218,59,84,.1);border:1px solid rgba(230,75,99,.25)}.arena-account-confirm-main{display:grid;place-items:center;min-height:calc(100vh - 100px)}.arena-account-confirm-card{width:min(700px,100%);padding:42px;background:linear-gradient(145deg,#151934,#090b19);border:1px solid rgba(121,140,220,.2);border-radius:25px}.arena-account-confirm-card>span{display:block;margin-top:14px;color:#8e98b4;font-size:12px;line-height:1.7}.arena-account-confirm-card dl{margin:28px 0}.arena-account-confirm-card dl>div{display:flex;justify-content:space-between;gap:20px;padding:16px 0;border-bottom:1px solid rgba(121,140,220,.15)}.arena-account-confirm-card dt{color:#7f8aa8;font-size:12px}.arena-account-confirm-card dd{margin:0;color:#f3f5ff;font-size:13px;font-weight:800}.arena-account-confirm-card form>label{display:flex;align-items:center;gap:10px;color:#c5cce0;font-size:12px}.arena-account-confirm-card form>div{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}.arena-account-confirm-card form a,.arena-account-confirm-card form button{min-height:47px;display:inline-flex;align-items:center;padding:0 20px;border-radius:11px;font:inherit;font-size:12px;font-weight:850;text-decoration:none}.arena-account-confirm-card form a{color:#aab3cf;border:1px solid rgba(130,146,206,.22)}.arena-account-confirm-card form button{color:#fff;background:linear-gradient(100deg,#8942e7,#3b64ff,#22aacf);border:0;cursor:pointer}@media(max-width:900px){.arena-payback-account-section>header{align-items:flex-start;flex-direction:column}.arena-account-form{grid-template-columns:1fr 1fr}.arena-account-form button{grid-column:1/-1}}@media(max-width:560px){.arena-access-error-card,.arena-account-confirm-card{padding:30px 22px}.arena-account-form{grid-template-columns:1fr}}
+.arena-error-main{min-height:calc(100vh - 92px);display:grid;place-items:center;padding:48px 24px}.arena-access-error-card{width:min(660px,100%);padding:54px;text-align:center;background:radial-gradient(circle at 50% 0,rgba(80,197,255,.15),transparent 22rem),linear-gradient(145deg,rgba(19,23,52,.98),rgba(10,12,28,.98));border:1px solid rgba(125,145,255,.2);border-radius:28px;box-shadow:0 35px 100px rgba(0,0,0,.42)}.arena-access-error-card>span{width:86px;height:86px;display:grid;place-items:center;margin:0 auto 24px;color:#fff;background:linear-gradient(135deg,#8f39e6,#3d61ff,#21bad5);border-radius:25px;font-size:30px;font-weight: 900}.arena-access-error-card>p,.arena-account-confirm-card>p{margin:0 0 10px;color:#7997ff;font-size: 12px;font-weight:900;letter-spacing:.18em}.arena-access-error-card h1,.arena-account-confirm-card h1{margin:0;color:#f5f7ff;font-size:clamp(30px,5vw,52px);letter-spacing:-.055em}.arena-access-error-card>div{margin:18px auto 30px;color:#9ca6c3;font-size:13px;line-height:1.8}.arena-access-error-card>a{min-height:50px;display:inline-flex;align-items:center;padding:0 24px;color:#fff;background:linear-gradient(100deg,#8740e7,#3d61ff,#20a7ce);border-radius:13px;font-size:12px;font-weight:850;text-decoration:none}
+.arena-payback-account-section{margin-top:28px;padding:34px;background:linear-gradient(145deg,rgba(18,22,49,.96),rgba(10,13,30,.96));border:1px solid rgba(128,145,222,.18);border-radius:24px}.arena-payback-account-section>header{display:flex;align-items:flex-end;justify-content:space-between;gap:34px}.arena-payback-account-section>header small{color:#899bff;font-size: 12px;font-weight:900;letter-spacing:.14em}.arena-payback-account-section>header h2{margin:8px 0 0;color:#f3f5ff;font-size:28px}.arena-payback-account-section>header>p{max-width:610px;margin:0;color:#8e98b5;font-size:12px;line-height:1.75}.arena-account-form{display:grid;grid-template-columns:1fr 1fr 1.4fr auto;gap:12px;margin-top:24px}.arena-account-form label{display:grid;gap:8px}.arena-account-form label>span{color:#b8c1dc;font-size: 12px;font-weight:800}.arena-account-form input{min-width:0;min-height:48px;padding:0 13px;color:#f4f6ff;background:#090c1d;border:1px solid rgba(125,144,217,.22);border-radius:11px;font:inherit}.arena-account-form button{align-self:end;min-height:48px;padding:0 18px;color:#fff;background:linear-gradient(100deg,#8942e7,#3b64ff,#22aacf);border:0;border-radius:11px;font:inherit;font-size:12px;font-weight:850;cursor:pointer}.arena-account-security{margin:14px 0 0;color:#707b99;font-size: 12px}.arena-linked-account{display:flex;align-items:center;gap:14px;margin-top:22px;padding:18px;background:rgba(59,102,255,.08);border:1px solid rgba(76,121,255,.2);border-radius:15px}.arena-linked-account>span{width:34px;height:34px;display:grid;place-items:center;color:#06101e;background:#5de1bf;border-radius:50%;font-weight: 900}.arena-linked-account small,.arena-linked-account p{display:block;margin:0;color:#7f8ba8;font-size: 12px}.arena-linked-account strong{display:block;margin:5px 0;color:#edf1ff;font-size:14px}.arena-account-feedback{margin-top:20px;padding:13px 15px;border-radius:11px;font-size: 12px;line-height:1.6}.arena-account-feedback.is-success{color:#a9f4d8;background:rgba(34,191,144,.1);border:1px solid rgba(66,218,172,.25)}.arena-account-feedback.is-warning{color:#ffe4a9;background:rgba(230,166,39,.1);border:1px solid rgba(239,183,66,.25)}.arena-account-feedback.is-error{color:#ffb6c1;background:rgba(218,59,84,.1);border:1px solid rgba(230,75,99,.25)}.arena-account-confirm-main{display:grid;place-items:center;min-height:calc(100vh - 100px)}.arena-account-confirm-card{width:min(700px,100%);padding:42px;background:linear-gradient(145deg,#151934,#090b19);border:1px solid rgba(121,140,220,.2);border-radius:25px}.arena-account-confirm-card>span{display:block;margin-top:14px;color:#8e98b4;font-size:12px;line-height:1.7}.arena-account-confirm-card dl{margin:28px 0}.arena-account-confirm-card dl>div{display:flex;justify-content:space-between;gap:20px;padding:16px 0;border-bottom:1px solid rgba(121,140,220,.15)}.arena-account-confirm-card dt{color:#7f8aa8;font-size:12px}.arena-account-confirm-card dd{margin:0;color:#f3f5ff;font-size:13px;font-weight:800}.arena-account-confirm-card form>label{display:flex;align-items:center;gap:10px;color:#c5cce0;font-size:12px}.arena-account-confirm-card form>div{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}.arena-account-confirm-card form a,.arena-account-confirm-card form button{min-height:47px;display:inline-flex;align-items:center;padding:0 20px;border-radius:11px;font:inherit;font-size:12px;font-weight:850;text-decoration:none}.arena-account-confirm-card form a{color:#aab3cf;border:1px solid rgba(130,146,206,.22)}.arena-account-confirm-card form button{color:#fff;background:linear-gradient(100deg,#8942e7,#3b64ff,#22aacf);border:0;cursor:pointer}@media(max-width:900px){.arena-payback-account-section>header{align-items:flex-start;flex-direction:column}.arena-account-form{grid-template-columns:1fr 1fr}.arena-account-form button{grid-column:1/-1}}@media(max-width:560px){.arena-access-error-card,.arena-account-confirm-card{padding:30px 22px}.arena-account-form{grid-template-columns:1fr}}
 
 * {
   box-sizing: border-box;
@@ -571,7 +571,7 @@ a:focus-visible {
   box-shadow:
     0 0 30px rgba(118, 84, 247, 0.28);
   font-size: 16px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-brand > span:last-child {
@@ -581,7 +581,7 @@ a:focus-visible {
 
 .arena-brand strong {
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.4px;
 }
 
@@ -668,7 +668,7 @@ a:focus-visible {
   background: var(--arena-gradient);
   border-radius: 9px;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-player strong {
@@ -709,7 +709,7 @@ a:focus-visible {
   margin: 0 0 18px;
   color: #95a6ff;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 3px;
 }
 
@@ -739,7 +739,7 @@ a:focus-visible {
   color: #fff;
   font-size:
     clamp(58px, 7.2vw, 112px);
-  font-weight: 950;
+  font-weight: 900;
   line-height: 0.9;
   letter-spacing:
     clamp(-6px, -0.45vw, -3px);
@@ -949,7 +949,7 @@ a:focus-visible {
 .arena-seed-card > header span {
   color: #7f8db5;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.6px;
 }
 
@@ -961,7 +961,7 @@ a:focus-visible {
   border-radius: 999px;
   font-size: 12px;
   font-style: normal;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1px;
 }
 
@@ -1115,7 +1115,7 @@ a:focus-visible {
   overflow: hidden;
   color: #fff;
   font-size: 25px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: -1px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1149,7 +1149,7 @@ a:focus-visible {
 .arena-player-line small {
   color: #69769d;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.2px;
 }
 
@@ -1255,7 +1255,7 @@ a:focus-visible {
   margin: 0 0 12px;
   color: #8596f8;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 2px;
 }
 
@@ -1343,7 +1343,7 @@ a:focus-visible {
   border: 1px solid rgba(25, 199, 233, 0.17);
   border-radius: 11px;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-mode-grid h3 {
@@ -1399,7 +1399,7 @@ a:focus-visible {
   background: var(--arena-gradient);
   border-radius: 14px;
   font-size: 16px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-development-banner > div {
@@ -1410,7 +1410,7 @@ a:focus-visible {
 .arena-development-banner small {
   color: #7180aa;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.5px;
 }
 
@@ -2653,7 +2653,7 @@ html {
   align-self: end;
   color: #8497fb;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.4px;
 }
 
@@ -2731,7 +2731,7 @@ html {
     rgba(25, 199, 233, 0.17);
   border-radius: 10px;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-definition-grid
@@ -2740,7 +2740,7 @@ html {
   margin: 0 0 9px;
   color: #8495f7;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.6px;
 }
 
@@ -2811,7 +2811,7 @@ html {
   justify-self: center;
   color: #7481a7;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.5px;
 }
 
@@ -2872,7 +2872,7 @@ html {
   color: #687594;
   font-size: 12px;
   font-style: normal;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-tier-requirements small {
@@ -3150,14 +3150,6 @@ html {
   border-color: rgba(247, 90, 139, 0.28);
 }
 
-.main-battle-status {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.main-battle-status article,
 .main-battle-action-grid > article,
 .main-invitation-board {
   background: #11162f;
@@ -3165,35 +3157,12 @@ html {
   border-radius: 19px;
 }
 
-.main-battle-status article {
-  padding: 18px;
-}
-
-.main-battle-status small,
 .main-battle-action-grid header small,
 .main-invitation-board header small {
   color: #71dcff;
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.12em;
-}
-
-.main-battle-status strong {
-  display: block;
-  margin-top: 8px;
-  color: #f4f7ff;
-  font-size: 20px;
-}
-
-.main-battle-status strong span {
-  font-size: 12px;
-}
-
-.main-battle-status a {
-  display: inline-block;
-  margin-top: 7px;
-  color: #7ddfff;
-  font-size: 12px;
 }
 
 .main-battle-action-grid {
@@ -3581,7 +3550,6 @@ html {
 }
 
 @media (max-width: 760px) {
-  .main-battle-status,
   .main-battle-action-grid,
   .main-invitation-columns,
   .main-invitation-board > header {
@@ -3617,7 +3585,7 @@ html {
   > header small {
   color: var(--arena-gold);
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.4px;
 }
 
@@ -3778,7 +3746,7 @@ html {
 .arena-flow-timeline small {
   color: #7f90ed;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.5px;
 }
 
@@ -3835,7 +3803,7 @@ html {
 .arena-payback-conditions small {
   color: #8b9cff;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.5px;
 }
 
@@ -4003,7 +3971,7 @@ html {
 .arena-division-cards small {
   color: #8b9cff;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.8px;
 }
 
@@ -4151,7 +4119,7 @@ html {
   margin: 0 0 10px;
   color: #8899fc;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 2px;
 }
 
@@ -4209,7 +4177,7 @@ html {
   small {
   color: #8798f7;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.6px;
 }
 
@@ -4605,7 +4573,7 @@ html {
     rgba(25, 199, 233, 0.15);
   border-radius: 9px;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-feature-grid
@@ -4720,7 +4688,7 @@ html {
 .arena-active-match-card small {
   color: #8798f7;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.5px;
 }
 
@@ -5663,7 +5631,7 @@ html {
 .arena-match-wait-card small {
   color: #7d8cff;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.7px;
   text-transform: uppercase;
 }
@@ -5899,7 +5867,7 @@ html {
     linear-gradient(120deg, #7e38e8, #098fc4);
   box-shadow: 0 18px 45px rgba(38, 143, 221, 0.22);
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   cursor: pointer;
 }
 
@@ -6035,7 +6003,7 @@ html {
 .arena-question-intro small {
   color: #7c8ebf;
   font-size: clamp(0.7rem, 1.3vw, 1rem);
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 0.65em;
   opacity: 0;
   animation:
@@ -6188,7 +6156,7 @@ html {
 .arena-evidence-dropzone > span {
   color: #fff;
   font-size: 16px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-evidence-dropzone > strong {
@@ -6240,7 +6208,7 @@ html {
     linear-gradient(115deg, #7538e8, #079fc6);
   box-shadow: 0 18px 42px rgba(24, 150, 211, 0.24);
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   cursor: pointer;
 }
 
@@ -6406,7 +6374,7 @@ html {
   border-radius: 14px;
   background: #f1f5f9;
   font-size: 16px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-match-question > header > div {
@@ -6627,7 +6595,7 @@ html {
 .arena-match-short-answer span {
   color: #7785ad;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-match-short-answer input {
@@ -6712,7 +6680,7 @@ html {
   background: rgba(28, 143, 201, 0.18);
   box-shadow: 0 0 35px rgba(56, 208, 255, 0.18);
   font-size: 27px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-match-wait-card p {
@@ -6781,7 +6749,7 @@ html {
 .arena-question-rollout-notice strong { color: #ffd57a; font-size: .78rem; white-space: nowrap; }
 .arena-question-rollout-notice p { margin: 0; font-size: .78rem; line-height: 1.65; }
 .arena-question-standard-block { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 26px; padding: clamp(24px, 4vw, 38px); border: 1px solid rgba(123, 142, 218, .17); border-radius: 22px; background: #0f162d; }
-.arena-question-standard-number { display: grid; place-items: center; width: 58px; height: 58px; border: 1px solid rgba(87, 215, 255, .3); border-radius: 17px; color: #7de2ff; background: rgba(36, 174, 223, .08); font-size: .82rem; font-weight: 950; letter-spacing: .1em; }
+.arena-question-standard-number { display: grid; place-items: center; width: 58px; height: 58px; border: 1px solid rgba(87, 215, 255, .3); border-radius: 17px; color: #7de2ff; background: rgba(36, 174, 223, .08); font-size: .82rem; font-weight: 900; letter-spacing: .1em; }
 .arena-question-standard-block h3 { margin: 9px 0 14px; color: #f4f6ff; font-size: clamp(1.25rem, 2.2vw, 1.85rem); }
 .arena-question-standard-block ul { display: grid; gap: 7px; margin: 0 0 22px; padding-left: 20px; color: #aeb8d4; line-height: 1.7; }
 .arena-question-standard-block ul { grid-template-columns: minmax(0, 1fr); }
@@ -7857,7 +7825,7 @@ html {
   align-self: center;
   color: #5be3ff;
   font-size: 0.8rem;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 0.1em;
 }
 .arena-mailbox-result-settlement {
@@ -8196,7 +8164,7 @@ html {
   content: "MATCH STATUS";
   color: rgba(var(--restriction-accent), 0.88);
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 0.16em;
 }
 
@@ -8222,7 +8190,7 @@ html {
 .arena-battle-page--main .arena-feature-lock > span[aria-hidden="true"]::before {
   content: "i";
   font-size: 27px;
-  font-weight: 950;
+  font-weight: 900;
   transform: rotate(-45deg);
 }
 
@@ -8567,7 +8535,7 @@ html {
   border-radius: 50%;
   box-shadow: 0 0 30px rgba(var(--command-accent-rgb), 0.15);
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   transform: translate(-50%, -50%);
 }
 
@@ -8596,7 +8564,7 @@ html {
   right: 25px;
   color: rgba(var(--command-accent-rgb), 0.34);
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.5px;
 }
 
@@ -8655,7 +8623,7 @@ html {
 .arena-analysis-question-body article > small {
   color: #58e6ff;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
   letter-spacing: 1.3px;
 }
 
@@ -8718,7 +8686,7 @@ html {
   border: 1px solid rgba(81, 221, 255, 0.16);
   border-radius: 12px;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .arena-analysis-question > summary > span:nth-child(2),
@@ -9083,7 +9051,6 @@ html {
 .goat-arena-page .arena-challenge-back,
 .goat-arena-page .arena-seed-card > a,
 .goat-arena-page .arena-development-banner > a,
-.goat-arena-page .main-battle-status a,
 .goat-arena-page .arena-live-item-meta a,
 .goat-arena-page .arena-live-action a,
 .goat-arena-page .arena-rulebook-switcher a,
@@ -9100,7 +9067,6 @@ html {
 
 .goat-arena-page .arena-account > a:first-child,
 .goat-arena-page .arena-challenge-back,
-.goat-arena-page .main-battle-status a,
 .goat-arena-page .arena-match-result-card > a,
 .goat-arena-page .arena-match-wait-card a,
 .goat-arena-page .arena-shop-history article a,
@@ -9624,6 +9590,17 @@ html {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.arena-v2-battle-header .arena-v2-metrics,
+.arena-v2-shop-header .arena-v2-metrics,
+.arena-division-command-page--main .arena-v2-mode-header .arena-v2-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.arena-v2-battle-jump {
+  width: fit-content;
+  margin-top: 16px;
+}
+
 .arena-v2-mode-command {
   min-height: 190px;
 }
@@ -10033,7 +10010,8 @@ html {
     padding-top: 24px;
   }
 
-  .arena-v2-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .arena-v2-metrics,
+  .arena-v2-mode-header .arena-v2-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .arena-v2-command { grid-template-columns: 1fr; min-height: auto; gap: 24px; }
   .arena-v2-crest,
   .arena-v2-mode-summary { justify-self: stretch; }
@@ -10130,6 +10108,7 @@ html {
   .arena-v2-command { margin-top: 16px; padding: 22px 18px; border-radius: 12px; }
   .arena-v2-command-copy h2 { font-size: 30px; line-height: 38px; }
   .arena-v2-command-copy .arena-v2-primary,
+  .arena-v2-battle-jump,
   .arena-v2-actions > a,
   .arena-error-actions > a { width: 100%; }
   .arena-v2-crest { justify-self: start; }

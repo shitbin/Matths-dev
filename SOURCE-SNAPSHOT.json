@@ -1,23 +1,25 @@
 {
   "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V1",
-  "createdAt": "2026-08-12T22:20:00+09:00",
+  "createdAt": "2026-08-13T01:38:53+09:00",
   "upstream": {
     "repository": "https://github.com/is4553807/Matths.git",
-    "mainCommit": "9b66b856e76ca79a03d1b020b9d09f450338f942",
+    "mainCommit": "023a47368bef13d763eda0377b45c989f59ef01b",
     "pushAllowed": false
   },
   "web": {
-    "sourceCommit": "4fa581bf4af5a4f822b75111a4be87a3add5c388",
+    "sourceCommit": "0734ce03586ae11010c748e9679651d8c62e8348",
     "path": "web"
   },
   "ipad": {
-    "sourceCommit": "4db90d55d6869c5119ce58b271475ec294d34d5b",
+    "sourceCommit": "4b9e4670ed669e6ab8ab900b8e5522ae3843cea6",
     "path": "ipad"
   },
   "verification": {
-    "webTests": "122/122 passed",
-    "webTemplates": 118,
-    "ipadContracts": "54/54 passed",
+    "webTests": "130/130 passed",
+    "webTemplates": 119,
+    "ipadContracts": "55/55 passed",
+    "publicCheckoutContracts": "53/55 passed without non-redistributable resources",
+    "externalResourceOverlay": "55/55 passed with local llama.xcframework and Debug-only KICE PDFs",
     "signedDeviceBuild": "passed",
     "physicalDeviceInstall": "passed (iPad14,3)",
     "physicalDeviceLaunch": "passed against http://192.168.0.35:8000"

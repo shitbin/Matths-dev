@@ -1006,9 +1006,9 @@ struct AssessmentScreen: View {
                     .entrance(4)
             }
 
-            // ── 5. 채점 Pro — 도구 진입은 "지금 할 일" 이 아니라서 하단 보조 행이다
-            //       (하단 탭 5개 개편으로 탭에서 빠진 도구의 진입점, 감사 0752 이관)
-            proEntryRow
+            // ── 5. 빠른 연습·채점 도구 — 정식 시험과 다른 보조 행동은 하단에 둔다.
+            //       퀵 연습은 구현된 네이티브 화면으로 가는 명시적 진입점이다.
+            supportingEntries
                 .entrance(5)
         }
         .sheet(isPresented: $showSystemInfo) { systemInfoSheet }
@@ -1036,32 +1036,60 @@ struct AssessmentScreen: View {
         }
     }
 
-    /// 채점 Pro 진입 — 위계 개편으로 카드에서 하단 보조 행으로 강등했다.
-    /// 도구 진입이 "지금 할 일"(열린 시험·주간 모의고사)과 같은 무게로 서면
-    /// 우선순위가 지워진다. 리스트 행 문법(제목 + 메타 + 셰브런)을 그대로 쓴다.
-    private var proEntryRow: some View {
-        VStack(alignment: .leading, spacing: Tokens.Space.s2) {
-            SectionRule(title: "도구")
-            Button { store.route = .pro } label: {
-                HStack(alignment: .center, spacing: Tokens.Space.s3) {
-                    Image(systemName: "camera.viewfinder")
-                        .font(.mBody).foregroundStyle(Tokens.text2)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("채점 Pro").font(.mBodyB).foregroundStyle(Tokens.ink)
-                        Text("시험지 사진을 올리면 풀이 과정까지 짚어 채점합니다.")
-                            .font(.mCaption).foregroundStyle(Tokens.text3)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer(minLength: Tokens.Space.s4)
-                    Image(systemName: "chevron.right").font(.mCaption).foregroundStyle(Tokens.text3)
-                }
-                .padding(.vertical, Tokens.Space.s3)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
+    /// 정식 평가보다 가벼운 행동을 한 섹션에 모은다. 퀵 연습은 40초 한 문항,
+    /// 채점 Pro는 촬영 도구라 열린 시험·주간 모의고사와 같은 위계로 올리지 않는다.
+    private var supportingEntries: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SectionRule(title: "빠른 연습과 도구")
+
+            supportingEntry(
+                title: "퀵 연습",
+                detail: "취약 개념 한 문항을 40초 안에 풀고 변화를 확인합니다.",
+                icon: "bolt.fill"
+            ) {
+                store.route = .quickPractice
             }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
+
+            Divider().foregroundStyle(Tokens.line)
+
+            supportingEntry(
+                title: "채점 Pro",
+                detail: "시험지 사진을 올리면 풀이 과정까지 짚어 채점합니다.",
+                icon: "camera.viewfinder"
+            ) {
+                store.route = .pro
+            }
         }
+    }
+
+    private func supportingEntry(
+        title: String,
+        detail: String,
+        icon: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: Tokens.Space.s3) {
+                Image(systemName: icon)
+                    .font(.mBody).foregroundStyle(Tokens.text2)
+                    .frame(width: 24)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.mBodyB).foregroundStyle(Tokens.ink)
+                    Text(detail)
+                        .font(.mCaption).foregroundStyle(Tokens.text3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: Tokens.Space.s4)
+                Image(systemName: "chevron.right")
+                    .font(.mCaption).foregroundStyle(Tokens.text3)
+            }
+            .padding(.vertical, Tokens.Space.s3)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(detail)")
     }
 }
 

@@ -51,9 +51,10 @@
         },
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js" defer></script>
+    <%- include("partials/mathjax-runtime") %>
     <% if (matchData.inProgress) { %>
       <script src="/js/arena-problem-visualization.js" defer></script>
+      <script src="/js/fetch-error-message.js" defer></script>
       <script src="/js/goat-arena-match.js" defer></script>
     <% } %>
   </head>
@@ -290,7 +291,7 @@
               <span>다음 버튼을 누르면 현재 답이 확정되며 이전 문제를 다시 보거나 수정할 수 없습니다.</span>
             </div>
             <button type="button" data-arena-match-submit><%= Number(matchData.attempt.currentQuestionIndex) === 4 ? "5번 완료 · 증거 제출로" : "다음 문제" %></button>
-            <p data-arena-match-error hidden></p>
+            <p data-arena-match-error role="alert" aria-live="assertive" hidden></p>
           </footer>
         </section>
       <% } else if (matchData.evidenceRequired) { %>

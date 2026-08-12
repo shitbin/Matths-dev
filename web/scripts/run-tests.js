@@ -100,9 +100,13 @@ const testFiles = [
   "tests/public-language-contract.test.js",
   "tests/brand-font-contract.test.js",
   "tests/product-refresh-contract.test.js",
+  "tests/reaudit-v8-visual-p1-regressions.test.js",
   "tests/web-interaction-size-contract.test.js",
   "tests/web-accessibility-contract.test.js",
   "tests/responsive-evidence-capture.test.js",
+  "tests/web-v8-evidence-fixtures.test.js",
+  "tests/reaudit-v8-reading-and-admin-contract.test.js",
+  "tests/font-weight-range-contract.test.js",
   "tests/local-capture-role-seed.test.js",
   "tests/arena-mobile-navigation.test.js",
   "tests/arena-feature-design.test.js",
@@ -110,6 +114,7 @@ const testFiles = [
   "tests/arena-gradient-discipline.test.js",
   "tests/ejs-attribute-contract.test.js",
   "tests/assessment-center-design.test.js",
+  "tests/student-longform-type-contract.test.js",
   "tests/arena-access-view.test.js",
   "tests/curriculum-public-atlas.test.js",
   "tests/public-curriculum-scope-copy.test.js",
@@ -133,10 +138,13 @@ const testFiles = [
   "tests/mastery-progress.test.js",
   "tests/wrongnotes-bulk-update.test.js",
   "tests/wrong-note-incremental-updated-at.test.js",
+  "tests/mathjax-runtime-contract.test.js",
+  "tests/student-fetch-error-ux.test.js",
+  "tests/student-fetch-error-completion.test.js",
   "tests/war-of-masters-render.test.js",
 ];
 
-// Cafe24 release archive에는 웹/서버 정본만 있고 형제 저장소인 ../ipad-app은 없다.
+// Cafe24 release archive에는 웹/서버 정본만 있고 iPad 작업본은 없다.
 // 이 검사는 패키징 전에 전체 작업공간에서 반드시 실행하고, 독립 아카이브에서는
 // 나머지 웹/서버 검사를 다시 실행한다. 목록을 넓히면 아래 계약 검사가 실패한다.
 const deploymentExcludedTests = Object.freeze([

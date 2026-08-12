@@ -25,9 +25,10 @@ const {
 const {
   respondToMainInvitation,
 } = require("../services/mainArenaMatchService");
+const { resolveIpadSourceRoot } = require("../scripts/resolveIpadWorkspace");
 
 const repoRoot = path.resolve(__dirname, "..");
-const ipadRoot = path.resolve(repoRoot, "..", "ipad-app", "Matths");
+const ipadRoot = resolveIpadSourceRoot(repoRoot);
 const read = (file) => fs.readFileSync(file, "utf8");
 const oid = () => new mongoose.Types.ObjectId();
 

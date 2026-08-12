@@ -83,28 +83,12 @@ struct MatthsApp: App {
                             .environmentObject(store)
                     }
                 }
-                // 스크린샷 감지 오버레이는 어느 화면에서든 위에 뜬다
-                .overlay {
-                    if screenshotGuard.isCaptureActive || screenshotGuard.isPrivacyCoverActive {
-                        CapturePrivacyCover()
-                    } else {
-                        ZStack {
-                            if screenshotGuard.isShowing {
-                                ScreenshotGuardOverlay(guardModel: screenshotGuard) { stuckPoint in
-                                    store.recordStuckPoint(stuckPoint)
-                                }
-                            }
-                            // 경고창이 떠 있는 동안 다시 촬영해도 계정·세션 가명 코드가
-                            // 사라지지 않는다. 워터마크는 hit testing/접근성에서 제외된다.
-                            if screenshotGuard.protectionEnabled {
-                                ProtectedContentWatermark(
-                                    accountCode: screenshotGuard.accountWatermarkCode,
-                                    sessionCode: screenshotGuard.watermarkCode)
-                            }
-                        }
-                    }
+                // 공통 보호 레이어는 루트와 fullScreenCover가 같은 구현을 쓴다.
+                // 모달은 루트 overlay보다 위에 뜨므로 각 presentation 최상단에도
+                // 붙여야 앱 전환 덮개·워터마크·캡처 안내가 경기 화면을 실제로 덮는다.
+                .screenProtectionLayer(guardModel: screenshotGuard) { stuckPoint in
+                    store.recordStuckPoint(stuckPoint)
                 }
-                .animation(.easeOut(duration: 0.2), value: screenshotGuard.isShowing)
                 .onChange(of: scenePhase) { _, phase in
                     screenshotGuard.setSceneActive(phase == .active)
                     if phase == .background {

@@ -22,6 +22,13 @@ do
 done
 
 grep -q 'ArenaShopFixture.make' "$shop"
+grep -q 'shop.analysisTargets' "$shop"
+grep -q 'shop.defenseProtectionTargets' "$shop"
+grep -q 'Picker(item.itemCode == "DEFENSE_SCHEDULE_PROTECTION"' "$shop"
+if grep -q '정산 완료 경기 ID\|적용 경기 ID' "$shop"; then
+  echo "FAIL: 상점이 학생에게 내부 경기 ID를 직접 입력시키고 있습니다." >&2
+  exit 1
+fi
 grep -q 'case "matchplay"' "$arena"
 grep -q 'GoatArenaMatchFixture.make' "$match"
 grep -q 'if !usesDebugFixture { await heartbeatLoop() }' "$match"

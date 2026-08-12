@@ -30,6 +30,22 @@
     <title>경기 상세 분석 | GOAT Arena</title>
     <link rel="stylesheet" href="/css/goat-arena.css" />
     <%- include("partials/rank-motion-head") %>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [["$", "$"], ["\\(", "\\)"]],
+          displayMath: [["\\[", "\\]"]],
+          processEscapes: true,
+        },
+        svg: {
+          fontCache: "global",
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+        },
+      };
+    </script>
+    <%- include("partials/mathjax-runtime") %>
     <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
   </head>
   <body class="goat-arena-page arena-inner-page arena-shop-page">

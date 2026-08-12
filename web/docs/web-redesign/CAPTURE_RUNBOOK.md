@@ -124,3 +124,37 @@ viewport에 강제하고 `window.innerWidth/innerHeight`와 스크롤 원점이 
 
 이 결과는 22면×5폭의 빠른 디자인 회귀 자료이며, 로그인된 4역할 54면×5폭 최종 승인을
 대체하지 않는다. 존재하지 않는 route의 `Cannot GET` DOM도 성공 캡처로 인정하지 않는다.
+
+## v8 S142/S143 결제·오류 18상태 증거
+
+결제 5면, 공통 `error.ejs`의 12개 상태 카피, `goat-arena-error.ejs` 1면은 운영 DB나
+운영 라우트를 만들지 않는 전용 fixture 서버로 촬영한다. 아래 명령은 fixture 서버를
+loopback 임시 포트로만 열고, CDP 캡처가 끝나면 종료한다. `NODE_ENV=production`에서는
+fixture 서버와 실행기가 모두 시작 전에 실패한다.
+
+```sh
+npm run evidence:web:v8-gaps -- \
+  --output evidence/web-v8-gaps-final
+```
+
+Chrome을 자동으로 찾지 못하는 환경에서는 경로만 추가한다.
+
+```sh
+npm run evidence:web:v8-gaps -- \
+  --chrome "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --output evidence/web-v8-gaps-final
+```
+
+정본 계획은 `docs/web-redesign/v8-evidence-gap-plan.json`이다. 실행기는 다음 조건을 모두
+확인하고 하나라도 다르면 종료 코드 1을 반환한다.
+
+- Git 추적 작업본이 깨끗하고 manifest의 `sourceCommit`이 실행 커밋과 같음
+- CDP driver, 정확한 viewport, HTTP 문서 상태, viewport·full-page PNG가 모두 유효함
+- 18상태×5폭=90장이고 실패 수가 0임
+- 가로·요소 내부 overflow가 없음
+- 각 상태의 `expectedText`가 실제 렌더 DOM에 모두 존재함
+- extra plan SHA-256과 18면 수가 manifest에 기록됨
+
+fixture EJS는 실제 `views/`와 공통 오류 view model을 사용하지만, production `server.js`에는
+`/__evidence__` 경로나 fixture 모듈을 mount하지 않는다. 따라서 이 90장은 상태별 반응형
+증거이며, 운영 결제사 round-trip·실계정 권한·운영 DB 검증을 대체하지 않는다.

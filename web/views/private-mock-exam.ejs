@@ -22,7 +22,8 @@
         },
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js" defer></script>
+    <%- include("partials/mathjax-runtime") %>
+    <script src="/js/fetch-error-message.js" defer></script>
     <script src="/js/private-mock-exam.js" defer></script>
   </head>
   <body class="private-mock-exam-body">
@@ -200,6 +201,13 @@
             data-quick-href="<%= examData.lobbyTools.quickPracticeHref %>"
             data-formula-href="<%= examData.lobbyTools.formulaHref || "" %>"
           ><%= examData.canStart ? "시험 시작" : "시작 시각 대기 중" %> <span aria-hidden="true">→</span></button>
+          <p
+            class="private-mock-submit-error"
+            role="alert"
+            aria-live="assertive"
+            data-private-mock-start-error
+            hidden
+          ></p>
         </section>
       <% } else { %>
         <section
