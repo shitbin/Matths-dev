@@ -1,0 +1,15 @@
+.DS_Store
+deliverables/
+*.xcarchive
+*.ipa
+DerivedData/
+node_modules/
+*.env
+.env.*
+!*.env.example
+*.p12
+*.pfx
+*.mobileprovision
+*.key
+*.pem
+
