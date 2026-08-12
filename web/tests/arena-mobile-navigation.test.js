@@ -40,6 +40,13 @@ const css = fs.readFileSync(path.join(repoRoot, "public/css/goat-arena.css"), "u
 assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.arena-mobile-navigation\s*\{[\s\S]*?grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
 assert.match(css, /\.arena-mobile-navigation > a,[\s\S]*?\.arena-mobile-navigation > button\s*\{[\s\S]*?min-width:\s*44px;[\s\S]*?min-height:\s*44px;/);
 
+const finalMobileOverride = css.lastIndexOf("@media (max-width: 560px)");
+const lateTabletNavigation = css.lastIndexOf("@media (max-width: 800px)");
+assert.ok(finalMobileOverride > lateTabletNavigation, "모바일 내비 숨김 규칙은 후반 800px HUD 규칙보다 뒤에 있어야 합니다.");
+const finalMobileCss = css.slice(finalMobileOverride);
+assert.match(finalMobileCss, /\.goat-arena-page \.arena-main-navigation\s*\{\s*display:\s*none;/);
+assert.match(finalMobileCss, /\.goat-arena-page \.arena-mobile-navigation\s*\{\s*display:\s*grid;/);
+
 const script = fs.readFileSync(path.join(repoRoot, "public/js/goat-arena-navigation.js"), "utf8");
 assert.match(script, /aria-expanded/);
 assert.match(script, /event\.key === "Escape"/);

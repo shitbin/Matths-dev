@@ -10104,6 +10104,16 @@ html {
 }
 
 @media (max-width: 560px) {
+  /* This final mobile override must stay after the later 800px HUD rules.
+     Otherwise both the six-item desktop nav and four-item mobile nav render. */
+  .goat-arena-page .arena-main-navigation {
+    display: none;
+  }
+
+  .goat-arena-page .arena-mobile-navigation {
+    display: grid;
+  }
+
   .arena-v2-shell,
   .goat-arena-page .arena-page-main,
   .goat-arena-page .arena-rulebook-main,
