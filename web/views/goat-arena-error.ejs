@@ -1,0 +1,41 @@
+<%
+  const diagnosticCode = typeof errorCode !== "undefined" && errorCode ? errorCode : `HTTP_${errorStatus}`;
+  const rankedShopDenied = diagnosticCode === "MAIN_SHOP_ACCESS_REQUIRED";
+  const statusTitle = rankedShopDenied ? "Ranked 상점은 Ranked 이용 중에 열립니다." : errorTitle;
+  const statusMessage = rankedShopDenied ? "현재 계정은 Unranked 상태입니다. Ranked 진입 조건을 마치면 상점의 분석·일정 기능을 이용할 수 있습니다." : errorMessage;
+  const primaryHref = rankedShopDenied ? "/goat-arena/sub" : returnHref;
+  const primaryLabel = rankedShopDenied ? "Unranked 진행 계속하기" : returnLabel;
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= errorTitle %> | GOAT Arena</title>
+    <link rel="stylesheet" href="/css/goat-arena.css" />
+    <%- include("partials/rank-motion-head") %>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  </head>
+  <body class="goat-arena-page arena-inner-page arena-state-page">
+    <a class="arena-skip-link" href="#arena-state-main">본문으로 바로가기</a>
+    <%- include("partials/goat-arena-navigation", { activeArenaPage, arenaUser }) %>
+    <main class="arena-error-main" id="arena-state-main">
+      <section class="arena-access-error-card" aria-labelledby="arena-state-title">
+        <p>이용 상태</p>
+        <h1 id="arena-state-title"><%= statusTitle %></h1>
+        <div class="arena-state-message"><%= statusMessage %></div>
+        <% if (rankedShopDenied) { %>
+          <dl class="arena-state-facts">
+            <div><dt>현재 상태</dt><dd>Unranked</dd></div>
+            <div><dt>다음 단계</dt><dd>페이백·사이클 조건 완료</dd></div>
+          </dl>
+        <% } %>
+        <div class="arena-error-actions">
+          <a class="arena-v2-primary" href="<%= primaryHref %>"><%= primaryLabel %></a>
+          <a class="arena-v2-secondary" href="<%= rankedShopDenied ? '/goat-arena/rules/main' : (typeof errorFaqHref !== 'undefined' && errorFaqHref ? errorFaqHref : `/faq?code=${errorStatus}#faq-error-${errorStatus}`) %>"><%= rankedShopDenied ? "Ranked 상점 이용 조건 보기" : "도움말 보기" %></a>
+        </div>
+        <details class="arena-technical-details"><summary>기술 정보 보기</summary><code><%= diagnosticCode %></code></details>
+      </section>
+    </main>
+  </body>
+</html>

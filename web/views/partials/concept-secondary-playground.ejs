@@ -1,0 +1,977 @@
+<%
+  const graphProfile =
+    typeof algebraGraphProfile !== "undefined"
+      ? algebraGraphProfile
+      : null;
+  const calculusExperience =
+    typeof isAdvancedCalculusExperience !==
+      "undefined" &&
+    isAdvancedCalculusExperience;
+  const calculusProfile =
+    typeof calculusPlaygroundProfile !==
+        "undefined" &&
+      calculusPlaygroundProfile
+      ? calculusPlaygroundProfile
+      : null;
+  const probabilityExperience =
+    typeof isProbabilityExperience !== "undefined" &&
+    isProbabilityExperience;
+  const probabilityKey =
+    typeof probabilityVisualKey !== "undefined"
+      ? probabilityVisualKey
+      : null;
+  const probabilityProfile =
+    typeof probabilityPlaygroundProfile !==
+      "undefined" &&
+    probabilityPlaygroundProfile
+      ? probabilityPlaygroundProfile
+      : {
+          modePrompt: "확인할 관점",
+          primary: {
+            label: "첫 번째 값",
+            min: 1,
+            max: 10,
+            step: 1,
+            value: 5,
+          },
+          secondary: {
+            label: "두 번째 값",
+            min: 1,
+            max: 10,
+            step: 1,
+            value: 5,
+          },
+          actionLabel: "다시 실행",
+        };
+  const commonMathExperience =
+    ["common-math-1", "common-math-2"].includes(course.id) &&
+    String(playgroundKey || "").startsWith("common-math-");
+  const commonMathVisualMode = commonMathExperience
+    ? lesson.dashboardPreview?.type || "formula"
+    : null;
+  const commonMathControlLabels =
+    commonMathVisualMode === "graph"
+      ? ["형태를 정하는 값 a", "위치를 바꾸는 값 b"]
+      : commonMathVisualMode === "area-model"
+        ? ["첫 번째 조건 a", "두 번째 조건 b"]
+        : ["식에 넣을 값 a", "비교할 값 b"];
+%>
+
+<% if (calculusExperience && calculusProfile) { %>
+  <div
+    class="limit-lab concept-specific-lab probability-lab calculus-lab"
+    data-calculus-mode="<%= calculusProfile.mode %>"
+  >
+    <aside class="lab-controls">
+      <div>
+        <p>확인할 관점</p>
+        <div class="mode-buttons">
+          <%
+            const calculusBlocks =
+              lesson.dashboardPreview?.blocks || [];
+            calculusBlocks.forEach(
+              (block, index) => {
+          %>
+            <button
+              type="button"
+              class="<%= index === 0 ? 'active' : '' %>"
+              data-calculus-view="<%= index %>"
+            >
+              <%= block.label %>
+            </button>
+          <%
+              }
+            );
+          %>
+        </div>
+      </div>
+
+      <label>
+        <span>
+          <b><%= calculusProfile.primary.label %></b>
+          <output id="calculus-primary-output">
+            <%= calculusProfile.primary.value %>
+          </output>
+        </span>
+        <input
+          id="calculus-primary"
+          type="range"
+          min="<%= calculusProfile.primary.min %>"
+          max="<%= calculusProfile.primary.max %>"
+          step="<%= calculusProfile.primary.step %>"
+          value="<%= calculusProfile.primary.value %>"
+        />
+      </label>
+
+      <label>
+        <span>
+          <b><%= calculusProfile.secondary.label %></b>
+          <output id="calculus-secondary-output">
+            <%= calculusProfile.secondary.value %>
+          </output>
+        </span>
+        <input
+          id="calculus-secondary"
+          type="range"
+          min="<%= calculusProfile.secondary.min %>"
+          max="<%= calculusProfile.secondary.max %>"
+          step="<%= calculusProfile.secondary.step %>"
+          value="<%= calculusProfile.secondary.value %>"
+        />
+      </label>
+
+      <button id="rerun-calculus-lab" type="button">
+        <%= calculusProfile.actionLabel %>
+      </button>
+
+      <div class="lab-tip">
+        <b>관찰 포인트</b>
+        <p id="calculus-tip">
+          두 값을 바꾸면 그래프와 식의 같은 부분이 어떻게
+          변하는지 확인해보세요.
+        </p>
+      </div>
+    </aside>
+
+    <div class="lab-visual">
+      <div class="lab-formula">
+        <span>현재 관계</span>
+        <strong id="calculus-formula">
+          <%= lesson.dashboardPreview?.formula || concept.title %>
+        </strong>
+      </div>
+
+      <div
+        class="limit-graph-wrap probability-visual-wrap calculus-graph-wrap"
+      >
+        <div
+          class="calculus-graph-toolbar"
+          role="group"
+          aria-label="그래프 확대 및 축소"
+        >
+          <button
+            type="button"
+            data-calculus-zoom="out"
+            aria-label="그래프 축소"
+            title="그래프 축소"
+          >−</button>
+          <output
+            id="calculus-zoom-status"
+            aria-live="polite"
+          >100%</output>
+          <button
+            type="button"
+            data-calculus-zoom="in"
+            aria-label="그래프 확대"
+            title="그래프 확대"
+          >+</button>
+          <button
+            type="button"
+            data-calculus-zoom="reset"
+            aria-label="그래프 배율 초기화"
+            title="그래프 배율 초기화"
+          >↺</button>
+        </div>
+        <svg
+          id="calculus-playground-visual"
+          viewBox="0 0 720 430"
+          role="img"
+          tabindex="0"
+          aria-label="<%= concept.title %>의 값을 조작하는 좌표평면"
+        ></svg>
+      </div>
+
+      <div class="limit-readout probability-readout">
+        <div>
+          <span>현재 설정</span>
+          <strong id="calculus-state">-</strong>
+        </div>
+        <div>
+          <span>그래프에서 읽기</span>
+          <strong id="calculus-value">-</strong>
+        </div>
+        <div class="limit-verdict">
+          <span>관찰 결과</span>
+          <strong id="calculus-verdict">-</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else if (probabilityExperience) { %>
+  <div
+    class="limit-lab concept-specific-lab probability-lab"
+    data-probability-visual="<%= probabilityKey %>"
+  >
+    <aside class="lab-controls">
+      <div>
+        <p><%= probabilityProfile.modePrompt %></p>
+
+        <div class="mode-buttons">
+          <%
+            const probabilityBlocks =
+              lesson.dashboardPreview?.blocks || [];
+
+            probabilityBlocks.forEach(
+              (block, index) => {
+          %>
+            <button
+              type="button"
+              class="<%= index === 0 ? 'active' : '' %>"
+              data-probability-mode="<%= index %>"
+            >
+              <%= block.label %>
+            </button>
+          <%
+              }
+            );
+          %>
+        </div>
+      </div>
+
+      <label>
+        <span>
+          <b id="probability-primary-label">
+            <%= probabilityProfile.primary.label %>
+          </b>
+          <output id="probability-primary-output">
+            <%= probabilityProfile.primary.value %>
+          </output>
+        </span>
+        <input
+          id="probability-primary"
+          type="range"
+          min="<%= probabilityProfile.primary.min %>"
+          max="<%= probabilityProfile.primary.max %>"
+          step="<%= probabilityProfile.primary.step %>"
+          value="<%= probabilityProfile.primary.value %>"
+        />
+      </label>
+
+      <label>
+        <span>
+          <b id="probability-secondary-label">
+            <%= probabilityProfile.secondary.label %>
+          </b>
+          <output id="probability-secondary-output">
+            <%
+              const secondaryLabels =
+                probabilityProfile.secondary.labels;
+              const initialSecondaryLabel =
+                Array.isArray(secondaryLabels)
+                  ? secondaryLabels[
+                      probabilityProfile.secondary.value
+                    ]
+                  : probabilityProfile.secondary.scale
+                    ? (
+                        probabilityProfile.secondary.value *
+                        probabilityProfile.secondary.scale
+                      ).toFixed(
+                        probabilityProfile.secondary.digits ?? 2
+                      )
+                    : probabilityProfile.secondary.value;
+            %>
+            <%= initialSecondaryLabel %>
+          </output>
+        </span>
+        <input
+          id="probability-secondary"
+          type="range"
+          min="<%= probabilityProfile.secondary.min %>"
+          max="<%= probabilityProfile.secondary.max %>"
+          step="<%= probabilityProfile.secondary.step %>"
+          value="<%= probabilityProfile.secondary.value %>"
+        />
+      </label>
+
+      <button id="rerun-probability-simulation" type="button">
+        <%= probabilityProfile.actionLabel %>
+      </button>
+
+      <div class="lab-tip">
+        <b>관찰 포인트</b>
+        <p id="probability-tip">
+          값을 바꾸면 그림의 영역·막대·구간이 어떤 규칙으로
+          변하는지 확인해보세요.
+        </p>
+      </div>
+    </aside>
+
+    <div class="lab-visual">
+      <div class="lab-formula">
+        <span>현재 관계</span>
+        <strong id="probability-formula">
+          <%= lesson.dashboardPreview?.formula || concept.title %>
+        </strong>
+      </div>
+
+      <div class="limit-graph-wrap probability-visual-wrap">
+        <svg
+          id="probability-playground-visual"
+          viewBox="0 0 720 430"
+          role="img"
+          aria-label="<%= concept.title %>의 값을 조작하는 시각화"
+        ></svg>
+      </div>
+
+      <div class="limit-readout probability-readout">
+        <div>
+          <span>현재 설정</span>
+          <strong id="probability-state">-</strong>
+        </div>
+        <div>
+          <span>그림에서 읽기</span>
+          <strong id="probability-value">-</strong>
+        </div>
+        <div class="limit-verdict">
+          <span>관찰 결과</span>
+          <strong id="probability-verdict">-</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else if (playgroundKey === "limit-calculation") { %>
+  <div class="limit-lab concept-specific-lab calculation-lab">
+    <aside class="lab-controls">
+      <div>
+        <p>계산 상황</p>
+
+        <div class="mode-buttons">
+          <button
+            type="button"
+            class="active"
+            data-calculation-mode="factor"
+          >
+            인수분해와 약분
+          </button>
+
+          <button
+            type="button"
+            data-calculation-mode="rationalize"
+          >
+            무리식 유리화
+          </button>
+
+          <button
+            type="button"
+            data-calculation-mode="infinity"
+          >
+            최고차항 비교
+          </button>
+        </div>
+      </div>
+
+      <label>
+        <span>
+          예제의 수 a
+          <output id="calculation-a-output">2</output>
+        </span>
+
+        <input
+          id="calculation-a"
+          type="range"
+          min="1"
+          max="5"
+          step="1"
+          value="2"
+        />
+      </label>
+
+      <button id="advance-calculation" type="button">
+        다음 계산 단계 보기
+      </button>
+
+      <div class="lab-tip">
+        <b>관찰 포인트</b>
+        <p id="calculation-tip">
+          먼저 대입한 결과가 0/0이면 공통 인자를 찾아
+          식을 단순하게 만듭니다.
+        </p>
+      </div>
+    </aside>
+
+    <div class="lab-visual">
+      <div class="lab-formula">
+        <span>현재 예제</span>
+        <strong id="calculation-formula"></strong>
+      </div>
+
+      <div
+        class="transformation-stage"
+        aria-live="polite"
+      >
+        <article
+          class="transformation-card active"
+          data-calculation-stage="0"
+        >
+          <small>01 · 직접 대입</small>
+          <strong id="calculation-stage-0"></strong>
+          <p>식의 형태를 먼저 확인합니다.</p>
+        </article>
+
+        <span aria-hidden="true">→</span>
+
+        <article
+          class="transformation-card"
+          data-calculation-stage="1"
+        >
+          <small>02 · 식 변형</small>
+          <strong id="calculation-stage-1"></strong>
+          <p>막고 있는 구조를 없앱니다.</p>
+        </article>
+
+        <span aria-hidden="true">→</span>
+
+        <article
+          class="transformation-card"
+          data-calculation-stage="2"
+        >
+          <small>03 · 다시 대입</small>
+          <strong id="calculation-stage-2"></strong>
+          <p>단순해진 식에서 값을 구합니다.</p>
+        </article>
+      </div>
+
+      <div class="limit-readout calculation-readout">
+        <div>
+          <span>현재 단계</span>
+          <strong id="calculation-step-output">1 / 3</strong>
+        </div>
+
+        <div>
+          <span>사용한 핵심</span>
+          <strong id="calculation-method-output">직접 대입</strong>
+        </div>
+
+        <div class="limit-verdict">
+          <span>판단</span>
+          <strong id="calculation-verdict">
+            0/0은 계산을 멈추라는 뜻이 아닙니다.
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else if (playgroundKey === "continuity-builder") { %>
+  <div class="limit-lab concept-specific-lab continuity-lab">
+    <aside class="lab-controls">
+      <div>
+        <p>빠른 예시</p>
+
+        <div class="mode-buttons">
+          <button
+            type="button"
+            class="active"
+            data-continuity-preset="continuous"
+          >
+            연속인 상태
+          </button>
+
+          <button
+            type="button"
+            data-continuity-preset="hole"
+          >
+            함수값만 다른 상태
+          </button>
+
+          <button
+            type="button"
+            data-continuity-preset="jump"
+          >
+            좌우 극한이 다른 상태
+          </button>
+        </div>
+      </div>
+
+      <label>
+        <span>
+          좌극한
+          <output id="continuity-left-output">2</output>
+        </span>
+
+        <input
+          id="continuity-left"
+          type="range"
+          min="-3"
+          max="4"
+          step="1"
+          value="2"
+        />
+      </label>
+
+      <label>
+        <span>
+          우극한
+          <output id="continuity-right-output">2</output>
+        </span>
+
+        <input
+          id="continuity-right"
+          type="range"
+          min="-3"
+          max="4"
+          step="1"
+          value="2"
+        />
+      </label>
+
+      <label>
+        <span>
+          실제 함수값 f(a)
+          <output id="continuity-point-output">2</output>
+        </span>
+
+        <input
+          id="continuity-point"
+          type="range"
+          min="-3"
+          max="4"
+          step="1"
+          value="2"
+        />
+      </label>
+
+      <div class="lab-tip">
+        <b>연속의 세 조건</b>
+        <p>
+          함수값이 존재하고, 양쪽 극한이 같으며, 그 극한값이
+          함수값과 같아야 합니다.
+        </p>
+      </div>
+    </aside>
+
+    <div class="lab-visual">
+      <div class="lab-formula">
+        <span>x = 0에서 확인</span>
+        <strong id="continuity-formula"></strong>
+      </div>
+
+      <div class="limit-graph-wrap">
+        <svg
+          id="continuity-graph"
+          viewBox="0 0 720 430"
+          role="img"
+          aria-label="좌극한, 우극한, 함수값을 비교하는 좌표평면"
+        ></svg>
+
+        <span
+          class="graph-zoom-status"
+          aria-hidden="true"
+        >
+          휠 줌
+          <output id="continuity-zoom-output">100%</output>
+        </span>
+      </div>
+
+      <div class="limit-readout continuity-readout">
+        <div>
+          <span>1. 함수값</span>
+          <strong id="continuity-value-check">존재</strong>
+        </div>
+
+        <div>
+          <span>2. 양쪽 극한</span>
+          <strong id="continuity-limit-check">같음</strong>
+        </div>
+
+        <div class="limit-verdict">
+          <span>3. 최종 판정</span>
+          <strong id="continuity-verdict">x = 0에서 연속입니다.</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else if (playgroundKey === "continuous-properties") { %>
+  <div class="limit-lab concept-specific-lab property-lab">
+    <aside class="lab-controls">
+      <div>
+        <p>확인할 성질</p>
+
+        <div class="mode-buttons">
+          <button
+            type="button"
+            class="active"
+            data-property-mode="intermediate"
+          >
+            중간값 정리
+          </button>
+
+          <button
+            type="button"
+            data-property-mode="extreme"
+          >
+            최대·최소 정리
+          </button>
+        </div>
+      </div>
+
+      <label id="property-target-control">
+        <span>
+          중간 높이 k
+          <output id="property-target-output">1</output>
+        </span>
+
+        <input
+          id="property-target"
+          type="range"
+          min="-3"
+          max="4"
+          step="0.25"
+          value="1"
+        />
+      </label>
+
+      <button id="animate-property" type="button">
+        교점이 생기는 장면 보기
+      </button>
+
+      <div class="lab-tip">
+        <b>정리의 전제</b>
+        <p>
+          닫힌구간 전체에서 그래프가 끊기지 않는다는 조건이
+          먼저 필요합니다.
+        </p>
+      </div>
+    </aside>
+
+    <div class="lab-visual">
+      <div class="lab-formula">
+        <span>닫힌구간 [-4, 4]</span>
+        <strong id="property-formula"></strong>
+      </div>
+
+      <div class="limit-graph-wrap">
+        <svg
+          id="continuous-property-graph"
+          viewBox="0 0 720 430"
+          role="img"
+          aria-label="연속함수의 중간값과 최대·최소를 확인하는 좌표평면"
+        ></svg>
+
+        <span
+          class="graph-zoom-status"
+          aria-hidden="true"
+        >
+          휠 줌
+          <output id="property-zoom-output">100%</output>
+        </span>
+      </div>
+
+      <div class="limit-readout property-readout">
+        <div>
+          <span>구간의 함수값 범위</span>
+          <strong id="property-range-output">-3.2 ≤ f(x) ≤ 4.2</strong>
+        </div>
+
+        <div>
+          <span>찾은 위치</span>
+          <strong id="property-c-output">c ≈ 0.4</strong>
+        </div>
+
+        <div class="limit-verdict">
+          <span>관찰 결과</span>
+          <strong id="property-verdict">
+            그래프가 y = k를 적어도 한 번 지납니다.
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else if (graphProfile) { %>
+  <div
+    class="limit-lab concept-specific-lab algebra-graph-lab"
+    data-algebra-graph="<%= graphProfile.key %>"
+  >
+    <aside class="lab-controls algebra-graph-controls">
+      <div>
+        <p>그래프 상황</p>
+
+        <div class="mode-buttons">
+          <% graphProfile.modes.forEach((mode, index) => { %>
+            <button
+              type="button"
+              class="<%= index === 0 ? 'active' : '' %>"
+              data-algebra-graph-mode="<%= mode.id %>"
+            >
+              <%= mode.label %>
+            </button>
+          <% }) %>
+        </div>
+      </div>
+
+      <% graphProfile.controls.forEach((control) => { %>
+        <label>
+          <span>
+            <%= control.label %>
+            <output
+              id="algebra-graph-<%= control.id %>-output"
+              for="algebra-graph-<%= control.id %>"
+            >
+              <%= control.value %>
+            </output>
+          </span>
+
+          <input
+            id="algebra-graph-<%= control.id %>"
+            type="range"
+            min="<%= control.min %>"
+            max="<%= control.max %>"
+            step="<%= control.step %>"
+            value="<%= control.value %>"
+          />
+        </label>
+      <% }) %>
+
+      <div class="lab-tip">
+        <b>관찰 포인트</b>
+        <p id="algebra-graph-tip">
+          값을 움직이면 그래프의 핵심 관계가 바로 갱신됩니다.
+        </p>
+      </div>
+    </aside>
+
+    <div class="lab-visual">
+      <div class="lab-formula">
+        <span>현재 관계</span>
+        <strong id="algebra-graph-formula">
+          <%= lesson.dashboardPreview?.formula || concept.title %>
+        </strong>
+      </div>
+
+      <div class="limit-graph-wrap algebra-graph-wrap">
+        <svg
+          id="algebra-playground-graph"
+          class="algebra-graph-svg"
+          viewBox="0 0 760 400"
+          role="img"
+          aria-label="<%= concept.title %>의 값을 조절할 수 있는 그래프"
+        ></svg>
+
+        <span
+          class="graph-zoom-status"
+          aria-hidden="true"
+        >
+          휠 줌
+          <output id="algebra-graph-zoom-output">100%</output>
+        </span>
+      </div>
+
+      <div class="limit-readout algebra-graph-readout">
+        <div>
+          <span>현재 설정</span>
+          <strong id="algebra-graph-state">-</strong>
+        </div>
+
+        <div>
+          <span>그래프에서 읽기</span>
+          <strong id="algebra-graph-value">-</strong>
+        </div>
+
+        <div class="limit-verdict">
+          <span>관찰 결과</span>
+          <strong id="algebra-graph-verdict">-</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else if (commonMathExperience) { %>
+  <div
+    class="limit-lab concept-specific-lab common-math-lab"
+    data-common-math-course="<%= course.id %>"
+    data-common-math-unit="<%= unit.id %>"
+    data-common-math-concept="<%= concept.id %>"
+    data-common-math-visual="<%= commonMathVisualMode %>"
+  >
+    <aside class="lab-controls">
+      <div>
+        <p>확인할 관점</p>
+        <div class="mode-buttons">
+          <% (lesson.dashboardPreview?.blocks || []).forEach((block, index) => { %>
+            <button type="button" class="<%= index === 0 ? 'active' : '' %>" data-common-math-mode="<%= index %>">
+              <%= block.label %>
+            </button>
+          <% }) %>
+        </div>
+      </div>
+      <label>
+        <span><b><%= commonMathControlLabels[0] %></b><output id="common-math-primary-output">3</output></span>
+        <input id="common-math-primary" type="range" min="1" max="8" step="1" value="3" />
+      </label>
+      <label>
+        <span><b><%= commonMathControlLabels[1] %></b><output id="common-math-secondary-output">2</output></span>
+        <input id="common-math-secondary" type="range" min="-5" max="5" step="1" value="2" />
+      </label>
+      <button id="rerun-common-math" type="button">현재 조건 다시 확인</button>
+      <div class="lab-tip"><b>관찰 포인트</b><p id="common-math-tip"><%= lesson.steps?.[1]?.description || lesson.keyTakeaway %></p></div>
+    </aside>
+    <div class="lab-visual">
+      <div class="lab-formula"><span>현재 핵심 관계</span><strong id="common-math-formula"><%= lesson.dashboardPreview?.formula || concept.title %></strong></div>
+      <div class="limit-graph-wrap common-math-visual-wrap <%= commonMathVisualMode === 'formula' ? 'is-formula-mode' : '' %>">
+        <% if (commonMathVisualMode === "formula") { %>
+          <div
+            id="common-math-formula-visual"
+            class="common-math-formula-visual"
+            role="img"
+            aria-label="<%= concept.title %>의 식 정리 과정"
+          ></div>
+        <% } else { %>
+          <svg
+            id="common-math-playground-visual"
+            viewBox="0 0 720 430"
+            role="img"
+            preserveAspectRatio="xMidYMid meet"
+            aria-label="<%= concept.title %>에 필요한 <%= commonMathVisualMode === 'graph' ? '좌표 그래프' : '수학 도식' %>"
+          ></svg>
+        <% } %>
+      </div>
+      <div class="limit-readout">
+        <div><span>현재 조건</span><strong id="common-math-state">a=3, b=2</strong></div>
+        <div><span><%= commonMathVisualMode === "graph" ? "그래프에서 읽기" : commonMathVisualMode === "area-model" ? "도식에서 읽기" : "식에서 읽기" %></span><strong id="common-math-value"><%= concept.title %></strong></div>
+        <div class="limit-verdict"><span>관찰 결과</span><strong id="common-math-verdict"><%= lesson.keyTakeaway %></strong></div>
+      </div>
+    </div>
+  </div>
+<% } else if (String(playgroundKey).startsWith("algebra-")) { %>
+  <div
+    class="limit-lab concept-specific-lab calculation-lab algebra-lab"
+    data-algebra-concept="<%= concept.id %>"
+  >
+    <aside class="lab-controls">
+      <div>
+        <p>확인할 핵심</p>
+
+        <div class="mode-buttons">
+          <%
+            const previewBlocks =
+              lesson.dashboardPreview?.blocks || [];
+
+            previewBlocks.forEach(
+              (block, index) => {
+          %>
+            <button
+              type="button"
+              class="<%= index === 0 ? 'active' : '' %>"
+              data-algebra-mode="<%= index %>"
+            >
+              <%= block.label %>
+            </button>
+          <%
+              }
+            );
+          %>
+        </div>
+      </div>
+
+      <label>
+        <span>
+          예제의 수
+          <output id="algebra-value-output">3</output>
+        </span>
+
+        <input
+          id="algebra-value"
+          type="range"
+          min="2"
+          max="6"
+          step="1"
+          value="3"
+        />
+      </label>
+
+      <button id="advance-algebra" type="button">
+        다음 계산 단계 보기
+      </button>
+
+      <div class="lab-tip">
+        <b>관찰 포인트</b>
+        <p id="algebra-tip">
+          값을 바꿔도 정의와 계산 법칙이 같은 순서로
+          적용되는지 확인해보세요.
+        </p>
+      </div>
+    </aside>
+
+    <div class="lab-visual">
+      <div class="lab-formula">
+        <span>현재 예제</span>
+        <strong id="algebra-formula">
+          <%= lesson.dashboardPreview?.formula || concept.title %>
+        </strong>
+      </div>
+
+      <div
+        class="transformation-stage"
+        aria-live="polite"
+      >
+        <%
+          (lesson.steps || [])
+            .slice(0, 3)
+            .forEach((step, index) => {
+        %>
+          <% if (index > 0) { %>
+            <span aria-hidden="true">→</span>
+          <% } %>
+
+          <article
+            class="transformation-card <%= index === 0 ? 'active' : '' %>"
+            data-algebra-stage="<%= index %>"
+          >
+            <small>
+              <%= String(index + 1).padStart(2, "0") %>
+              · <%= step.title %>
+            </small>
+            <strong id="algebra-stage-<%= index %>">
+              <%= index === 0 ? "정의를 확인합니다." : "?" %>
+            </strong>
+            <p><%= step.description %></p>
+          </article>
+        <%
+            });
+        %>
+      </div>
+
+      <div class="limit-readout calculation-readout">
+        <div>
+          <span>현재 단계</span>
+          <strong id="algebra-step-output">1 / 3</strong>
+        </div>
+
+        <div>
+          <span>사용한 핵심</span>
+          <strong id="algebra-method-output">
+            <%= previewBlocks[0]?.label || "정의" %>
+          </strong>
+        </div>
+
+        <div class="limit-verdict">
+          <span>계산 결과</span>
+          <strong id="algebra-verdict">
+            값을 움직여 예제를 바꿔보세요.
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <section class="secondary-concept-board" aria-labelledby="secondary-concept-board-title">
+    <header>
+      <div>
+        <p>개념 탐색판</p>
+        <h4 id="secondary-concept-board-title"><%= concept.title %>의 판단 순서</h4>
+      </div>
+      <span><%= lesson.estimatedMinutes || 10 %>분</span>
+    </header>
+    <p class="secondary-concept-board-summary"><%= lesson.summary || concept.achievementStandard %></p>
+    <ol>
+      <% (lesson.steps || []).slice(0, 4).forEach((step, index) => { %>
+        <li>
+          <b><%= String(index + 1).padStart(2, "0") %></b>
+          <div><strong><%= step.title %></strong><span><%= step.description %></span></div>
+        </li>
+      <% }) %>
+    </ol>
+    <footer>
+      <strong>마지막 확인</strong>
+      <span><%= lesson.keyTakeaway || concept.achievementStandard %></span>
+    </footer>
+  </section>
+<% } %>

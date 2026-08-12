@@ -1,0 +1,243 @@
+const assert = require("node:assert/strict");
+const { createHash } = require("node:crypto");
+const fs = require("node:fs");
+const path = require("node:path");
+const ejs = require("ejs");
+
+const root = path.resolve(__dirname, "..");
+const viewRoot = path.join(root, "views");
+const cssRoot = path.join(root, "public", "css");
+const publicRoot = path.join(root, "public");
+
+const officialRankCrestHashes = Object.freeze({
+  bronze: "96e177bc1317ee44409c61f0956811675450311636d897b5316af968b746a1f6",
+  silver: "08802d38246d2bb80484295a5bc07c534935954d271935942b551ac8bff1b5dd",
+  gold: "b03d92aac1a398248c1bbece7faa60aa4a0244bb9e1ca346686c851b8d1e8eba",
+  platinum: "032c6514f91adaeedc2cbe14f9616438f0722a4f5d9782ac62d50dfe9e51ea50",
+  emerald: "35e1d8c27b70ad58e4bb7e17e472e2890e555b26088fac34e362e98368628283",
+  diamond: "98f25ea0ef8f7f0e4cd85deffe44853a4be7bf76a40d93133d7c64dab90133f9",
+  master: "f5c89e651812c5ec5e0d3ebfff02c1dd8eb3f5c1bb7477638cd271ee79b6e68b",
+  grandmaster: "f19eb7621ab45846e0eec9b97e18ad117d3a0cfb75a007e9557411a4581cb492",
+  challenger: "85248170c874e6d3dd49bd91e0be1e7a132b6c14e0466fb5f619b23a68c45a4a",
+});
+
+for (const [tier, expectedHash] of Object.entries(officialRankCrestHashes)) {
+  const asset = path.join(publicRoot, "images", "ranks", `${tier}.png`);
+  assert.ok(fs.existsSync(asset), `${tier} 공식 휘장 파일이 없습니다.`);
+  const actualHash = createHash("sha256").update(fs.readFileSync(asset)).digest("hex");
+  assert.equal(actualHash, expectedHash, `${tier} 휘장은 제공받은 원본 PNG여야 합니다.`);
+}
+
+function filesIn(directory, extension) {
+  return fs
+    .readdirSync(directory, {
+      withFileTypes: true,
+    })
+    .flatMap((entry) => {
+      const absolute = path.join(
+        directory,
+        entry.name
+      );
+      if (entry.isDirectory()) {
+        return filesIn(absolute, extension);
+      }
+      return entry.name.endsWith(extension)
+        ? [absolute]
+        : [];
+    });
+}
+
+const viewFiles = filesIn(viewRoot, ".ejs");
+for (const filename of viewFiles) {
+  const markup = fs.readFileSync(
+    filename,
+    "utf8"
+  );
+  ejs.compile(
+    markup,
+    { filename }
+  );
+
+  if (/<!doctype html>/i.test(markup)) {
+    assert.match(
+      markup,
+      /<link[^>]+rel=["'](?:shortcut )?icon["']/i,
+      `favicon이 없는 화면: ${path.relative(
+        root,
+        filename
+      )}`
+    );
+  }
+
+  for (const match of markup.matchAll(
+    /<link[^>]+rel=["']stylesheet["'][^>]+href=["'](\/css\/[^"']+)["']/gi
+  )) {
+    const stylesheet = path.join(
+      publicRoot,
+      match[1].split("?")[0]
+    );
+    assert.ok(
+      fs.existsSync(stylesheet),
+      `존재하지 않는 stylesheet: ${match[1]} (${path.relative(
+        root,
+        filename
+      )})`
+    );
+  }
+}
+
+const cssFiles = filesIn(cssRoot, ".css");
+const css = cssFiles
+  .map((filename) =>
+    fs.readFileSync(filename, "utf8")
+  )
+  .join("\n");
+
+assert.doesNotMatch(
+  css,
+  /rank-crests-(?:grid|v2)/i,
+  "화면은 임의 편집한 통합 휘장 이미지가 아니라 티어별 공식 PNG를 사용해야 합니다."
+);
+
+assert.doesNotMatch(
+  css,
+  /font-size:\s*(?:[0-9]|1[01])(?:\.[0-9]+)?px\b/,
+  "학생·관리자 화면의 고정 px 글자는 최소 12px이어야 합니다."
+);
+assert.doesNotMatch(
+  css,
+  /font-size:\s*0?\.(?:[0-6][0-9]*|7(?:[0-4][0-9]*)?)rem\b/,
+  "기본 16px 기준 고정 rem 글자는 최소 .75rem(12px)이어야 합니다."
+);
+assert.doesNotMatch(
+  css,
+  /font-size:\s*clamp\(\s*(?:[0-9]|1[01])px\b/,
+  "clamp()의 최소 글자 크기도 12px 이상이어야 합니다."
+);
+
+const publicNavigationCss = fs.readFileSync(
+  path.join(cssRoot, "public-navigation.css"),
+  "utf8"
+);
+assert.match(
+  publicNavigationCss,
+  /@media\s*\(max-width:\s*1100px\)/,
+  "공개 Navbar는 중간 화면 폭에서 메뉴 버튼이 삐져나오기 전에 축소 메뉴로 전환해야 합니다."
+);
+
+const adminCss = fs.readFileSync(
+  path.join(cssRoot, "admin.css"),
+  "utf8"
+);
+assert.match(
+  adminCss,
+  /@media\s*\(max-width:\s*1180px\)/,
+  "관리자 Navbar는 1180px 이하에서 두 줄 레이아웃을 사용해야 합니다."
+);
+
+for (const filename of cssFiles) {
+  const source = fs.readFileSync(
+    filename,
+    "utf8"
+  );
+  for (const match of source.matchAll(
+    /url\(\s*["']?(\/[^"')?#]+)[^"')]*["']?\s*\)/gi
+  )) {
+    const asset = path.join(
+      publicRoot,
+      match[1]
+    );
+    assert.ok(
+      fs.existsSync(asset),
+      `CSS가 참조하는 파일이 없음: ${match[1]} (${path.relative(
+        root,
+        filename
+      )})`
+    );
+  }
+}
+
+const registerMarkup = fs.readFileSync(
+  path.join(viewRoot, "register.ejs"),
+  "utf8"
+);
+const realNameIndex =
+  registerMarkup.indexOf('id="realName"');
+const birthDateIndex =
+  registerMarkup.indexOf('id="birthDate"');
+const nicknameIndex =
+  registerMarkup.indexOf('id="name"');
+assert.ok(
+  realNameIndex >= 0 &&
+    birthDateIndex > realNameIndex &&
+    nicknameIndex > birthDateIndex,
+  "회원가입 생년월일은 실명 다음, 닉네임 전에 있어야 합니다."
+);
+
+const auditedViews = [
+  "error.ejs",
+  "register.ejs",
+  "intro.ejs",
+  "admin-arena-audit.ejs",
+  "admin-data-analysis.ejs",
+  "goat-arena.ejs",
+  "goat-arena-division.ejs",
+  "goat-arena-profile.ejs",
+  "goat-arena-rankings.ejs",
+  "partials/goat-arena-navigation.ejs",
+  "partials/rank-crest.ejs",
+  "partials/tier-ranking-pools.ejs",
+];
+const structuralClasses = new Set([
+  "active",
+  "is-me",
+]);
+const missing = new Set();
+
+for (const relative of auditedViews) {
+  const markup = fs.readFileSync(
+    path.join(viewRoot, relative),
+    "utf8"
+  );
+  const attributes = markup.matchAll(
+    /class\s*=\s*"([^"]+)"/g
+  );
+  for (const attribute of attributes) {
+    const staticValue = attribute[1].replace(
+      /<%[\s\S]*?%>/g,
+      " "
+    );
+    for (const className of staticValue.split(/\s+/)) {
+      if (
+        !/^[a-z][a-z0-9_-]*$/i.test(
+          className
+        ) ||
+        className.endsWith("-") ||
+        structuralClasses.has(className)
+      ) {
+        continue;
+      }
+      const selector = new RegExp(
+        `\\.${className.replace(
+          /[-/\\^$*+?.()|[\]{}]/g,
+          "\\$&"
+        )}(?![a-zA-Z0-9_-])`
+      );
+      if (!selector.test(css)) {
+        missing.add(className);
+      }
+    }
+  }
+}
+
+assert.deepEqual(
+  [...missing].sort(),
+  [],
+  `스타일 정의가 없는 정적 class: ${[
+    ...missing,
+  ].sort().join(", ")}`
+);
+
+console.log(
+  `UI verification passed: ${viewFiles.length} EJS templates compiled and audited styles are present`
+);

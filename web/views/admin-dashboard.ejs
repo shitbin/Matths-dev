@@ -1,0 +1,193 @@
+<%
+  const formatDate = (date) =>
+    new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul",
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(date));
+  const inquiryStatus = {
+    pending: "접수",
+    in_review: "확인 중",
+    replied: "답변 완료",
+    closed: "종료",
+  };
+  const kstDateParts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .formatToParts(new Date())
+      .map((part) => [part.type, part.value])
+  );
+  const kstToday = [
+    kstDateParts.year,
+    kstDateParts.month,
+    kstDateParts.day,
+  ].join("-");
+  const announcementInput =
+    typeof oldInput === "object" && oldInput
+      ? oldInput
+      : {};
+  const hasAnnouncementInput =
+    Object.keys(announcementInput).length > 0;
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>관리자 운영센터 | Matths</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+    <link rel="stylesheet" href="/css/brand.css" />
+    <link rel="stylesheet" href="/css/admin-v2.css" />
+    <link rel="stylesheet" href="/css/product-refresh.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  </head>
+  <body class="admin-page">
+    <%- include("partials/admin-navigation", { activePage: "dashboard" }) %>
+    <main class="admin-main">
+      <header class="admin-heading">
+        <div>
+          <p>운영 현황</p>
+          <h1>관리자 운영센터</h1>
+          <span>공지, 문의, 자료와 사용자 상태를 한곳에서 관리합니다.</span>
+        </div>
+      </header>
+
+      <% if (feedback) { %>
+        <div class="admin-feedback" role="status"><%= feedback %></div>
+      <% } %>
+      <% if (error) { %>
+        <div class="admin-feedback admin-feedback--error" role="alert">
+          <span aria-hidden="true">!</span>
+          <%= error %>
+        </div>
+      <% } %>
+
+      <section class="admin-stat-grid" aria-label="운영 요약">
+        <article><span>활성 학생</span><strong><%= adminData.stats.activeUsers %></strong></article>
+        <article><span>활성 학부모</span><strong><%= adminData.stats.activeParents %></strong></article>
+        <article><span>미처리 문의</span><strong><%= adminData.stats.pendingInquiries %></strong></article>
+        <article><span>공개 공지</span><strong><%= adminData.stats.publishedAnnouncements %></strong></article>
+        <article><span>아카이브</span><strong><%= adminData.stats.archiveItems %><small>개 · 폴더 <%= adminData.stats.archiveFolders %></small></strong></article>
+      </section>
+
+      <section class="admin-panel admin-revenue-panel" data-admin-revenue>
+        <div class="admin-panel-heading">
+          <div><p>결제 원장 요약</p><h2>현재 매출 지표</h2></div>
+          <span>15초마다 자동 갱신 · 결제 승인·취소·환불 원장 기준 · 비용 제외 전</span>
+        </div>
+        <div class="admin-stat-grid">
+          <article><span>현재 순매출</span><strong data-revenue="netRevenue"><%= Number(adminData.revenue.netRevenue || 0).toLocaleString("ko-KR") %><small>원</small></strong></article>
+          <article><span>오늘 승인 매출</span><strong data-revenue="todayRevenue"><%= Number(adminData.revenue.todayRevenue || 0).toLocaleString("ko-KR") %><small>원</small></strong></article>
+          <article><span>누적 승인액</span><strong data-revenue="grossApproved"><%= Number(adminData.revenue.grossApproved || 0).toLocaleString("ko-KR") %><small>원</small></strong></article>
+          <article><span>환불·취소</span><strong data-revenue="deductions"><%= Number((adminData.revenue.refunded || 0) + (adminData.revenue.cancelled || 0)).toLocaleString("ko-KR") %><small>원</small></strong></article>
+        </div>
+        <small data-revenue-updated>마지막 갱신 <%= new Date(adminData.revenue.updatedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) %></small>
+      </section>
+      <script>
+        (() => {
+          const root = document.querySelector("[data-admin-revenue]");
+          if (!root) return;
+          const format = (value) => `${Number(value || 0).toLocaleString("ko-KR")}<small>원</small>`;
+          const refresh = async () => {
+            const response = await fetch("/api/admin/revenue", { headers: { Accept: "application/json" } });
+            if (!response.ok) return;
+            const { revenue } = await response.json();
+            ["netRevenue", "todayRevenue", "grossApproved"].forEach((key) => {
+              const node = root.querySelector(`[data-revenue="${key}"]`);
+              if (node) node.innerHTML = format(revenue[key]);
+            });
+            const deductions = root.querySelector('[data-revenue="deductions"]');
+            if (deductions) deductions.innerHTML = format(Number(revenue.refunded || 0) + Number(revenue.cancelled || 0));
+            const updated = root.querySelector("[data-revenue-updated]");
+            if (updated) updated.textContent = `마지막 갱신 ${new Date(revenue.updatedAt).toLocaleString("ko-KR")}`;
+          };
+          window.setInterval(() => refresh().catch(() => {}), 15000);
+        })();
+      </script>
+
+      <div class="admin-dashboard-grid">
+        <section class="admin-panel">
+          <div class="admin-panel-heading">
+            <div><p>공지 작성</p><h2>공지 발표</h2></div>
+          </div>
+          <form class="admin-form" action="/admin/announcements" method="POST">
+            <label>
+              <span>운영 게시판 분류</span>
+              <select name="boardCategory">
+                <option value="notice" <%= announcementInput.boardCategory === "notice" ? "selected" : "" %>>일반 공지</option>
+                <option value="rules" <%= announcementInput.boardCategory === "rules" ? "selected" : "" %>>규칙</option>
+                <option value="policies" <%= announcementInput.boardCategory === "policies" ? "selected" : "" %>>방침</option>
+                <option value="manuals" <%= announcementInput.boardCategory === "manuals" ? "selected" : "" %>>설명서</option>
+                <option value="inquiry-rules" <%= announcementInput.boardCategory === "inquiry-rules" ? "selected" : "" %>>문의 규칙</option>
+              </select>
+            </label>
+            <label><span>제목</span><input name="title" minlength="2" maxlength="120" value="<%= announcementInput.title || "" %>" required /></label>
+            <label><span>내용</span><textarea name="content" rows="7" minlength="5" maxlength="5000" required><%= announcementInput.content || "" %></textarea></label>
+            <label>
+              <span>대시보드 노출 종료일 <small>선택한 날짜의 자정 직전까지 표시 · 비워두면 직접 내릴 때까지 · KST 기준</small></span>
+              <input
+                type="date"
+                name="dashboardEndDate"
+                min="<%= kstToday %>"
+                value="<%= announcementInput.dashboardEndDate || "" %>"
+              />
+            </label>
+            <label class="admin-checkbox"><input type="checkbox" name="publishNow" value="true" <%= !hasAnnouncementInput || announcementInput.publishNow === "true" || announcementInput.publishNow === "on" ? "checked" : "" %> /><span>저장과 동시에 전체 사용자 우편함과 운영 게시판에 공개</span></label>
+            <button type="submit">공지 저장</button>
+          </form>
+        </section>
+
+        <section class="admin-panel">
+          <div class="admin-panel-heading">
+            <div><p>처리 대기</p><h2>최근 문의</h2></div>
+            <a href="/admin/inquiries">전체 보기 →</a>
+          </div>
+          <div class="admin-compact-list">
+            <% if (!adminData.inquiries.length) { %>
+              <p class="admin-empty">접수된 문의가 없습니다.</p>
+            <% } %>
+            <% adminData.inquiries.forEach((inquiry) => { %>
+              <a href="/admin/inquiries">
+                <span class="status-<%= inquiry.status %>"><%= inquiryStatus[inquiry.status] || "상태 확인 필요" %></span>
+                <strong><%= inquiry.subject %></strong>
+                <small><%= inquiry.authorNickname %> · <%= formatDate(inquiry.createdAt) %></small>
+              </a>
+            <% }) %>
+          </div>
+        </section>
+      </div>
+
+      <section class="admin-panel">
+        <div class="admin-panel-heading">
+          <div><p>공개 이력</p><h2>공지·운영 게시판 이력</h2></div>
+        </div>
+        <div class="admin-announcement-list">
+          <% if (!adminData.announcements.length) { %>
+            <p class="admin-empty">등록된 공지가 없습니다.</p>
+          <% } %>
+          <% adminData.announcements.forEach((announcement) => { %>
+            <article>
+              <div>
+                <span class="<%= announcement.isPublished ? 'is-live' : '' %>"><%= announcement.isPublished ? "공개 중" : "비공개" %></span>
+                <span><%= ({ notice: "일반 공지", rules: "규칙", policies: "방침", manuals: "설명서", "inquiry-rules": "문의 규칙" })[announcement.boardCategory || "notice"] %></span>
+                <h3><%= announcement.title %></h3>
+                <p><%= announcement.content %></p>
+                <small><%= formatDate(announcement.createdAt) %></small>
+                <small>대시보드 노출: <%= announcement.dashboardEndsAt ? `${formatDate(announcement.dashboardEndsAt)}까지` : "직접 내릴 때까지" %></small>
+              </div>
+              <form action="/admin/announcements/<%= announcement._id %>/status" method="POST">
+                <input type="hidden" name="publish" value="<%= announcement.isPublished ? 'false' : 'true' %>" />
+                <button type="submit"><%= announcement.isPublished ? "공개 중지" : "지금 공개" %></button>
+              </form>
+            </article>
+          <% }) %>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

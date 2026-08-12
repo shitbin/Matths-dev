@@ -1,0 +1,190 @@
+<%
+  const gradeLabel = {
+    10: "고1",
+    11: "고2",
+    12: "고3",
+    13: "N수생",
+    14: "대학생",
+    15: "직장인",
+  };
+  const rankingUpdatedAt = ranking.latestCalculatedAt ? new Date(ranking.latestCalculatedAt) : null;
+  const rankingUpdatedLabel = rankingUpdatedAt
+    ? new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(rankingUpdatedAt)
+    : "갱신 대기";
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="description"
+      content="Matths 최종 종합 랭킹과 고등학교·N수생·대학교·직장인 랭킹"
+    />
+    <title>최종 종합 랭킹 | GOAT Arena | Matths</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/war-of-masters.css" />
+    <link rel="stylesheet" href="/css/tier-rankings.css" />
+    <link rel="stylesheet" href="/css/brand.css" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/images/favicon-32.png"
+    />
+    <script src="/js/main.js" defer></script>
+    <script src="/js/tier-rankings.js" defer></script>
+  </head>
+  <body class="masters-page rankings-page">
+    <a class="skip-link" href="#rankings-main">본문으로 바로가기</a>
+
+    <div class="dashboard-shell">
+      <div
+        class="sidebar-overlay"
+        id="sidebar-overlay"
+        hidden
+      ></div>
+      <aside
+        class="sidebar"
+        id="dashboard-sidebar"
+        aria-label="학습 메뉴"
+      >
+        <div class="sidebar-top">
+          <a class="brand" href="/" aria-label="Matths 메인">
+            <%- include("partials/brand-primary-logo") %>
+          </a>
+          <button
+            class="sidebar-close"
+            id="sidebar-close"
+            type="button"
+            aria-label="메뉴 닫기"
+          >×</button>
+        </div>
+        <%- include("partials/dashboard-navigation", {
+          activePage: "war-of-masters",
+        }) %>
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-profile">
+          <a class="profile-avatar" href="/profile">
+            <%= String(user.name || "M").slice(0, 1) %>
+          </a>
+          <div class="profile-copy">
+            <strong><%= user.name %>님</strong>
+            <small><%= gradeLabel[Number(user.schoolGrade)] || "학년 미설정" %></small>
+          </div>
+          <form action="/logout" method="POST">
+            <button type="submit" aria-label="로그아웃">↗</button>
+          </form>
+        </div>
+      </aside>
+
+      <main class="dashboard-main rankings-main" id="rankings-main">
+        <header class="topbar masters-topbar">
+          <div class="topbar-left">
+            <button
+              class="sidebar-open"
+              id="sidebar-open"
+              type="button"
+              aria-label="학습 메뉴 열기"
+              aria-controls="dashboard-sidebar"
+              aria-expanded="false"
+            >
+              <span></span><span></span><span></span>
+            </button>
+            <div>
+              <p>GOAT Arena</p>
+              <h1>최종 종합 랭킹</h1>
+            </div>
+          </div>
+          <div class="masters-topbar-actions">
+            <a
+              class="back-dashboard secondary learning-home-button"
+              href="/main"
+            >Matths 대시보드</a>
+            <a class="back-dashboard" href="/war-of-masters">
+              GOAT Arena
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </header>
+
+        <section class="matths-ranking-intro">
+          <div>
+            <p>공식 종합 랭킹</p>
+            <h2>개인과 학교의<br />현재 위치를 확인하세요.</h2>
+          </div>
+          <p>
+            최종 종합 랭킹은 활성 이용자의 최종 종합 점수로 정렬합니다.
+            고등학교와 대학교별 랭킹은 소속 재학생들의 최종 종합 랭킹 순위 평균이 낮은 곳부터 표시합니다.
+            N수생과 직장인은 학교 집계에서 제외하고 각 이용자 유형의 개별 랭킹에서 확인합니다.
+          </p>
+        </section>
+
+        <section class="matths-final-ranking-hub tier-ranking-hub" data-final-ranking-tabs>
+          <div class="ranking-freshness" data-ranking-freshness data-updated-at="<%= rankingUpdatedAt ? rankingUpdatedAt.toISOString() : '' %>">
+            <span>최근 공식 갱신 <strong><%= rankingUpdatedLabel %> KST</strong></span>
+            <button type="button" data-ranking-retry>새로고침</button>
+          </div>
+          <div class="ranking-pool-tabs" role="tablist" aria-label="Matths 랭킹 선택">
+            <button type="button" role="tab" aria-selected="true" data-final-ranking-tab="overall">최종 종합 랭킹</button>
+            <button type="button" role="tab" aria-selected="false" data-final-ranking-tab="school"><%= Number(user.schoolGrade) === 13 ? "N수생 랭킹" : Number(user.schoolGrade) === 14 ? "대학교별 랭킹" : Number(user.schoolGrade) === 15 ? "직장인 랭킹" : "고등학교별 랭킹" %></button>
+          </div>
+
+          <section data-final-ranking-panel="overall">
+            <% if (ranking.currentFinal) { %>
+              <article class="tier-my-ranking">
+                <div><small>나의 최종 종합 랭킹</small><h2><%= ranking.currentFinal.displayName %> <%- include("partials/arena-ranking-decoration", { decoration: ranking.currentFinal.rankingDecoration }) %></h2><p><%= ranking.currentFinal.affiliationName || "소속 미설정" %> · <%= ranking.currentFinal.division === "MAIN" ? "Ranked" : "Unranked" %></p></div>
+                <dl><div><dt>현재 순위</dt><dd><%= ranking.currentFinal.finalRank %><small>위</small></dd></div><div><dt>최종 종합 점수</dt><dd><%= ranking.currentFinal.finalRating %></dd></div></dl>
+              </article>
+            <% } %>
+            <div class="matths-ranking-table-scroll" data-ranking-scroll data-ranking-kind="final" data-current-school="<%= ranking.currentFinal?.schoolName || '' %>" tabindex="0" aria-label="최종 종합 랭킹 목록">
+              <div class="tier-ranking-table">
+                <div class="tier-ranking-row tier-ranking-head"><span>순위</span><span>모드</span><span>이름</span><span>학교</span><span>최종 종합 점수</span></div>
+                <% ranking.finalOverall.forEach((entry) => { const isCurrentRanker = entry.userId === String(user._id); %>
+                  <div class="tier-ranking-row <%= isCurrentRanker ? 'is-me' : '' %>" data-ranking-row data-rank="<%= entry.finalRank %>" data-name="<%= entry.displayName %>" data-division="<%= entry.division %>" data-school="<%= entry.affiliationName || '소속 미설정' %>" data-rank-delta="<%= entry.rankDelta || 0 %>" <% if (isCurrentRanker) { %>data-current-ranker aria-current="true"<% } %>><b><%= entry.finalRank %></b><span><%= entry.division === "MAIN" ? "Ranked" : "Unranked" %></span><strong><%= entry.displayName %><%= isCurrentRanker ? " · 나" : "" %> <%- include("partials/arena-ranking-decoration", { decoration: entry.rankingDecoration }) %></strong><span><%= entry.affiliationName || "소속 미설정" %></span><em><%= entry.finalRating %><small class="ranking-delta <%= entry.rankDelta > 0 ? 'is-up' : entry.rankDelta < 0 ? 'is-down' : '' %>"><%= entry.rankDelta > 0 ? `▲${entry.rankDelta}` : entry.rankDelta < 0 ? `▼${Math.abs(entry.rankDelta)}` : '—' %></small></em></div>
+                <% }) %>
+              </div>
+            </div>
+          </section>
+
+          <section data-final-ranking-panel="school" hidden>
+            <% if (Number(user.schoolGrade) === 13) { %>
+              <div class="matths-ranking-table-scroll" data-ranking-scroll data-ranking-kind="retaker" tabindex="0" aria-label="N수생 랭킹 목록"><div class="tier-ranking-table">
+                <div class="tier-ranking-row tier-ranking-head"><span>순위</span><span>모드</span><span>이름</span><span>구분</span><span>최종 종합 순위</span></div>
+                <% ranking.retakerRankings.forEach((entry) => { const isCurrentRanker = entry.userId === String(user._id); %><div class="tier-ranking-row <%= isCurrentRanker ? 'is-me' : '' %>" data-ranking-row data-rank="<%= entry.retakerRank %>" data-name="<%= entry.displayName %>" data-division="<%= entry.division %>" data-school="N수생" <% if (isCurrentRanker) { %>data-current-ranker aria-current="true"<% } %>><b><%= entry.retakerRank %></b><span><%= entry.division === "MAIN" ? "Ranked" : "Unranked" %></span><strong><%= entry.displayName %><%= isCurrentRanker ? " · 나" : "" %> <%- include("partials/arena-ranking-decoration", { decoration: entry.rankingDecoration }) %></strong><span>N수생</span><em><%= entry.finalRank %>위</em></div><% }) %>
+              </div></div>
+            <% } else if (Number(user.schoolGrade) === 14) { %>
+              <div class="school-final-ranking-list">
+                <% ranking.universityRankings.forEach((university) => { %>
+                  <details class="school-final-ranking-card">
+                    <summary><b><%= university.rank %>위</b><div><strong><%= university.name %></strong><small><%= university.campus %> · <%= university.region %> · 재학생 <%= university.participantCount %>명</small></div><em>평균 <%= university.averageFinalRank %>위</em></summary>
+                    <div class="school-student-ranking-list"><% university.students.forEach((student, index) => { %><p><b><%= index + 1 %></b><strong><%= student.displayName %></strong><span>최종 종합 <%= student.finalRank %>위</span></p><% }) %></div>
+                  </details>
+                <% }) %>
+              </div>
+            <% } else if (Number(user.schoolGrade) === 15) { %>
+              <div class="matths-ranking-table-scroll" data-ranking-scroll data-ranking-kind="worker" tabindex="0" aria-label="직장인 랭킹 목록"><div class="tier-ranking-table">
+                <div class="tier-ranking-row tier-ranking-head"><span>순위</span><span>모드</span><span>이름</span><span>구분</span><span>최종 종합 순위</span></div>
+                <% ranking.workerRankings.forEach((entry) => { const isCurrentRanker = entry.userId === String(user._id); %><div class="tier-ranking-row <%= isCurrentRanker ? 'is-me' : '' %>" data-ranking-row data-rank="<%= entry.workerRank %>" data-name="<%= entry.displayName %>" data-division="<%= entry.division %>" data-school="직장인" <% if (isCurrentRanker) { %>data-current-ranker aria-current="true"<% } %>><b><%= entry.workerRank %></b><span><%= entry.division === "MAIN" ? "Ranked" : "Unranked" %></span><strong><%= entry.displayName %><%= isCurrentRanker ? ' · 나' : '' %> <%- include("partials/arena-ranking-decoration", { decoration: entry.rankingDecoration }) %></strong><span>직장인</span><em><%= entry.finalRank %>위</em></div><% }) %>
+              </div></div>
+            <% } else { %>
+              <div class="school-final-ranking-list">
+                <% ranking.schoolRankings.forEach((school) => { %>
+                  <details class="school-final-ranking-card">
+                    <summary><b><%= school.rank %>위</b><div><strong><%= school.name %></strong><small><%= school.region %> · 재학생 <%= school.participantCount %>명</small></div><em>평균 <%= school.averageFinalRank %>위</em></summary>
+                    <div class="school-student-ranking-list">
+                      <% school.students.forEach((student, index) => { %><p><b><%= index + 1 %></b><strong><%= student.displayName %></strong><span>최종 종합 <%= student.finalRank %>위</span></p><% }) %>
+                    </div>
+                  </details>
+                <% }) %>
+              </div>
+            <% } %>
+          </section>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

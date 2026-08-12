@@ -1,0 +1,354 @@
+/* 평가 센터 — 시험 선택과 현재 상태를 첫 화면에서 판단하는 작업 표면 */
+
+.assessment-main {
+  color: var(--matths-ink);
+  background: var(--matths-canvas);
+}
+
+.assessment-command-center {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.1fr) minmax(300px, 0.9fr);
+  gap: 24px 42px;
+  margin-bottom: 28px;
+  padding: 34px;
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-lg);
+  box-shadow: var(--matths-shadow);
+}
+
+.assessment-command-copy > p {
+  margin: 0 0 10px;
+  color: var(--matths-progress-blue);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.assessment-command-copy h2 {
+  margin: 0;
+  max-width: 620px;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+}
+
+.assessment-command-copy > span {
+  display: block;
+  max-width: 620px;
+  margin-top: 16px;
+  color: var(--matths-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.assessment-command-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-self: start;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.assessment-command-metrics > div {
+  min-width: 0;
+  padding: 17px 14px;
+  border-right: 1px solid var(--matths-line);
+}
+
+.assessment-command-metrics > div:last-child {
+  border-right: 0;
+}
+
+.assessment-command-metrics dt {
+  color: var(--matths-muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.assessment-command-metrics dd {
+  margin: 7px 0 0;
+  color: var(--matths-ink);
+  font-size: 28px;
+  font-weight: 860;
+  line-height: 1;
+}
+
+.assessment-command-metrics dd small {
+  margin-left: 3px;
+  color: var(--matths-muted);
+  font-size: 12px;
+}
+
+.assessment-next-action {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 24px;
+  padding: 20px 22px 20px 26px;
+  background: var(--matths-primary-soft);
+  border-left: 4px solid var(--matths-progress-blue);
+  border-radius: var(--matths-radius-md);
+}
+
+.assessment-next-action > span,
+.assessment-next-action > strong,
+.assessment-next-action > p {
+  grid-column: 1;
+}
+
+.assessment-next-action > span {
+  color: var(--matths-progress-blue);
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.assessment-next-action > strong {
+  margin-top: 2px;
+  font-size: 18px;
+}
+
+.assessment-next-action > p {
+  margin: 2px 0 0;
+  color: var(--matths-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.assessment-next-action > a,
+.assessment-next-action > form {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  margin: 0;
+}
+
+.assessment-next-action > a,
+.assessment-next-action button {
+  min-width: 112px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  border: 0;
+  border-radius: var(--matths-radius-md);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 820;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease);
+}
+
+.assessment-next-action > a:hover,
+.assessment-next-action button:hover {
+  background: var(--matths-action-primary-pressed);
+  transform: var(--motion-lift);
+}
+
+.assessment-course {
+  margin-top: 16px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius);
+  box-shadow: none;
+}
+
+.assessment-course.locked:not([open]) {
+  background: var(--matths-surface);
+}
+
+.assessment-course > .course-heading {
+  min-height: 92px;
+  padding: 20px 24px;
+}
+
+.assessment-course[open] > .course-heading {
+  border-bottom-color: var(--matths-line);
+}
+
+.course-heading > div:first-child > span,
+.assessment-unit > header > span,
+.subassessment-card span,
+.unit-final span,
+.course-final span {
+  color: var(--matths-progress-blue);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.course-heading h2 {
+  margin-top: 4px;
+  font-size: 24px;
+  letter-spacing: -0.035em;
+}
+
+.course-pass-state {
+  min-width: 218px;
+  color: var(--matths-muted);
+  background: var(--matths-canvas);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.course-pass-state span,
+.course-pass-state strong {
+  font-size: 12px;
+}
+
+.assessment-course-body {
+  padding: 0 24px 24px;
+}
+
+.assessment-unit-list {
+  gap: 14px;
+  padding-top: 18px;
+}
+
+.assessment-unit {
+  padding: 20px;
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.assessment-unit > header > span {
+  color: var(--matths-on-brand);
+  background: var(--matths-progress-blue);
+}
+
+.subassessment-card {
+  min-height: 176px;
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.subassessment-card h4 {
+  font-size: 15px;
+}
+
+.subassessment-card p,
+.subassessment-card small,
+.unit-final p,
+.course-final p,
+.unit-final-action strong,
+.course-final > div:last-child > strong,
+.locked-course-message p,
+.locked-course-message a {
+  font-size: 13px;
+}
+
+.subassessment-card button,
+.unit-final button,
+.course-final button,
+.assessment-resume {
+  min-height: 44px;
+  padding-inline: 16px;
+  background: var(--matths-action-primary);
+  border-radius: var(--matths-radius-md);
+  font-size: 13px;
+}
+
+.unit-final,
+.course-final,
+.course-final.passed,
+.course-final.locked {
+  color: var(--matths-ink);
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-left: 4px solid var(--matths-progress-blue);
+  border-radius: var(--matths-radius-md);
+}
+
+.unit-final.passed,
+.course-final.passed {
+  border-left-color: var(--assessment-green);
+}
+
+.course-final > div:last-child > strong,
+.course-final p,
+.course-final.locked > div:last-child > strong,
+.course-final.locked p {
+  color: var(--matths-muted);
+}
+
+@media (max-width: 980px) {
+  .assessment-command-center {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .assessment-command-center {
+    gap: 24px;
+    padding: 24px 18px;
+    border-radius: var(--matths-radius);
+  }
+
+  .assessment-command-copy h2 {
+    font-size: 31px;
+  }
+
+  .assessment-command-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .assessment-command-metrics > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 13px 15px;
+    border-right: 0;
+    border-bottom: 1px solid var(--matths-line);
+  }
+
+  .assessment-command-metrics > div:last-child {
+    border-bottom: 0;
+  }
+
+  .assessment-command-metrics dd {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  .assessment-next-action {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .assessment-next-action > a,
+  .assessment-next-action > form {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: 10px;
+  }
+
+  .assessment-next-action > a,
+  .assessment-next-action button {
+    width: 100%;
+  }
+
+  .assessment-course > .course-heading {
+    padding: 18px;
+  }
+
+  .course-pass-state {
+    min-width: 0;
+  }
+
+  .assessment-course-body {
+    padding: 0 12px 14px;
+  }
+
+  .assessment-unit {
+    padding: 16px 12px;
+  }
+}

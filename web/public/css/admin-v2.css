@@ -1,0 +1,423 @@
+@import url("/css/matths-theme.css");
+
+/* 운영센터 — 장식보다 상태·필터·위험 행동을 먼저 읽는 고밀도 작업 표면. */
+
+body.admin-page,
+.admin-guide-page {
+  color: var(--matths-ink);
+  background: var(--matths-canvas);
+  background-image: none;
+}
+
+.admin-topbar {
+  min-height: 72px;
+  color: var(--matths-ink);
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  box-shadow: none;
+}
+
+.admin-brand > .brand-logo {
+  width: 132px;
+  height: auto;
+}
+
+.admin-main-nav a,
+.admin-main-nav button,
+.admin-account button,
+.admin-account-user span,
+.admin-alert-menu button,
+.admin-alert-menu small,
+.admin-alert-all {
+  font-size: 13px;
+}
+
+.admin-main-nav a,
+.admin-main-nav button,
+.admin-account button {
+  min-height: 44px;
+  color: var(--matths-muted);
+}
+
+.admin-main-nav a.active,
+.admin-main-nav .admin-nav-group.active > button {
+  color: var(--matths-progress-blue);
+  background: var(--matths-primary-soft);
+}
+
+.admin-nav-menu {
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  box-shadow: var(--motion-hover-shadow);
+}
+
+.admin-main {
+  width: min(1480px, calc(100% - 40px));
+  padding-top: 36px;
+}
+
+/*
+ * Grid children must be allowed to shrink before their tables, long notices,
+ * or file inputs take over the page width. Wide operational data keeps its
+ * own horizontal scroller; the document itself must never scroll sideways.
+ */
+.admin-main,
+.admin-guide-shell,
+.admin-dashboard-grid,
+.admin-detail-grid,
+.admin-action-grid,
+.admin-panel,
+.admin-guide-section,
+.admin-community-list,
+.admin-notice-list,
+.admin-notice-card,
+.admin-community-editor,
+.admin-community-editor form,
+.admin-form,
+.admin-table-wrap,
+.admin-guide-table-wrap {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-form :where(label, input, select, textarea, button),
+.admin-community-editor :where(label, input, select, textarea, button) {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-notice-list,
+.admin-notice-card,
+.admin-guide-workflow-grid,
+.admin-guide-workflow-grid > article,
+.forensic-upload-form,
+.forensic-upload-form > * {
+  width: 100%;
+}
+
+.admin-guide-workflow-grid,
+.admin-guide-workflow-grid > article,
+.admin-guide-workflow-grid > article > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-guide-workflow-grid :where(h3, p, ol, li, dl, div, dt, dd, code) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.forensic-upload-form,
+.forensic-upload-form > *,
+.forensic-upload-form :where(span, small, input, button) {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-heading,
+.admin-guide-hero {
+  min-height: 0;
+  padding: 30px 32px;
+  color: var(--matths-ink);
+  background: var(--matths-surface);
+  background-image: none;
+  border: 1px solid var(--matths-line);
+  border-left: 4px solid var(--matths-progress-blue);
+  border-radius: var(--matths-radius-lg);
+  box-shadow: none;
+}
+
+.admin-heading p,
+.admin-panel-heading p,
+.admin-guide-hero p,
+.admin-guide-section > header p,
+.admin-payback-list > header p,
+.admin-payback-history > header p {
+  color: var(--matths-progress-blue);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.admin-heading h1,
+.admin-guide-hero h1 {
+  max-width: none;
+  color: var(--matths-ink);
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+}
+
+.admin-heading span,
+.admin-heading > div > span,
+.admin-guide-hero > div > span {
+  color: var(--matths-muted);
+  font-size: 14px;
+}
+
+.admin-stat-grid article,
+.admin-panel,
+.admin-guide-section,
+.admin-guide-workflow-grid > article,
+.forensic-upload-panel,
+.forensic-result-card {
+  background: var(--matths-surface);
+  background-image: none;
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius-md);
+  box-shadow: none;
+}
+
+.admin-stat-grid article {
+  border-top: 3px solid var(--matths-progress-blue);
+}
+
+.admin-stat-grid span,
+.admin-stat-grid small,
+.admin-panel-heading > span,
+.admin-panel-heading a,
+.admin-compact-list small,
+.admin-filter-bar label > span,
+.admin-form label > span,
+.admin-form label small,
+.admin-form > p,
+.admin-empty,
+.admin-table-wrap th,
+.admin-table-wrap td,
+.admin-page table th,
+.admin-page table td,
+.admin-page code,
+.admin-page summary,
+.admin-page details > p,
+.admin-page details li,
+.admin-guide-page small,
+.admin-guide-page p,
+.admin-guide-page li,
+.admin-guide-page dt,
+.admin-payback-row dt,
+.admin-payback-row dd,
+.admin-payback-row > div small,
+.admin-payback-row > div span,
+.forensic-result-card dt,
+.forensic-result-card dd,
+.forensic-guide article span,
+.forensic-guide > p {
+  font-size: 13px;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form select,
+.admin-filter-bar input,
+.admin-filter-bar select,
+.admin-filter-bar button,
+.admin-form button,
+.admin-heading-actions > a,
+.admin-primary-button,
+.admin-matchmaking-form input,
+.admin-matchmaking-form button,
+.forensic-upload-form input,
+.forensic-upload-form button,
+.admin-payback-period input,
+.admin-payback-period button,
+.admin-payback-row form input,
+.admin-payback-row form button {
+  min-height: 44px;
+  font-size: 13px;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form select,
+.admin-filter-bar input,
+.admin-filter-bar select,
+.admin-matchmaking-form input,
+.forensic-upload-form input,
+.admin-payback-period input,
+.admin-payback-row form input {
+  color: var(--matths-ink);
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+}
+
+.admin-form button,
+.admin-filter-bar button,
+.admin-heading-actions > a,
+.admin-primary-button,
+.admin-matchmaking-form button,
+.forensic-upload-form button,
+.admin-payback-period button,
+.admin-payback-row form button {
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  background-image: none;
+  border-radius: var(--matths-radius-md);
+  box-shadow: none;
+}
+
+.admin-page :where(a, button):hover {
+  transform: var(--motion-lift);
+}
+
+.admin-page :where(button, a, input, select, textarea) {
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+.danger-form,
+.admin-form.danger-form,
+.admin-matchmaking-form button.danger {
+  border-color: var(--matths-danger);
+}
+
+.danger-form button,
+.admin-form.danger-form button,
+.admin-matchmaking-form button.danger {
+  color: var(--matths-on-brand);
+  background: var(--matths-danger);
+  background-image: none;
+}
+
+.admin-guide-hero dl div,
+.admin-guide-workflow-grid article > header > span,
+.forensic-result-card dl div,
+.forensic-guide article {
+  color: var(--matths-ink);
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+  backdrop-filter: none;
+}
+
+.admin-guide-hero dt,
+.admin-guide-hero dd {
+  color: var(--matths-ink);
+}
+
+.admin-guide-jump {
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.admin-guide-jump a {
+  min-height: 44px;
+  color: var(--matths-muted);
+  font-size: 13px;
+}
+
+.admin-guide-jump a:hover {
+  color: var(--matths-progress-blue);
+  background: var(--matths-primary-soft);
+}
+
+.admin-table-wrap,
+.admin-guide-table-wrap,
+.admin-payback-history {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+@media (max-width: 760px) {
+  .admin-main,
+  .admin-guide-shell {
+    width: min(100% - 24px, 1480px);
+  }
+
+  .admin-heading,
+  .admin-guide-hero {
+    padding: 24px 20px;
+  }
+
+  .admin-stat-grid,
+  .admin-dashboard-grid,
+  .admin-guide-status-grid,
+  .admin-guide-scheduler-grid,
+  .admin-guide-incident-grid,
+  .admin-guide-workflow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Closed absolute menus must not participate in the mobile page width. */
+  .admin-nav-menu {
+    position: fixed;
+    top: 104px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    min-width: 0;
+    display: none;
+    transform: none;
+  }
+
+  .admin-nav-group:focus-within .admin-nav-menu,
+  .admin-nav-group.is-open .admin-nav-menu {
+    display: grid;
+    transform: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-main-nav {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .admin-main-nav > a,
+  .admin-main-nav > .admin-nav-group {
+    flex: 0 0 auto;
+  }
+}
+.arena-client-review-summary {
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid var(--matths-line, #dfe5f2);
+  border-radius: 12px;
+  background: var(--matths-paper, #f7f9fd);
+}
+
+.arena-client-review-summary > header,
+.arena-client-review-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.arena-client-review-summary > header span,
+.arena-client-review-summary li small,
+.arena-client-review-chip span {
+  color: var(--matths-text-3, #657089);
+  font-size: 12px;
+}
+
+.arena-client-review-summary ul {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arena-client-review-summary li {
+  display: grid;
+  gap: 3px;
+  padding-top: 8px;
+  border-top: 1px solid var(--matths-line, #dfe5f2);
+}
+
+.arena-client-review-chip {
+  margin: 10px 0;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--matths-paper, #f7f9fd);
+}

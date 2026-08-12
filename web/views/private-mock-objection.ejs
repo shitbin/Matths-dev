@@ -1,0 +1,104 @@
+<%
+  const formatDate = (value) =>
+    new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(new Date(value));
+  const displayName =
+    formData.user.realName ||
+    formData.user.name ||
+    "학생";
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>문제 이의신청 | GOAT Arena</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/war-of-masters.css" />
+    <link rel="stylesheet" href="/css/private-mock-objection.css" />
+    <link rel="stylesheet" href="/css/brand.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png" />
+    <script src="/js/main.js" defer></script>
+  </head>
+  <body class="masters-page objection-page">
+    <a class="matths-skip-link" href="#private-mock-objection-main">이의신청으로 바로가기</a>
+    <div class="dashboard-shell">
+      <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
+      <aside class="sidebar" id="dashboard-sidebar" aria-label="학습 메뉴">
+        <div class="sidebar-top">
+          <a class="brand" href="/" aria-label="Matths 메인">
+            <%- include("partials/brand-primary-logo") %>
+          </a>
+          <button class="sidebar-close" id="sidebar-close" type="button" aria-label="메뉴 닫기">×</button>
+        </div>
+        <%- include("partials/dashboard-navigation", { activePage: "war-of-masters" }) %>
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-profile">
+          <a class="profile-avatar" href="/profile"><%= displayName.slice(0, 1) %></a>
+          <div class="profile-copy"><strong><%= displayName %>님</strong><small>GOAT Arena</small></div>
+          <form action="/logout" method="POST"><button type="submit" aria-label="로그아웃">↗</button></form>
+        </div>
+      </aside>
+      <main class="dashboard-main objection-main" id="private-mock-objection-main">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button class="sidebar-open" id="sidebar-open" type="button" aria-label="학습 메뉴 열기"><span></span><span></span><span></span></button>
+            <div><p>문제 검토</p><h1>문제 이의신청</h1></div>
+          </div>
+          <a class="back-dashboard learning-home-button" href="/war-of-masters">GOAT Arena로 <span>→</span></a>
+        </header>
+
+        <section class="objection-hero">
+          <div>
+            <p>공정한 시험 검토</p>
+            <h2>문제나 정답이 잘못되었다고 판단되면 알려주세요.</h2>
+            <span>공개된 Matths 주간 공식 모의고사만 선택할 수 있습니다. 문제의 어느 부분이 성립하지 않는지, 정답이 달라야 하는 근거가 무엇인지 구체적으로 적어주세요.</span>
+          </div>
+          <b>접수 후 운영팀이 문제지·답지·채점 데이터를 함께 검토하고 이메일과 알림 우편함으로 결과를 안내합니다.</b>
+        </section>
+
+        <% if (feedback) { %>
+          <div class="objection-feedback" role="status">✓ <%= feedback.message %></div>
+        <% } %>
+
+        <section class="objection-form-card">
+          <% if (!formData.exams.length) { %>
+            <div class="objection-empty">
+              <strong>이의신청할 수 있는 공개 시험지가 없습니다.</strong>
+              <p>Matths 주간 공식 모의고사가 종료되고 아카이브에 공개된 뒤 다시 확인해주세요.</p>
+            </div>
+          <% } else { %>
+            <form action="/war-of-masters/objections" method="POST">
+              <label>
+                <span>시험지</span>
+                <select name="examId" required>
+                  <option value="">아카이브 시험지를 선택하세요</option>
+                  <% formData.exams.forEach((exam) => { %>
+                    <option value="<%= exam.id %>"><%= formatDate(exam.releaseAt) %> · <%= exam.title %> · <%= exam.formCode %>형</option>
+                  <% }) %>
+                </select>
+              </label>
+              <label>
+                <span>문항 번호</span>
+                <input name="questionNumber" type="number" min="1" max="30" placeholder="예: 13" required />
+              </label>
+              <label class="wide">
+                <span>문제가 있다고 판단한 부분</span>
+                <textarea name="issueDetail" rows="10" minlength="10" maxlength="5000" placeholder="문제의 조건, 계산 과정, 기존 정답과 달라야 한다고 판단한 근거를 구체적으로 적어주세요." required></textarea>
+              </label>
+              <div class="objection-form-note">
+                허위·반복 신청은 처리하지 않을 수 있습니다. 정답 정정이 필요한 것으로 확인되면 전체 응시 기록을 재채점하고 랭킹과 GP를 다시 계산합니다.
+              </div>
+              <button type="submit">이의신청 제출 <span>→</span></button>
+            </form>
+          <% } %>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

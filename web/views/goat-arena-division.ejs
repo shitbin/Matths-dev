@@ -1,0 +1,112 @@
+<%
+  const hasDivisionAccess = division === "SUB" ? arenaAccess.canUseSub : arenaAccess.canUseMain;
+  const currentPool = division === "SUB" ? ranking.pools.sub : ranking.pools.main;
+  const arenaNotificationState = typeof arenaNotifications !== "undefined" ? arenaNotifications : null;
+  const currentRanking = currentPool.current || arenaAccess.standing || null;
+  const availableDays = arenaAccess.learningRights.availableDays ?? "—";
+  const paybackScore = Number(arenaAccess.learningRights.paybackScoreDays || 0);
+  const paybackGoal = Number(arenaAccess.learningRights.minimumPaybackScore || 30);
+  const studyDays = Number(arenaAccess.learningRights.studyStreakDays || 0);
+  const studyGoal = Number(arenaAccess.learningRights.minimumStudyStreakDays || 29);
+  const primaryHref = division === "SUB" ? "/goat-arena/sub/challenge" : "/goat-arena/main/battle";
+  const primaryLabel = division === "SUB" ? "자동 매치 신청" : "Ranked 경기 선택";
+  const accessView = arenaAccess.requirementsByDivision?.[division] || { requirements: [], firstUnmetRequirement: null };
+  const firstUnmetRequirement = accessView.firstUnmetRequirement || {
+    actionHref: "/goat-arena",
+    actionLabel: "Arena 홈으로 돌아가기",
+  };
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="<%= divisionLabel %> GOAT Arena 경기와 진행 상태" />
+    <meta name="theme-color" content="#090c1b" />
+    <title><%= divisionLabel %> | GOAT Arena</title>
+    <link rel="stylesheet" href="/css/goat-arena.css" />
+    <%- include("partials/rank-motion-head") %>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <script src="/js/goat-arena.js" defer></script>
+  </head>
+  <body class="goat-arena-page arena-inner-page arena-division-command-page arena-division-command-page--<%= division.toLowerCase() %>">
+    <a class="arena-skip-link" href="#arena-division-main">본문으로 바로가기</a>
+    <%- include("partials/goat-arena-navigation", { activeArenaPage, arenaUser }) %>
+
+    <main class="arena-v2-shell arena-v2-division" id="arena-division-main">
+      <% if (!hasDivisionAccess) { %>
+        <section class="arena-v2-qualification" aria-labelledby="qualification-title">
+          <p><%= divisionLabel %></p>
+          <h1 id="qualification-title"><%= division === "MAIN" ? "아직 Ranked에 입장할 수 없습니다." : "현재 Unranked 경기를 시작할 수 없습니다." %></h1>
+          <span><%= division === "MAIN" ? "현재 조건과 다음 할 일을 확인하고 Unranked에서 이어가세요." : "아래에서 아직 충족하지 못한 조건과 바로 이어갈 행동을 확인하세요." %></span>
+          <dl>
+            <% accessView.requirements.forEach((requirement) => { %>
+              <div class="<%= requirement.completed ? 'done' : '' %>">
+                <dt><%= requirement.label %></dt>
+                <dd><%= requirement.detail %></dd>
+              </div>
+            <% }) %>
+          </dl>
+          <div class="arena-v2-actions">
+            <a class="arena-v2-primary" href="<%= firstUnmetRequirement.actionHref %>"><%= firstUnmetRequirement.actionLabel %></a>
+            <a class="arena-v2-secondary" href="/goat-arena/rules/<%= division === 'MAIN' ? 'main' : 'sub' %>"><%= divisionLabel %> 규정 보기</a>
+          </div>
+        </section>
+      <% } else { %>
+        <header class="arena-v2-statusbar arena-v2-mode-header">
+          <div class="arena-v2-title">
+            <span><%= divisionLabel %></span>
+            <h1><%= currentRanking ? `${currentRanking.tier || currentRanking.arenaRank} ${currentRanking.tierRank || currentRanking.arenaPosition || '—'}위` : `${divisionLabel} 경기` %></h1>
+            <p><%= division === "SUB" ? "페이백 진행과 다음 경기를 한곳에서 관리합니다." : "학습일을 확인하고 가능한 경기 방식을 선택합니다." %></p>
+          </div>
+          <dl class="arena-v2-metrics">
+            <% if (division === "SUB") { %>
+              <div><dt>페이백</dt><dd><%= paybackScore %> / <%= paybackGoal %></dd></div>
+              <div><dt>연속 학습</dt><dd><%= studyDays %> / <%= studyGoal %>일</dd></div>
+            <% } else { %>
+              <div><dt>사용 가능</dt><dd><%= availableDays %><%= availableDays === "무제한" ? "" : "일" %></dd></div>
+              <div><dt>초대 예약</dt><dd><%= arenaAccess.learningRights.reservedDays ?? 0 %>일</dd></div>
+              <div><dt>경기 예치</dt><dd><%= arenaAccess.learningRights.lockedDays ?? 0 %>일</dd></div>
+            <% } %>
+            <div><dt>확인할 경기</dt><dd><%= Math.max(Number(arenaNotificationState?.actionByDivision?.[division] || 0), Number(arenaNotificationState?.defenseByDivision?.[division] || 0)) %>건</dd></div>
+          </dl>
+        </header>
+
+        <section class="arena-v2-command arena-v2-mode-command" aria-labelledby="mode-action-title">
+          <div class="arena-v2-command-copy">
+            <p>다음 행동</p>
+            <h2 id="mode-action-title"><%= primaryLabel %></h2>
+            <span><%= division === "SUB" ? "서버가 현재 티어와 경기 기록을 확인한 뒤 적격 상대를 자동으로 배정합니다." : "상향 도전·초대전·복수전의 조건과 필요한 학습일을 비교한 뒤 선택하세요." %></span>
+            <a class="arena-v2-primary" href="<%= primaryHref %>"><%= primaryLabel %><span aria-hidden="true">→</span></a>
+          </div>
+          <div class="arena-v2-mode-summary">
+            <small><%= division === "SUB" ? "이번 사이클" : "학습일 운용" %></small>
+            <strong><%= division === "SUB" ? `${paybackScore}/${paybackGoal}` : `${availableDays}일` %></strong>
+            <span><%= division === "SUB" ? `연속 학습 ${studyDays}/${studyGoal}일` : `예약 ${arenaAccess.learningRights.reservedDays ?? 0}일 · 예치 ${arenaAccess.learningRights.lockedDays ?? 0}일` %></span>
+          </div>
+        </section>
+
+        <section class="arena-v2-feature-section" aria-labelledby="division-feature-title">
+          <header><div><p><%= divisionLabel %> 기능</p><h2 id="division-feature-title"><%= division === "SUB" ? "경기와 페이백" : "경기와 학습일" %></h2></div><a href="/goat-arena/rules/<%= division === 'SUB' ? 'sub' : 'main' %>">규정 보기</a></header>
+          <div class="arena-v2-feature-groups">
+            <% featureGroups.forEach((group) => { %>
+              <section aria-labelledby="feature-group-<%= group.key.toLowerCase() %>">
+                <header><h3 id="feature-group-<%= group.key.toLowerCase() %>"><%= group.title %></h3><p><%= group.description %></p></header>
+                <div class="arena-v2-feature-grid">
+                  <% group.features.forEach((feature) => { %>
+                    <% const count = ["subActiveMatch", "mainActiveMatch"].includes(feature.key) ? Math.max(Number(arenaNotificationState?.actionByDivision?.[division] || 0), Number(arenaNotificationState?.defenseByDivision?.[division] || 0)) : 0; %>
+                    <a href="<%= feature.href %>">
+                      <span><%= feature.name %><% if (count) { %><b><%= count %></b><% } %></span>
+                      <p><%= feature.description %></p>
+                      <i aria-hidden="true">→</i>
+                    </a>
+                  <% }) %>
+                </div>
+              </section>
+            <% }) %>
+          </div>
+        </section>
+      <% } %>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,457 @@
+<%
+  const learner = user;
+  const data = dashboardData;
+
+  const displayName = String(learner.name || "학생");
+  const greetingName = String(learner.realName || learner.name || "학생");
+  const notifications = Array.isArray(data.notifications) ? data.notifications : [];
+  const hasUrgentNotification = Boolean(data.hasUrgentNotification);
+  const activeDashboardNotices = Array.isArray(data.activeDashboardNotices) ? data.activeDashboardNotices : [];
+  const activityDays = Array.isArray(data.weeklyActivity?.days) ? data.weeklyActivity.days : [];
+  const weeklyStudyMinutes = Number(data.stats?.weeklyStudyMinutes) || 0;
+  const todayStudyMinutes = Number(data.stats?.todayStudyMinutes) || 0;
+  const activeStudyDays = Number(data.stats?.activeStudyDays) || 0;
+  const averageStudyMinutes = Number(data.stats?.averageStudyMinutes) || 0;
+  const weeklySolvedProblems = Number(data.stats?.weeklySolvedProblems) || 0;
+  const weeklyCorrectRate = Number(data.stats?.correctRate) || 0;
+  const hasPlottableStudyTime = activityDays.some(
+    (day) => (Number(day.minutes) || 0) > 0
+  );
+  const activePlan = data.activePlan || { code: "FREE", name: "무료 플랜" };
+  const accessRenewalNotice = data.accessRenewalNotice || null;
+
+  /* 홈 상단 섹션 데이터 — 컨트롤러가 섹션별 독립 폴백으로 내려준다.
+     resume/wrongNoteDue 는 실패 시 null, arena 는 available:false. */
+  const resume = data.resume || null;
+  const wrongNoteDue = data.wrongNoteDue || null;
+  const dueCount = Number(wrongNoteDue?.due) || 0;
+  const arena = data.arena || { available: false, placed: false };
+
+  const currentKoreanYear = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+  }).format(new Date());
+
+  const formatStudyTime = (minutes) => {
+    const safeMinutes = Math.max(0, Math.round(Number(minutes) || 0));
+    const hours = Math.floor(safeMinutes / 60);
+    const remainingMinutes = safeMinutes % 60;
+
+    if (!hours) return `${remainingMinutes}분`;
+    if (!remainingMinutes) return `${hours}시간`;
+    return `${hours}시간 ${remainingMinutes}분`;
+  };
+
+  const gradeLabel = learner.schoolGrade === 10
+    ? "고등학교 1학년"
+    : learner.schoolGrade === 11
+      ? "고등학교 2학년"
+      : learner.schoolGrade === 12
+        ? "고등학교 3학년"
+        : learner.schoolGrade === 13
+          ? "N수생"
+          : learner.schoolGrade === 14
+            ? "대학생"
+            : learner.schoolGrade === 15
+              ? "직장인"
+              : "학년 미설정";
+
+  const chartMaximum = Math.max(1, Number(data.weeklyActivity?.maxMinutes) || 0);
+  const planExpiryLabel = activePlan.expiresAt
+    ? new Intl.DateTimeFormat("ko-KR", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(new Date(activePlan.expiresAt))
+    : null;
+
+  /* 아레나 우선 대시보드: 상태를 반복 나열하지 않고 지금 할 한 행동을 안내한다. */
+  const greetingSubcopy = !arena.available
+    ? "학습 기능은 정상입니다. 아레나 현황은 잠시 후 다시 확인하세요."
+    : !arena.placed
+      ? "배치고사를 마치면 같은 실력대의 첫 승부가 열립니다."
+      : "현재 티어를 지키거나, 바로 다음 순위에 도전하세요.";
+
+  /* (1) 히어로 — 이어 학습 대상. resume 이 없으면 시작 유도로 폴백. */
+  const resumeStarted = Boolean(resume) && (Number(resume.progress) || 0) > 0;
+  const heroHref = resume ? resume.href : "/my-learning";
+  const heroCtaLabel = resumeStarted ? "이어 학습하기" : "학습 시작하기";
+
+  /* (4) 플랜 스트립 — 거대 카드의 정보를 한 줄로 축약(기능 제거 없음). */
+  const planRemainingDays = Number(activePlan.remainingLearningDays) || 0;
+  const planReservedDays = Number(activePlan.reservedLearningDays) || 0;
+  const planLockedDays = Number(activePlan.lockedLearningDays) || 0;
+  let planDetail;
+  if (activePlan.unlimited) {
+    planDetail = "무제한 · 만료 없음";
+  } else if (activePlan.code === "LEARNING_PACKAGE") {
+    planDetail = `남은 학습일수 ${planRemainingDays}일`;
+    if (planReservedDays + planLockedDays > 0) {
+      planDetail += ` (지금 사용 가능 ${Number(activePlan.availableLearningDays) || 0}일 · 예약 ${planReservedDays}일 · 경기 예치 ${planLockedDays}일)`;
+    }
+    if (planExpiryLabel) planDetail += ` · ${planExpiryLabel}까지`;
+  } else if (planExpiryLabel) {
+    planDetail = `${activePlan.statusLabel || "이용 중"} · ${planExpiryLabel}까지`;
+  } else {
+    planDetail = activePlan.statusLabel || "무료 이용";
+  }
+
+  /* 강조 톤은 만료 임박·이용 종료 상태에만 — 그 외엔 조용한 한 줄. */
+  const planExpirySoon =
+    activePlan.code === "LEARNING_PACKAGE" &&
+    !activePlan.unlimited &&
+    planRemainingDays > 0 &&
+    planRemainingDays <= 3;
+  const planAlert = Boolean(accessRenewalNotice) || planExpirySoon;
+  const planAlertLabel = accessRenewalNotice
+    ? (accessRenewalNotice.kind === "MAIN_DEMOTION" ? "RANKED 이용 종료" : "학습권 이용 종료")
+    : planExpirySoon
+      ? "만료 임박"
+      : null;
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="오늘의 다음 행동과 아레나 현황, 주간 학습 기록을 한눈에 확인하는 Matths 학습 홈입니다."
+    />
+    <meta name="theme-color" content="#f5f7fc" />
+    <title>학습 홈 | Matths</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <script src="/js/main.js" defer></script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png" />
+    <link rel="stylesheet" href="/css/brand.css" />
+  </head>
+  <body class="dashboard-home">
+    <a class="skip-link" href="#dashboard-main">본문으로 바로가기</a>
+
+    <% if (accessRenewalNotice) { %>
+      <dialog
+        class="access-renewal-dialog"
+        id="access-renewal-dialog"
+        data-access-renewal-dialog
+        <% if (accessRenewalNotice.graceDeadline) { %>data-grace-deadline="<%= new Date(accessRenewalNotice.graceDeadline).toISOString() %>"<% } %>
+      >
+        <div class="access-renewal-dialog__glow" aria-hidden="true"></div>
+        <form method="dialog" class="access-renewal-dialog__body">
+          <p><%= accessRenewalNotice.kind === "MAIN_DEMOTION" ? "RANKED 이용 종료" : "학습권 이용 종료" %></p>
+          <h2>정기권 학습 가능 일수를 모두 사용했습니다.</h2>
+          <% if (accessRenewalNotice.kind === "MAIN_DEMOTION") { %>
+            <span>Ranked 이용이 종료되어 Unranked로 전환됐습니다. 다시 이용하려면 29일 학습권 패키지를 구매해주세요.</span>
+            <dl class="access-renewal-preview">
+              <div><dt>72시간 내 재구매 예상 위치</dt><dd><strong><%= accessRenewalNotice.referenceTier %></strong> · <%= accessRenewalNotice.referenceGp %> GP<% if (accessRenewalNotice.referenceOverallPosition) { %> · 전체 <%= accessRenewalNotice.referenceOverallPosition %>위<% } %></dd></div>
+              <div><dt>72시간 종료까지</dt><dd data-renewal-countdown><%= accessRenewalNotice.withinGrace ? "계산 중" : "종료됨" %></dd></div>
+              <div><dt>기한 후 랭크 복귀전 최고 위치</dt><dd><strong><%= accessRenewalNotice.lateTier %></strong> · <%= accessRenewalNotice.lateGp %> GP</dd></div>
+            </dl>
+            <small>72시간은 무료 이용 기간이 아닙니다. 기한이 지나면 결제 후 랭크 복귀전을 완료해야 합니다.</small>
+          <% } else { %>
+            <span>GOAT Arena와 Matths 주간 공식 모의고사 이용이 중단됐습니다. 새 학습권 패키지의 가격과 이용 범위를 확인해주세요.</span>
+          <% } %>
+          <div class="access-renewal-dialog__actions">
+            <a href="/pricing">학습권 패키지 확인</a>
+            <button type="submit">대시보드 먼저 보기</button>
+          </div>
+        </form>
+      </dialog>
+    <% } %>
+
+    <div class="dashboard-shell">
+      <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
+
+      <aside class="sidebar" id="dashboard-sidebar" aria-label="학습 메뉴">
+        <div class="sidebar-top">
+          <a class="brand" href="/" aria-label="Matths 학습 홈">
+            <%- include("partials/brand-primary-logo") %>
+          </a>
+
+          <button class="sidebar-close" id="sidebar-close" type="button" aria-label="메뉴 닫기">
+            ×
+          </button>
+        </div>
+
+        <%- include("partials/dashboard-navigation", {
+          activePage: "main",
+        }) %>
+
+        <div class="sidebar-spacer"></div>
+
+        <div class="sidebar-profile">
+          <a
+            class="profile-avatar"
+            href="/profile"
+            aria-label="<%= displayName %>님의 프로필 설정으로 이동"
+            title="프로필 설정"
+          ><%= displayName.slice(0, 1) %></a>
+
+          <div class="profile-copy">
+            <strong><%= displayName %>님</strong>
+            <small><%= gradeLabel %></small>
+          </div>
+
+          <form action="/logout" method="POST">
+            <button type="submit" aria-label="로그아웃" title="로그아웃">↗</button>
+          </form>
+        </div>
+      </aside>
+
+      <main class="dashboard-main" id="dashboard-main">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button
+              class="sidebar-open"
+              id="sidebar-open"
+              type="button"
+              aria-label="학습 메뉴 열기"
+              aria-controls="dashboard-sidebar"
+              aria-expanded="false"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+
+            <div>
+              <p id="today-label">오늘의 아레나</p>
+              <h1><%= greetingName %>님, 오늘의 승부를 시작하세요.</h1>
+              <p class="greeting-subcopy"><%= greetingSubcopy %></p>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <div class="streak-pill" title="연속 학습일">
+              <span aria-hidden="true">●</span>
+              <strong><%= learner.currentStreak %>일 연속</strong>
+            </div>
+
+            <div class="notification-wrap">
+              <button
+                class="notification-button <%= hasUrgentNotification ? 'urgent shake' : '' %>"
+                id="notification-button"
+                type="button"
+                aria-label="알림 <%= notifications.length %>개 보기"
+                aria-expanded="false"
+                aria-controls="notification-panel"
+              >
+                <span aria-hidden="true">♢</span>
+                <% if (notifications.length > 0) { %>
+                  <i><%= notifications.length %></i>
+                <% } %>
+              </button>
+
+              <div class="notification-panel" id="notification-panel" hidden>
+                <div class="notification-panel-title">
+                  <strong><a href="/notifications">알림 우편함</a></strong>
+                  <button id="notification-close" type="button" aria-label="알림 닫기">×</button>
+                </div>
+
+                <% if (notifications.length) { %>
+                  <% notifications.forEach((notification) => { %>
+                    <a class="<%= notification.urgent ? 'urgent' : '' %>" href="<%= notification.href %>">
+                      <b><%= notification.title %></b>
+                      <small><%= notification.description %></small>
+                    </a>
+                  <% }) %>
+                <% } else { %>
+                  <p class="panel-empty">새로운 알림이 없습니다.</p>
+                <% } %>
+                <a class="notification-inbox-cta" href="/notifications">
+                  알림 우편함 전체 보기
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <% if (activeDashboardNotices.length) { %>
+          <section class="dashboard-announcements" aria-label="운영 공지">
+            <% activeDashboardNotices.forEach((notice) => { %>
+              <article class="<%= notice.kind === 'integrity' ? 'integrity' : '' %>" data-dashboard-notice="<%= notice.id %>">
+                <span aria-hidden="true">!</span>
+                <a href="<%= notice.href %>">
+                  <strong><%= notice.title %></strong>
+                  <p><%= notice.content %></p>
+                </a>
+                <button
+                  type="button"
+                  data-dismiss-dashboard-notice="<%= notice.dismissUrl %>"
+                  aria-label="<%= notice.title %> 알림 닫기"
+                  title="대시보드에서 닫기"
+                >×</button>
+              </article>
+            <% }) %>
+          </section>
+        <% } %>
+
+        <!-- (1) GOAT Arena — 회의 결정 ①에 따라 로그인 후 첫 행동으로 승격 -->
+        <section class="arena-strip-section" aria-labelledby="arena-strip-title">
+          <article class="arena-strip">
+            <div class="arena-strip-copy">
+              <p>GOAT ARENA · RANKED</p>
+              <% if (!arena.available) { %>
+                <h2 id="arena-strip-title">아레나 현황을 불러오지 못했습니다</h2>
+                <span>학습 기능은 그대로 이용할 수 있습니다. 잠시 후 아레나에서 다시 확인하세요.</span>
+              <% } else if (!arena.placed) { %>
+                <h2 id="arena-strip-title">첫 배치로 내 티어를 확인하세요</h2>
+                <span>배치고사를 마치면 같은 실력대의 승부가 시작됩니다.</span>
+              <% } else { %>
+                <h2 id="arena-strip-title"><%= arena.tierLabel %></h2>
+                <span><b><%= Number(arena.rankPoint) || 0 %> GP</b><% if (arena.overallRank) { %> · 전체 <%= arena.overallRank %>위<% } %></span>
+              <% } %>
+            </div>
+            <a class="arena-strip-link" href="/war-of-masters">
+              <%= arena.available && !arena.placed ? "배치고사 시작" : "아레나 입장" %>
+              <span aria-hidden="true">→</span>
+            </a>
+          </article>
+        </section>
+
+        <!-- (2) 학습은 전부 유지하되 두 번째 흐름으로 강등 -->
+        <section class="next-action-section" aria-labelledby="next-action-title">
+          <article class="next-action-card">
+            <div class="next-action-copy">
+              <p>오늘의 다음 행동</p>
+              <% if (resume) { %>
+                <h2 id="next-action-title"><%= resume.conceptTitle %></h2>
+                <% if (resume.courseTitle || resume.unitTitle) { %>
+                  <span class="next-action-meta"><%= [resume.courseTitle, resume.unitTitle].filter(Boolean).join(" · ") %></span>
+                <% } %>
+                <% if (resumeStarted) { %>
+                  <div class="next-action-progress">
+                    <div aria-hidden="true"><span style="--progress:<%= Math.min(100, Math.max(0, Number(resume.progress) || 0)) %>%"></span></div>
+                    <strong aria-label="진행률 <%= Number(resume.progress) || 0 %>퍼센트"><%= Number(resume.progress) || 0 %>%</strong>
+                  </div>
+                <% } %>
+              <% } else { %>
+                <h2 id="next-action-title">첫 개념부터 차근차근 시작해요</h2>
+                <span class="next-action-meta">내 학습에서 지금 배울 개념을 골라 드려요.</span>
+              <% } %>
+            </div>
+            <div class="next-action-actions">
+              <a class="hero-cta" href="<%= heroHref %>"><%= heroCtaLabel %><span aria-hidden="true">→</span></a>
+              <% if (dueCount > 0) { %>
+                <a class="review-due-link" href="/wrong-notes">복습할 오답 <%= dueCount %>문제</a>
+              <% } %>
+            </div>
+          </article>
+        </section>
+
+        <!-- (3) 주간 기록 — 핵심 4지표 + 차트, 보조 2지표는 캡션으로 -->
+        <section
+          class="learning-record-section"
+          id="learning-record"
+          aria-labelledby="learning-record-title"
+        >
+          <article class="activity-card">
+            <div class="card-heading">
+              <div>
+                <p>주간 학습</p>
+                <h2 id="learning-record-title">이번 주 학습 기록</h2>
+              </div>
+
+              <% if (hasPlottableStudyTime) { %>
+                <span class="chart-legend"><b></b> 학습 시간</span>
+              <% } %>
+            </div>
+
+            <dl class="learning-kpi-grid" aria-label="최근 7일 학습 통계">
+              <div>
+                <dt>최근 7일 학습</dt>
+                <dd>
+                  <strong><%= formatStudyTime(weeklyStudyMinutes) %></strong>
+                  <small><%= data.stats?.weeklyStudyDetail || "비교 기록 없음" %></small>
+                </dd>
+              </div>
+              <div>
+                <dt>오늘 학습</dt>
+                <dd>
+                  <strong><%= formatStudyTime(todayStudyMinutes) %></strong>
+                  <small>한국 시간 기준</small>
+                </dd>
+              </div>
+              <div>
+                <dt>최근 7일 풀이</dt>
+                <dd>
+                  <strong><%= weeklySolvedProblems %><span>문제</span></strong>
+                  <small>개념·복습·평가 포함</small>
+                </dd>
+              </div>
+              <div>
+                <dt>최근 7일 정답률</dt>
+                <dd>
+                  <strong><%= weeklyCorrectRate %><span>%</span></strong>
+                  <small><%= data.stats?.correctRateDetail || "비교 기록 없음" %></small>
+                </dd>
+              </div>
+            </dl>
+
+            <% if (hasPlottableStudyTime && activityDays.length) { %>
+              <div class="weekly-chart" aria-label="요일별 학습 시간">
+                <% activityDays.forEach((day) => {
+                  const rawHeight = Math.round((Number(day.minutes) || 0) / chartMaximum * 100);
+                  const barHeight = day.minutes > 0 ? Math.max(7, rawHeight) : 0;
+                %>
+                  <div class="chart-day <%= day.isToday ? 'today' : '' %>">
+                    <div class="bar-track">
+                      <i
+                        style="--height:<%= barHeight %>%"
+                        aria-label="<%= day.label %> <%= day.minutes %>분"
+                      >
+                        <span><%= day.minutes %>분</span>
+                      </i>
+                    </div>
+                    <small><%= day.label %></small>
+                  </div>
+                <% }) %>
+              </div>
+              <p class="chart-footnote">최근 7일 중 학습한 날 <%= activeStudyDays %>일 · 학습일 평균 <%= formatStudyTime(averageStudyMinutes) %></p>
+            <% } else { %>
+              <div class="section-empty chart-empty compact">
+                <span aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 19V9M12 19V5M19 19v-7"></path>
+                    <path d="M3 19h18"></path>
+                  </svg>
+                </span>
+                <strong>첫 학습 기록을 만들어보세요.</strong>
+                <p>한 개념을 시작하면 풀이 수와 학습 시간이 여기에 쌓입니다.</p>
+                <a href="<%= heroHref %>">학습 시작하기 <span aria-hidden="true">→</span></a>
+              </div>
+            <% } %>
+          </article>
+        </section>
+
+        <!-- (4) 이용 플랜 — 콤팩트 한 줄 스트립 -->
+        <section class="plan-strip-section" aria-labelledby="plan-strip-title">
+          <article class="plan-strip <%= planAlert ? 'plan-strip--alert' : '' %>">
+            <div class="plan-strip-copy">
+              <h2 id="plan-strip-title"><%= activePlan.name %><% if (activePlan.division) { %> <small>· <%= activePlan.division %></small><% } %></h2>
+              <span><%= planDetail %></span>
+            </div>
+            <% if (planAlertLabel) { %>
+              <em class="plan-strip-flag"><%= planAlertLabel %></em>
+            <% } %>
+            <a href="/pricing"><%= activePlan.code === "FREE" ? "플랜 비교하기" : "이용 범위 확인" %><span aria-hidden="true">→</span></a>
+          </article>
+        </section>
+
+        <footer class="dashboard-footer">
+          <span>© <%= currentKoreanYear %> Matths</span>
+          <p>설명은 친절하게. 학습은 단계적으로.</p>
+          <div>
+            <a href="/terms">이용약관</a>
+            <a href="/privacy">개인정보처리방침</a>
+            <%- include("partials/social-footer-links") %>
+          </div>
+        </footer>
+
+        <p class="sr-only" id="dashboard-status" role="status" aria-live="polite"></p>
+      </main>
+    </div>
+  </body>
+</html>

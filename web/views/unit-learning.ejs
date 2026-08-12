@@ -1,0 +1,805 @@
+<%
+  const learner = user;
+  const data = learningData;
+  const course = unitView.course;
+  const unit = unitView.unit;
+  const concept = unitView.selectedConcept;
+  const previousItem = unitView.previous;
+  const nextItem = unitView.next;
+
+  const displayName = String(
+    learner.name || "학생"
+  );
+
+  const gradeLabel =
+    learner.schoolGrade === 10
+      ? "고등학교 1학년"
+      : learner.schoolGrade === 11
+        ? "고등학교 2학년"
+        : learner.schoolGrade === 12
+          ? "고등학교 3학년"
+          : learner.schoolGrade === 13
+            ? "N수생"
+            : "학년 미설정";
+
+  /* 서버 콘텐츠가 일시적으로 비어도 성취기준과 학습 행동은 유지합니다. */
+  const lessonData =
+    typeof lesson !== "undefined" && lesson
+      ? lesson
+      : {
+          summary:
+            concept.achievementStandard || "",
+
+          keyTakeaway:
+            concept.achievementStandard || "개념의 조건과 결론을 연결해 확인합니다.",
+
+          estimatedMinutes: 10,
+
+          steps: [],
+
+          motion: {
+            assetUrl: null,
+            posterUrl: null,
+            durationSeconds: null,
+          },
+
+          playgroundKey: null,
+
+          practice: {
+            generatorKey: null,
+            requiredDistinctTypes: 5,
+          },
+        };
+
+  /*
+   * 해당 학생의 개념별 문제풀이 기록입니다.
+   */
+  const masteryData =
+    typeof mastery !== "undefined" && mastery
+      ? mastery
+      : {
+          requiredDistinctTypes:
+            lessonData.practice
+              ?.requiredDistinctTypes || 5,
+
+          correctTypeIds: [],
+          unlockedAt: null,
+          userCompleted: false,
+          completedAt: null,
+        };
+
+  const reviewData =
+    typeof reviewContext !== "undefined" &&
+    reviewContext
+      ? reviewContext
+      : null;
+
+  const subunitAssessmentData =
+    typeof subunitAssessment !== "undefined"
+      ? subunitAssessment
+      : null;
+  const conceptGuidesData =
+    typeof conceptTypeGuides !== "undefined" &&
+    Array.isArray(conceptTypeGuides)
+      ? conceptTypeGuides
+      : [];
+  const subunitConceptIds =
+    subunitAssessmentData?.concepts?.map(
+      (item) => item.id
+    ) || [];
+  const isLastSubunitConcept =
+    subunitConceptIds.length > 0 &&
+    subunitConceptIds[
+      subunitConceptIds.length - 1
+    ] === concept.id;
+%>
+
+<!doctype html>
+
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <meta
+      name="description"
+      content="<%= concept.title %> 개념을 설명, 모션그래픽, 수학 놀이터, 문제풀이 순서로 학습합니다."
+    />
+
+    <meta
+      name="theme-color"
+      content="#f5f7fc"
+    />
+
+    <title>
+      <%= concept.title %> | Matths
+    </title>
+
+    <!-- 대시보드 공통 디자인 -->
+    <link
+      rel="stylesheet"
+      href="/css/main.css"
+    />
+
+    <!-- 기존 단원 학습 페이지 디자인 -->
+    <link
+      rel="stylesheet"
+      href="/css/unit-learning.css"
+    />
+
+    <!-- 새 개념 학습 영역 디자인 -->
+    <link
+      rel="stylesheet"
+      href="/css/concept-experience.css"
+    />
+
+    <!--
+      정적 수식과 API로 불러오는 동적 수식을 같은 LaTeX 문법으로
+      렌더링합니다. 설정은 MathJax 본체보다 먼저 실행되어야 합니다.
+    -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [["\\(", "\\)"]],
+          displayMath: [["\\[", "\\]"]],
+          processEscapes: true,
+        },
+      };
+    </script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"
+      defer
+    ></script>
+
+    <!-- 사이드바 등 대시보드 공통 기능 -->
+    <script
+      src="/js/main.js"
+      defer
+    ></script>
+
+    <!-- 기본 개념 페이지의 Step 미리보기와 topic 진도 저장 -->
+    <script
+      src="/js/unit-learning.js"
+      defer
+    ></script>
+
+    <!-- 모션그래픽과 수학 놀이터 기능 -->
+    <script
+      src="/js/concept-experience.js"
+      defer
+    ></script>
+    <script
+      src="/js/math-keyboard.js"
+      defer
+    ></script>
+
+    <!-- 미적분Ⅰ의 접선·도함수·정적분 놀이터 -->
+    <script
+      src="/js/calculus1.js"
+      defer
+    ></script>
+
+    <!-- 그래프가 필요한 대수 개념의 설명·놀이터 -->
+    <script
+      src="/js/algebra-graphs.js"
+      defer
+    ></script>
+
+    <!-- 확률과 통계의 모션그래픽·분포·표집 놀이터 -->
+    <script
+      src="/js/probability-statistics.js"
+      defer
+    ></script>
+    <!-- 공통수학Ⅰ·Ⅱ의 좌표·집합·함수·계산 시각 놀이터 -->
+    <script src="/js/common-math.js" defer></script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png" />
+    <link rel="stylesheet" href="/css/brand.css" />
+  </head>
+
+  <body>
+    <a
+      class="skip-link"
+      href="#unit-learning-main"
+    >
+      본문으로 바로가기
+    </a>
+
+    <div class="dashboard-shell">
+      <div
+        class="sidebar-overlay"
+        id="sidebar-overlay"
+        hidden
+      ></div>
+
+      <aside
+        class="sidebar"
+        id="dashboard-sidebar"
+        aria-label="학습 메뉴"
+      >
+        <div class="sidebar-top">
+          <a
+            class="brand"
+            href="/"
+            aria-label="Matths 메인"
+          >
+            <%- include("partials/brand-primary-logo") %>
+          </a>
+
+          <button
+            class="sidebar-close"
+            id="sidebar-close"
+            type="button"
+            aria-label="메뉴 닫기"
+          >
+            ×
+          </button>
+        </div>
+
+        <%- include("partials/dashboard-navigation", {
+          activePage: "my-learning",
+        }) %>
+
+        <div class="sidebar-spacer"></div>
+
+        <div class="sidebar-profile">
+          <a
+            class="profile-avatar"
+            href="/profile"
+            aria-label="<%= displayName %>님의 프로필 설정으로 이동"
+            title="프로필 설정"
+          >
+            <%= displayName.slice(0, 1) %>
+          </a>
+
+          <div class="profile-copy">
+            <strong>
+              <%= displayName %>님
+            </strong>
+
+            <small>
+              <%= gradeLabel %>
+            </small>
+          </div>
+
+          <form
+            action="/logout"
+            method="POST"
+          >
+            <button
+              type="submit"
+              aria-label="로그아웃"
+              title="로그아웃"
+            >
+              ↗
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      <main
+        class="dashboard-main unit-learning-main"
+        id="unit-learning-main"
+      >
+        <header class="topbar learning-topbar">
+          <div class="topbar-left">
+            <button
+              class="sidebar-open"
+              id="sidebar-open"
+              type="button"
+              aria-label="학습 메뉴 열기"
+              aria-controls="dashboard-sidebar"
+              aria-expanded="false"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+
+            <nav
+              class="learning-breadcrumb"
+              aria-label="현재 학습 위치"
+            >
+              <a href="/my-learning">
+                내 학습
+              </a>
+
+              <span aria-hidden="true">
+                /
+              </span>
+
+              <a href="/my-learning">
+                <%= course.officialTitle %>
+              </a>
+
+              <span aria-hidden="true">
+                /
+              </span>
+
+              <strong>
+                <%= unit.title %>
+              </strong>
+            </nav>
+          </div>
+
+          <div class="learning-topbar-actions">
+            <a
+              class="exit-learning learning-home-link learning-home-button"
+              href="/main"
+            >
+              학습 홈으로
+            </a>
+            <a
+              class="exit-learning"
+              href="/my-learning"
+            >
+              학습 나가기
+
+              <span aria-hidden="true">
+                ×
+              </span>
+            </a>
+          </div>
+        </header>
+
+        <section
+          class="unit-hero"
+          aria-labelledby="unit-title"
+        >
+          <div class="unit-hero-copy">
+            <p>
+              <%= course.officialTitle %>
+              · UNIT
+              <%= String(unit.order).padStart(2, "0") %>
+            </p>
+
+            <h1 id="unit-title">
+              <%= unit.title %>
+            </h1>
+
+            <span>
+              <%= unit.concepts.length %>개의 개념을
+              순서대로 학습합니다. 각 개념은 설명,
+              모션그래픽, 놀이터, 문제풀이로
+              구성됩니다.
+            </span>
+          </div>
+
+          <div class="unit-hero-progress">
+            <div>
+              <span>단원 완성도</span>
+
+              <strong id="unit-progress-value">
+                <%= unit.progress %>%
+              </strong>
+            </div>
+
+            <i>
+              <b
+                id="unit-progress-bar"
+                style="--unit-progress:<%= unit.progress %>%"
+              ></b>
+            </i>
+
+            <small id="unit-completed-count">
+              <%= unit.completedConcepts %>
+              /
+              <%= unit.concepts.length %>개념 완료
+            </small>
+          </div>
+        </section>
+
+        <div class="lesson-layout">
+          <aside
+            class="concept-rail"
+            aria-labelledby="concept-list-title"
+          >
+            <div class="concept-rail-head">
+              <p>개념 목록</p>
+
+              <h2 id="concept-list-title">
+                <%= unit.title %> 학습 순서
+              </h2>
+            </div>
+
+            <nav
+              class="concept-nav"
+              aria-label="소단원 개념 선택"
+            >
+              <%
+                unit.concepts.forEach(
+                  (item, index) => {
+                    const active =
+                      item.id === concept.id;
+              %>
+
+                <a
+                  class="
+                    concept-nav-item
+                    <%= active ? 'active' : '' %>
+                    <%= item.status %>
+                  "
+                  href="<%= item.href %>"
+                  <% if (active) { %>
+                    aria-current="page"
+                  <% } %>
+                  data-concept-id="<%= item.id %>"
+                  data-concept-number="<%= String(index + 1).padStart(2, '0') %>"
+                >
+                  <span>
+                    <%= item.progress >= 100
+                      ? "✓"
+                      : String(index + 1).padStart(2, "0")
+                    %>
+                  </span>
+
+                  <div>
+                    <strong>
+                      <%= item.title %>
+                    </strong>
+
+                    <i>
+                      <b
+                        style="--concept-progress:<%= item.progress %>%"
+                      ></b>
+                    </i>
+                  </div>
+
+                  <em>
+                    <%= item.progress %>%
+                  </em>
+                </a>
+
+              <%
+                  }
+                );
+              %>
+            </nav>
+
+            <a
+              class="all-progress-link"
+              href="/my-learning"
+            >
+              전체 진도 보기
+
+              <span aria-hidden="true">
+                →
+              </span>
+            </a>
+          </aside>
+
+          <article
+            class="lesson-panel"
+            data-course-id="<%= course.id %>"
+            data-unit-id="<%= unit.id %>"
+            data-concept-id="<%= concept.id %>"
+          >
+            <header class="lesson-heading">
+              <div>
+                <p>
+                  <%= concept.standardCode %>
+                  · CONCEPT
+                  <%= String(concept.order).padStart(2, "0") %>
+                </p>
+
+                <h2>
+                  <%= concept.title %>
+                </h2>
+              </div>
+
+              <div
+                class="concept-completion"
+                role="progressbar"
+                aria-label="현재 개념 학습 진도"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="<%= concept.progress %>"
+              >
+                <span>개념 완성도</span>
+
+                <strong id="concept-progress-value">
+                  <%= concept.progress %>%
+                </strong>
+
+                <i>
+                  <b
+                    id="concept-progress-bar"
+                    style="--concept-progress:<%= concept.progress %>%"
+                  ></b>
+                </i>
+              </div>
+            </header>
+
+            <section
+              class="learning-goal"
+              aria-labelledby="goal-title"
+            >
+              <span aria-hidden="true">
+                ◎
+              </span>
+
+              <div>
+                <p>이 개념의 목표</p>
+
+                <h3 id="goal-title">
+                  <%= concept.achievementStandard %>
+                </h3>
+              </div>
+            </section>
+
+            <% if (lessonData.playgroundKey) { %>
+              <%- include(
+                "partials/concept-experience",
+                {
+                  lesson: lessonData,
+                  mastery: masteryData,
+                  review: reviewData,
+                  course,
+                  unit,
+                  concept
+                }
+              ) %>
+            <% } else { %>
+              <%- include(
+                "partials/basic-concept-experience",
+                {
+                  lesson: lessonData,
+                  mastery: masteryData,
+                  course,
+                  unit,
+                  concept
+                }
+              ) %>
+            <% } %>
+
+            <% if (conceptGuidesData.length) { %>
+              <section
+                class="concept-type-guide"
+                aria-labelledby="concept-type-guide-title"
+              >
+                <header>
+                  <div>
+                    <p>문제 유형 안내</p>
+                    <h3 id="concept-type-guide-title">
+                      유형별로 풀이 순서를 확인합니다.
+                    </h3>
+                  </div>
+                  <span>
+                    문제를 풀기 전에 필요한 유형만 펼쳐보세요.
+                  </span>
+                </header>
+
+                <div class="concept-type-guide-list">
+                  <% conceptGuidesData.forEach((guide) => { %>
+                    <details>
+                      <summary>
+                        <b>
+                          유형 <%= String(guide.order).padStart(2, "0") %>
+                        </b>
+                        <strong><%= guide.title.replace(/^유형\s*\d+\s*·?\s*/, "") %></strong>
+                        <span aria-hidden="true">+</span>
+                      </summary>
+                      <div>
+                        <p class="guide-label">예시 문제</p>
+                        <div class="guide-math"><%= guide.prompt %></div>
+                        <% if (guide.choices.length) { %>
+                          <ol>
+                            <% guide.choices.forEach((choice) => { %>
+                              <li><%= choice.text %></li>
+                            <% }) %>
+                          </ol>
+                        <% } %>
+                        <div class="guide-process">
+                          <p>
+                            <span>1</span>
+                            <strong>첫 단서</strong>
+                            <em><%= guide.hint %></em>
+                          </p>
+                          <p>
+                            <span>2</span>
+                            <strong>계산과 검산</strong>
+                            <em><%= guide.solution %></em>
+                          </p>
+                        </div>
+                      </div>
+                    </details>
+                  <% }) %>
+                </div>
+              </section>
+            <% } %>
+
+            <% if (
+              Array.isArray(concept.scopeNotes) &&
+              concept.scopeNotes.length
+            ) { %>
+              <aside
+                class="scope-note"
+                aria-labelledby="scope-note-title"
+              >
+                <div>
+                  <span aria-hidden="true">
+                    !
+                  </span>
+
+                  <h3 id="scope-note-title">
+                    학습 범위 안내
+                  </h3>
+                </div>
+
+                <ul>
+                  <%
+                    concept.scopeNotes.forEach(
+                      (note) => {
+                  %>
+                    <li>
+                      <%= note %>
+                    </li>
+                  <%
+                      }
+                    );
+                  %>
+                </ul>
+              </aside>
+            <% } %>
+
+            <% if (
+              subunitAssessmentData &&
+              subunitAssessmentData.unlocked
+            ) { %>
+              <section
+                class="subunit-assessment-callout <%= subunitAssessmentData.passed ? 'passed' : '' %>"
+                aria-labelledby="subunit-assessment-title"
+              >
+                <div>
+                  <span>
+                    <%= subunitAssessmentData.passed
+                      ? "MIDTERM PASSED"
+                      : "MIDTERM UNLOCKED" %>
+                  </span>
+                  <h3 id="subunit-assessment-title">
+                    <%= subunitAssessmentData.title %>
+                    중간평가
+                  </h3>
+                  <p>
+                    <%= subunitAssessmentData.passed
+                      ? `80점 기준 통과 · 최고 ${subunitAssessmentData.bestScore}점`
+                      : "이 소단원의 개념을 모두 끝냈습니다. 개념평가보다 한 단계 높은 10문항으로 확인하세요." %>
+                  </p>
+                </div>
+
+                <form
+                  action="/assessments/start"
+                  method="post"
+                >
+                  <input
+                    type="hidden"
+                    name="scopeType"
+                    value="subunit"
+                  />
+                  <input
+                    type="hidden"
+                    name="courseId"
+                    value="<%= course.id %>"
+                  />
+                  <input
+                    type="hidden"
+                    name="unitId"
+                    value="<%= unit.id %>"
+                  />
+                  <input
+                    type="hidden"
+                    name="subunitId"
+                    value="<%= subunitAssessmentData.id %>"
+                  />
+                  <button type="submit">
+                    <%= subunitAssessmentData.passed
+                      ? "새 회차 응시"
+                      : "중간평가 시작" %>
+                    <span aria-hidden="true">→</span>
+                  </button>
+                </form>
+              </section>
+            <% } %>
+
+            <nav
+              class="lesson-pagination"
+              aria-label="이전 및 다음 개념"
+            >
+              <% if (previousItem) { %>
+                <a
+                  class="previous"
+                  href="/learn/<%= course.id %>/<%= previousItem.unit.id %>/<%= previousItem.concept.id %>"
+                >
+                  <span>
+                    ← 이전 개념
+                  </span>
+
+                  <strong>
+                    <%= previousItem.concept.title %>
+                  </strong>
+                </a>
+              <% } else { %>
+                <span></span>
+              <% } %>
+
+              <% if (nextItem) { %>
+                <% if (
+                  subunitAssessmentData?.unlocked &&
+                  isLastSubunitConcept
+                ) { %>
+                  <form
+                    class="next midterm-pagination"
+                    action="/assessments/start"
+                    method="post"
+                  >
+                    <input type="hidden" name="scopeType" value="subunit" />
+                    <input type="hidden" name="courseId" value="<%= course.id %>" />
+                    <input type="hidden" name="unitId" value="<%= unit.id %>" />
+                    <input type="hidden" name="subunitId" value="<%= subunitAssessmentData.id %>" />
+                    <button type="submit">
+                      <span>소단원 완료 →</span>
+                      <strong>중간평가 보기</strong>
+                    </button>
+                  </form>
+                <% } else { %>
+                  <a
+                    class="next"
+                    href="/learn/<%= course.id %>/<%= nextItem.unit.id %>/<%= nextItem.concept.id %>"
+                  >
+                    <span>
+                      다음 개념 →
+                    </span>
+
+                    <strong>
+                      <%= nextItem.concept.title %>
+                    </strong>
+                  </a>
+                <% } %>
+              <% } else { %>
+                <a
+                  class="next complete-course"
+                  href="/my-learning"
+                >
+                  <span>
+                    과목 학습 완료
+                  </span>
+
+                  <strong>
+                    전체 진도 확인하기
+                  </strong>
+                </a>
+              <% } %>
+            </nav>
+          </article>
+        </div>
+
+        <footer class="dashboard-footer">
+          <span>
+            © <%= new Date().getFullYear() %>
+            Matths
+          </span>
+
+          <p>
+            개념은 천천히. 확인은 확실하게.
+          </p>
+
+          <div>
+            <a href="/terms">
+              이용약관
+            </a>
+
+            <a href="/privacy">
+              개인정보처리방침
+            </a>
+            <%- include("partials/social-footer-links") %>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

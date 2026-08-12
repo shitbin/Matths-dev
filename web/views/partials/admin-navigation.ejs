@@ -1,0 +1,139 @@
+<%
+  const currentAdminPage =
+    typeof activePage === "string"
+      ? activePage
+      : "";
+  const todoSummary =
+    typeof adminTodoSummary !== "undefined"
+      ? adminTodoSummary
+      : { pendingCount: 0, items: [] };
+  const adminNavigationGroups = [
+    {
+      id: "members",
+      label: "회원·고객",
+      items: [
+        { id: "users", href: "/admin/users", label: "유저 관리" },
+        { id: "todos", href: "/admin/todos", label: "할 일" },
+        { id: "inquiries", href: "/admin/inquiries", label: "문의 관리" },
+      ],
+    },
+    {
+      id: "content",
+      label: "콘텐츠",
+      items: [
+        { id: "community", href: "/admin/community", label: "게시판 관리" },
+        { id: "coach-suggestions", href: "/admin/coach-suggestions", label: "문구 제안" },
+        { id: "archive", href: "/archive/admin", label: "아카이브" },
+        { id: "pdf-forensics", href: "/admin/pdf-forensics", label: "유출 자료 추적" },
+        { id: "store", href: "/admin/store", label: "고2·고3 수험관" },
+        { id: "private-mock-exams", href: "/admin/private-mock-exams", label: "주간 공식 모의고사" },
+        { id: "problem-banks", href: "/admin/problem-banks", label: "문제 데이터" },
+      ],
+    },
+    {
+      id: "arena",
+      label: "GOAT Arena",
+      items: [
+        { id: "arena-policies", href: "/admin/arena-policies", label: "정책·상품" },
+        { id: "arena-matches", href: "/admin/arena-matches", label: "경기 관리" },
+        { id: "arena-audit", href: "/admin/arena-audit", label: "정산·저장 감사" },
+        { id: "paybacks", href: "/admin/paybacks", label: "페이백 정산" },
+      ],
+    },
+    {
+      id: "analytics",
+      label: "데이터",
+      items: [
+        { id: "data-analysis", href: "/admin/data-analysis", label: "운영 지표" },
+        { id: "test-control", href: "/admin/test-control", label: "테스트 리모콘" },
+      ],
+    },
+    {
+      id: "manual",
+      label: "운영 안내",
+      items: [
+        { id: "operations-guide", href: "/admin/operations-guide", label: "관리 매뉴얼" },
+      ],
+    },
+  ];
+%>
+<a class="matths-skip-link" href="#admin-navigation-end">본문으로 바로가기</a>
+<header class="admin-topbar">
+  <a class="admin-brand" href="/admin" aria-label="Matths 운영센터 홈">
+    <%- include("brand-primary-logo") %>
+    <small class="brand-context-label">운영센터</small>
+  </a>
+  <nav class="admin-main-nav" aria-label="관리자 메뉴">
+    <a
+      class="admin-nav-home <%= currentAdminPage === 'dashboard' ? 'active' : '' %>"
+      href="/admin"
+      <%- currentAdminPage === "dashboard" ? 'aria-current="page"' : "" %>
+    >운영 현황</a>
+    <% adminNavigationGroups.forEach((group) => {
+      const groupActive = group.items.some((item) => item.id === currentAdminPage);
+    %>
+      <div class="admin-nav-group <%= groupActive ? 'active' : '' %>" data-admin-nav-group>
+        <button
+          type="button"
+          aria-expanded="false"
+          aria-haspopup="true"
+          data-admin-nav-toggle
+        >
+          <%= group.label %>
+          <span aria-hidden="true">⌄</span>
+        </button>
+        <div class="admin-nav-menu" data-admin-nav-menu>
+          <% group.items.forEach((item) => { %>
+            <a
+              class="<%= item.id === currentAdminPage ? 'active' : '' %>"
+              href="<%= item.href %>"
+              <%- item.id === currentAdminPage ? 'aria-current="page"' : "" %>
+            ><%= item.label %></a>
+          <% }) %>
+        </div>
+      </div>
+    <% }) %>
+  </nav>
+  <div class="admin-account">
+    <div class="admin-account-user">
+      <span><%= user.name %> 관리자</span>
+      <form action="/logout" method="POST">
+        <button type="submit">로그아웃</button>
+      </form>
+    </div>
+  </div>
+</header>
+<div class="admin-alert-dock">
+  <div class="admin-alert-menu" data-admin-alert-menu>
+      <button
+        type="button"
+        class="<%= (todoSummary.pendingCount || 0) > 0 ? 'has-alerts' : '' %>"
+        aria-label="처리할 관리자 알림 <%= todoSummary.pendingCount || 0 %>개"
+        aria-expanded="false"
+        data-admin-alert-toggle
+      >
+        <span aria-hidden="true">관리 알림</span>
+        <% if ((todoSummary.pendingCount || 0) > 0) { %>
+          <b><%= Math.min(99, todoSummary.pendingCount) %></b>
+        <% } %>
+      </button>
+      <section data-admin-alert-panel hidden>
+        <header><strong>처리할 알림</strong><span><%= todoSummary.pendingCount || 0 %>건</span></header>
+        <div>
+          <% if (!(todoSummary.items || []).length) { %>
+            <p>새로 처리할 항목이 없습니다.</p>
+          <% } %>
+          <% (todoSummary.items || []).forEach((todo) => { %>
+            <a href="<%= todo.href %>">
+              <strong><%= todo.title %></strong>
+              <small><%= todo.actorUserId?.realName || todo.actorUserId?.name || "사용자" %></small>
+            </a>
+          <% }) %>
+        </div>
+        <a class="admin-alert-all" href="/admin/todos">할 일 목록 보기 →</a>
+      </section>
+  </div>
+</div>
+<span class="matths-skip-target" id="admin-navigation-end" tabindex="-1"></span>
+<script src="/js/admin-navigation.js" defer></script>
+<script src="/js/session-usage.js" defer></script>

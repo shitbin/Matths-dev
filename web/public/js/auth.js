@@ -1,0 +1,503 @@
+(function () {
+  "use strict";
+
+  function initPasswordToggles() {
+    const buttons = document.querySelectorAll(
+      "[data-password-toggle]"
+    );
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const inputId =
+          button.dataset.passwordToggle;
+
+        const input =
+          document.getElementById(inputId);
+
+        if (!input) {
+          return;
+        }
+
+        const shouldShow =
+          input.type === "password";
+
+        input.type = shouldShow
+          ? "text"
+          : "password";
+
+        button.textContent = shouldShow
+          ? "숨기기"
+          : "보기";
+
+        button.setAttribute(
+          "aria-pressed",
+          String(shouldShow)
+        );
+      });
+    });
+  }
+
+  function initPasswordConfirmation() {
+    const form =
+      document.querySelector(
+        "[data-register-form]"
+      );
+
+    if (!form) {
+      return;
+    }
+
+    const password =
+      document.getElementById("password");
+
+    const confirmation =
+      document.getElementById(
+        "passwordConfirm"
+      );
+
+    const message =
+      document.getElementById(
+        "password-match"
+      );
+
+    if (
+      !password ||
+      !confirmation ||
+      !message
+    ) {
+      return;
+    }
+
+    function validatePasswords() {
+      if (!confirmation.value) {
+        confirmation.setCustomValidity("");
+        message.textContent = "";
+        message.className = "field-guide";
+        return;
+      }
+
+      const matches =
+        password.value === confirmation.value;
+
+      confirmation.setCustomValidity(
+        matches
+          ? ""
+          : "비밀번호가 일치하지 않습니다."
+      );
+
+      message.textContent = matches
+        ? "비밀번호가 일치합니다."
+        : "비밀번호가 일치하지 않습니다.";
+
+      message.className = matches
+        ? "field-guide valid"
+        : "field-guide invalid";
+    }
+
+    password.addEventListener(
+      "input",
+      validatePasswords
+    );
+
+    confirmation.addEventListener(
+      "input",
+      validatePasswords
+    );
+  }
+
+  function initSubmitState() {
+    const forms =
+      document.querySelectorAll(".auth-form");
+
+    forms.forEach((form) => {
+      form.addEventListener("submit", () => {
+        if (!form.checkValidity()) {
+          return;
+        }
+
+        const button =
+          form.querySelector(
+            ".submit-button"
+          );
+
+        if (!button) {
+          return;
+        }
+
+        const pendingLabel =
+          form.action.endsWith("/login")
+            ? "로그인 중…"
+            : form.action.endsWith("/register")
+              ? "회원가입 처리 중…"
+              : "요청 처리 중…";
+
+        button.disabled = true;
+        button.textContent = pendingLabel;
+        button.setAttribute("aria-busy", "true");
+      });
+    });
+  }
+
+  function init() {
+    initPasswordToggles();
+    initPasswordConfirmation();
+    initSchoolSelector();
+    initUniversitySelector();
+    initSubmitState();
+  }
+
+  if (
+    document.readyState === "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      init,
+      { once: true }
+    );
+  } else {
+    init();
+  }
+})();
+
+function initSchoolSelector() {
+  const dataElement =
+    document.getElementById(
+      "school-data"
+    );
+
+  const regionSelect =
+    document.getElementById(
+      "schoolRegion"
+    );
+
+  const schoolSearch =
+    document.getElementById(
+      "schoolSearch"
+    );
+
+  const schoolSelect =
+    document.getElementById(
+      "schoolCode"
+    );
+
+  const resultCount =
+    document.getElementById(
+      "schoolResultCount"
+    );
+
+  const gradeSelect =
+    document.getElementById(
+      "schoolGrade"
+    );
+
+  const schoolFieldset =
+    document.querySelector(
+      "[data-school-selector]"
+    );
+
+  if (
+    !dataElement ||
+    !regionSelect ||
+    !schoolSearch ||
+    !schoolSelect
+  ) {
+    return;
+  }
+
+  let schoolsByRegion = {};
+
+  try {
+    schoolsByRegion =
+      JSON.parse(
+        dataElement.textContent
+      );
+  } catch (error) {
+    schoolSelect.innerHTML = "";
+
+    schoolSelect.add(
+      new Option(
+        "학교 목록을 준비하지 못했습니다. 페이지를 새로고침해주세요.",
+        ""
+      )
+    );
+
+    if (schoolResultCount) {
+      schoolResultCount.textContent =
+        "입력한 내용은 아직 전송되지 않았습니다. 페이지를 새로고침해주세요.";
+    }
+
+    return;
+  }
+
+  let selectedSchoolCode =
+    schoolSelect.dataset
+      .selectedSchool || "";
+
+  function usesHighSchool() {
+    return [10, 11, 12].includes(
+      Number(gradeSelect?.value)
+    );
+  }
+
+  function getCurrentSchools() {
+    return (
+      schoolsByRegion[
+        regionSelect.value
+      ] || []
+    );
+  }
+
+  function normalizeSearch(value) {
+    return String(value || "")
+      .trim()
+      .toLocaleLowerCase("ko-KR")
+      .replace(/\s+/g, "");
+  }
+
+  function createSchoolLabel(school) {
+    if (school.roadAddress) {
+      return [
+        school.name,
+        school.roadAddress,
+      ].join(" · ");
+    }
+
+    return school.name;
+  }
+
+  function renderSchools() {
+    if (!usesHighSchool()) {
+      schoolSelect.innerHTML = "";
+      schoolSelect.add(
+        new Option(
+          "현재 학습자 구분은 고등학교 입력을 사용하지 않습니다.",
+          ""
+        )
+      );
+      schoolSelect.disabled = true;
+      return;
+    }
+
+    const schools =
+      getCurrentSchools();
+
+    const searchValue =
+      normalizeSearch(
+        schoolSearch.value
+      );
+
+    const filteredSchools =
+      schools.filter((school) => {
+        if (!searchValue) {
+          return true;
+        }
+
+        const searchableText =
+          normalizeSearch(
+            [
+              school.name,
+              school.roadAddress,
+              school.highSchoolType,
+            ].join(" ")
+          );
+
+        return searchableText.includes(
+          searchValue
+        );
+      });
+
+    schoolSelect.innerHTML = "";
+
+    const placeholder =
+      new Option(
+        filteredSchools.length
+          ? "학교를 선택해 주세요"
+          : "검색 결과가 없습니다.",
+        ""
+      );
+
+    schoolSelect.add(placeholder);
+
+    filteredSchools.forEach(
+      (school) => {
+        const option =
+          new Option(
+            createSchoolLabel(school),
+            school.code
+          );
+
+        if (
+          school.code ===
+          selectedSchoolCode
+        ) {
+          option.selected = true;
+        }
+
+        schoolSelect.add(option);
+      }
+    );
+
+    schoolSelect.disabled =
+      !regionSelect.value ||
+      filteredSchools.length === 0;
+
+    if (resultCount) {
+      resultCount.textContent =
+        regionSelect.value
+          ? `${filteredSchools.length}개 학교`
+          : "";
+    }
+  }
+
+  function handleRegionChange() {
+    selectedSchoolCode = "";
+    schoolSearch.value = "";
+
+    schoolSearch.disabled =
+      !regionSelect.value;
+
+    renderSchools();
+
+    if (regionSelect.value) {
+      schoolSearch.focus();
+    }
+  }
+
+  function applyGradeMode() {
+    const highSchoolActive = usesHighSchool();
+
+    if (schoolFieldset) {
+      schoolFieldset.hidden = !highSchoolActive;
+    }
+
+    regionSelect.required = highSchoolActive;
+    schoolSelect.required = highSchoolActive;
+    regionSelect.disabled = !highSchoolActive;
+
+    if (!highSchoolActive) {
+      schoolSearch.disabled = true;
+      schoolSelect.disabled = true;
+      if (resultCount) {
+        resultCount.textContent = "";
+      }
+      return;
+    }
+
+    schoolSearch.disabled =
+      !regionSelect.value;
+    renderSchools();
+  }
+
+  regionSelect.addEventListener(
+    "change",
+    handleRegionChange
+  );
+
+  schoolSearch.addEventListener(
+    "input",
+    () => {
+      selectedSchoolCode = "";
+      renderSchools();
+    }
+  );
+
+  schoolSelect.addEventListener(
+    "change",
+    () => {
+      selectedSchoolCode =
+        schoolSelect.value;
+    }
+  );
+
+  if (gradeSelect) {
+    gradeSelect.addEventListener(
+      "change",
+      applyGradeMode
+    );
+  }
+
+  if (
+    regionSelect.value &&
+    usesHighSchool()
+  ) {
+    schoolSearch.disabled = false;
+  }
+  applyGradeMode();
+}
+
+function initUniversitySelector() {
+  const dataElement = document.getElementById("university-data");
+  const gradeSelect = document.getElementById("schoolGrade");
+  const fieldset = document.querySelector("[data-university-selector]");
+  const searchInput = document.getElementById("universitySearch");
+  const universitySelect = document.getElementById("universityCode");
+  const resultCount = document.getElementById("universityResultCount");
+  if (!dataElement || !gradeSelect || !fieldset || !searchInput || !universitySelect) return;
+
+  let universities = [];
+  try {
+    universities = JSON.parse(dataElement.textContent);
+  } catch (_error) {
+    universitySelect.innerHTML = '<option value="">대학교 목록을 준비하지 못했습니다. 페이지를 새로고침해주세요.</option>';
+    if (resultCount) {
+      resultCount.textContent = "입력한 내용은 아직 전송되지 않았습니다. 페이지를 새로고침해주세요.";
+    }
+    return;
+  }
+  let selectedCode = universitySelect.dataset.selectedUniversity || "";
+  const normalize = (value) => String(value || "")
+    .trim()
+    .toLocaleLowerCase("ko-KR")
+    .replace(/\s+/g, "");
+  const isUniversity = () => Number(gradeSelect.value) === 14;
+
+  function render() {
+    const query = normalize(searchInput.value);
+    const rows = universities.filter((university) =>
+      !query || normalize(
+        `${university.name} ${university.campus} ${university.region}`
+      ).includes(query)
+    );
+    universitySelect.innerHTML = "";
+    universitySelect.add(new Option(
+      rows.length ? "대학교를 선택해 주세요" : "검색 결과가 없습니다.",
+      ""
+    ));
+    rows.forEach((university) => {
+      const suffix = [university.campus, university.region]
+        .filter(Boolean)
+        .join(" · ");
+      const option = new Option(
+        `${university.name}${suffix ? ` · ${suffix}` : ""}`,
+        university.code
+      );
+      option.selected = String(university.code) === String(selectedCode);
+      universitySelect.add(option);
+    });
+    universitySelect.disabled = !isUniversity() || rows.length === 0;
+    if (resultCount) {
+      resultCount.textContent = isUniversity()
+        ? `${rows.length}개 공시대상 대학·캠퍼스`
+        : "";
+    }
+  }
+
+  function applyMode() {
+    const active = isUniversity();
+    fieldset.hidden = !active;
+    searchInput.disabled = !active;
+    universitySelect.required = active;
+    universitySelect.disabled = !active;
+    if (active) render();
+  }
+  searchInput.addEventListener("input", () => {
+    selectedCode = "";
+    render();
+  });
+  universitySelect.addEventListener("change", () => {
+    selectedCode = universitySelect.value;
+  });
+  gradeSelect.addEventListener("change", applyMode);
+  render();
+  applyMode();
+}

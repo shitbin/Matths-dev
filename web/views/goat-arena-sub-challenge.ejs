@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="description"
+      content="GOAT Arena Unranked 일반 쟁탈전 신청"
+    />
+    <meta name="theme-color" content="#070913" />
+    <title>일반 쟁탈전 신청 | GOAT Arena</title>
+    <link rel="stylesheet" href="/css/goat-arena.css" />
+    <%- include("partials/rank-motion-head") %>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  </head>
+  <body class="goat-arena-page arena-inner-page arena-battle-page arena-battle-page--sub">
+    <a class="arena-skip-link" href="#sub-challenge-main">본문으로 바로가기</a>
+
+    <%- include("partials/goat-arena-navigation", {
+      activeArenaPage,
+      arenaUser,
+    }) %>
+
+    <main class="arena-v2-shell arena-v2-battle arena-v2-sub-challenge" id="sub-challenge-main">
+      <a class="arena-challenge-back" href="/goat-arena/sub">← Unranked로 돌아가기</a>
+
+      <header class="arena-v2-statusbar arena-v2-mode-header arena-v2-battle-header" aria-labelledby="sub-challenge-title">
+        <div class="arena-v2-title">
+          <span>Unranked 자동 매치</span>
+          <h1 id="sub-challenge-title">조건이 맞는 상대 찾기</h1>
+          <p>같은 티어의 내 앞 순위를 먼저 찾고, 상대가 없을 때만 바로 위 티어까지 범위를 넓힙니다.</p>
+        </div>
+        <dl class="arena-v2-metrics" aria-label="현재 Unranked 경기 상태">
+          <div><dt>내 Arena 상태</dt><dd><%= challengeData.currentStanding ? `${challengeData.currentStanding.arenaRank} ${challengeData.currentStanding.arenaPosition}위` : "미확정" %></dd></div>
+          <div><dt>신청 예치</dt><dd><%= challengeData.stakeDays %>점</dd></div>
+          <div><dt>남은 공격</dt><dd><%= challengeData.dailyUsage.attackRemaining %>회</dd></div>
+          <div><dt>매치 범위</dt><dd>최대 한 티어 위</dd></div>
+        </dl>
+      </header>
+
+      <% if (matchCreated) { %>
+        <p class="arena-challenge-notice success" role="status">
+          일반 쟁탈전이 생성되었습니다. 양쪽 참가자를 확정하고 도전자의 페이백 점수를 안전하게 예치했습니다.
+        </p>
+      <% } %>
+
+      <% if (matchError) { %>
+        <p class="arena-challenge-notice error" role="alert"><%= matchError %></p>
+      <% } %>
+
+      <% if (challengeData.activeMatch) { %>
+        <section class="arena-active-match-card" aria-labelledby="active-match-title">
+          <div>
+            <small>정산되지 않은 공식 경기</small>
+            <h2 id="active-match-title"><%= challengeData.activeMatch.statusLabel %></h2>
+            <p>
+              <%= challengeData.activeMatch.role %>로 <strong><%= challengeData.activeMatch.opponentName %></strong>님과 연결되어 있습니다. 이 경기가 끝나기 전에는 새 일반 쟁탈전을 신청할 수 없습니다.
+            </p>
+          </div>
+          <dl>
+            <div><dt>내 역할</dt><dd><%= challengeData.activeMatch.role %></dd></div>
+            <div><dt>상대</dt><dd><%= challengeData.activeMatch.opponentName %></dd></div>
+            <div><dt>경기 예치</dt><dd>페이백 점수 <%= challengeData.activeMatch.stakeDays %>점</dd></div>
+          </dl>
+          <a class="arena-active-match-link" href="<%= challengeData.activeMatch.href %>">
+            경기 화면으로 이동 <span aria-hidden="true">→</span>
+          </a>
+        </section>
+      <% } else if (!challengeData.canRequest) { %>
+        <section class="arena-access-gate arena-challenge-gate">
+          <img src="/images/brand/matths-symbol.svg" alt="" />
+          <div>
+            <small>일반 쟁탈전 신청 불가</small>
+            <h2>현재는 새 경기를 만들 수 없습니다.</h2>
+            <p><%= challengeData.unavailableMessage %></p>
+            <% if (challengeData.reasons.includes("INTEGRITY_PENALTY_ACTIVE")) { %>
+              <p class="arena-challenge-penalty-notice">부정행위가 확인되어 GOAT Arena 매치메이킹이 제한되었습니다.<br />제한 해제: <strong><%= formatMatchmakingRestriction(challengeData.matchmakingRestrictedUntil) %> (KST)</strong></p>
+            <% } %>
+            <p>오늘 공격 <%= challengeData.dailyUsage.attackCount %>/<%= challengeData.dailyUsage.attackLimit %>회 · 오늘 방어 <%= challengeData.dailyUsage.defenseCount %>/<%= challengeData.dailyUsage.defenseLimit %>회</p>
+          </div>
+          <a href="/goat-arena/profile">Arena 프로필 확인</a>
+        </section>
+      <% } else { %>
+        <section class="arena-division-status arena-challenge-status arena-command-status" aria-label="오늘의 일반 쟁탈전 이용 현황">
+          <article>
+            <small>오늘 공격</small>
+            <strong><%= challengeData.dailyUsage.attackCount %> / <%= challengeData.dailyUsage.attackLimit %>회</strong>
+            <span>현재 티어 기준 · 남은 공격 <%= challengeData.dailyUsage.attackRemaining %>회</span>
+          </article>
+          <article>
+            <small>오늘 방어</small>
+            <strong><%= challengeData.dailyUsage.defenseCount %> / <%= challengeData.dailyUsage.defenseLimit %>회</strong>
+            <span>현재 티어 기준 · 남은 방어 <%= challengeData.dailyUsage.defenseRemaining %>회</span>
+          </article>
+          <article>
+            <small>당일 승리 잠금</small>
+            <strong><%= challengeData.dailyUsage.challengerWin ? "적용 중" : "없음" %></strong>
+            <span>도전자로 승리하면 그날 남은 일반 공격·방어가 잠깁니다.</span>
+          </article>
+        </section>
+        <section class="arena-candidate-section arena-v2-battle-section" aria-labelledby="candidate-title">
+          <header>
+            <div>
+              <small>자동 매치 신청</small>
+              <h2 id="candidate-title">신청 전에 적용 조건을 확인하세요.</h2>
+            </div>
+            <p>
+              활성 이용권·배치 상태·오늘 경기 횟수·진행 중 경기를 확인한 뒤 상대 한 명을 배정합니다. 매치가 만들어지기 전에는 페이백 점수가 예치되지 않습니다.
+            </p>
+          </header>
+
+          <% if (challengeData.hasEligibleOpponent) { %>
+            <div class="arena-candidate-list">
+                <% const automaticCandidateCount = challengeData.targetTiers.reduce((sum, target) => sum + target.candidateCount, 0); %>
+                <article class="arena-candidate-auto-tier">
+                  <div class="arena-candidate-crest"><span class="arena-random-tier-mark" aria-hidden="true">자동</span></div>
+                  <div class="arena-candidate-identity">
+                    <small>순차 자동 배정</small>
+                    <strong><%= challengeData.currentStanding?.arenaRank || "현재 티어" %> 상위 순위<%= challengeData.nextTierTarget ? ` → ${challengeData.nextTierTarget.label}` : "" %></strong>
+                    <span>같은 티어 <%= challengeData.sameTierTarget?.candidateCount || 0 %>명 · 바로 위 티어 <%= challengeData.nextTierTarget?.candidateCount || 0 %>명</span>
+                  </div>
+                  <form action="/goat-arena/sub/challenges" method="post"><input type="hidden" name="requestId" value="<%= requestId %>" /><button type="submit" <%= automaticCandidateCount > 0 ? "" : "disabled" %>>자동 매치 신청 <span aria-hidden="true">→</span></button></form>
+                </article>
+            </div>
+          <% } else { %>
+            <div class="arena-candidate-empty">
+              <strong>지금 자동 매치할 수 있는 상대가 없습니다.</strong>
+              <p>적격 상대가 없으므로 페이백 점수는 예치되거나 차감되지 않았습니다. 잠시 후 다시 확인해주세요.</p>
+            </div>
+          <% } %>
+        </section>
+      <% } %>
+    </main>
+  </body>
+</html>

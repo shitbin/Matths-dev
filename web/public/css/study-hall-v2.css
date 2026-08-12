@@ -1,0 +1,374 @@
+/* 수험관 목록 — 브랜드 공통 셸 안에서 학습 진도와 다음 행동을 우선한다. */
+
+.study-hall-page {
+  color: var(--matths-ink);
+  background: var(--matths-canvas);
+}
+
+.study-hall-main {
+  background: var(--matths-canvas);
+}
+
+.study-hall-hero {
+  min-height: 0;
+  align-items: center;
+  margin: 24px auto 18px;
+  padding: 34px;
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-lg);
+  box-shadow: var(--matths-shadow);
+}
+
+.study-hall-hero p,
+.study-hall-catalog > header p,
+.study-hall-series > header small {
+  color: var(--matths-progress-blue);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.study-hall-hero h1 {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.13;
+}
+
+.study-hall-hero > div > span {
+  max-width: 680px;
+  margin-top: 16px;
+  color: var(--matths-muted);
+  font-size: 15px;
+}
+
+.study-hall-hero aside {
+  min-height: 132px;
+  padding: 22px;
+  background: var(--matths-canvas);
+  border: 1px solid var(--matths-line);
+  border-left: 4px solid var(--matths-progress-blue);
+  border-radius: var(--matths-radius-md);
+  backdrop-filter: none;
+}
+
+.study-hall-hero aside span,
+.study-hall-hero aside small {
+  color: var(--matths-muted);
+  font-size: 12px;
+}
+
+.study-hall-hero aside strong {
+  color: var(--matths-ink);
+}
+
+.study-hall-tabs {
+  top: 0;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+  box-shadow: none;
+}
+
+.study-hall-tabs a {
+  min-height: 68px;
+  padding: 12px 14px;
+  color: var(--matths-muted);
+  background: transparent;
+  border-right: 1px solid var(--matths-line);
+  border-radius: 0;
+  transition: transform var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease),
+    color var(--motion-base) var(--motion-ease);
+}
+
+.study-hall-tabs a:last-child {
+  border-right: 0;
+}
+
+.study-hall-tabs a:hover {
+  color: var(--matths-ink);
+  background: var(--matths-primary-soft);
+  transform: var(--motion-lift);
+}
+
+.study-hall-tabs a.is-active {
+  color: var(--matths-ink);
+  background: var(--matths-primary-soft);
+  box-shadow: inset 0 -3px 0 var(--matths-progress-blue);
+}
+
+.study-hall-tabs span {
+  font-size: 14px;
+}
+
+.study-hall-tabs small {
+  font-size: 12px;
+  opacity: 1;
+}
+
+.study-hall-continue {
+  min-height: 92px;
+  padding: 20px 22px 20px 26px;
+  color: var(--matths-ink);
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-left: 4px solid var(--matths-progress-blue);
+  border-radius: var(--matths-radius-md);
+  box-shadow: none;
+  transition: transform var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease);
+}
+
+.study-hall-continue:hover {
+  border-color: var(--matths-progress-blue);
+  transform: var(--motion-lift);
+}
+
+.study-hall-continue small,
+.study-hall-continue span {
+  color: var(--matths-muted);
+  font-size: 13px;
+}
+
+.study-hall-continue > b {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  border-radius: var(--matths-radius-md);
+  font-size: 13px;
+}
+
+.study-hall-catalog {
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius-lg);
+  box-shadow: none;
+}
+
+.study-hall-catalog > header h2 {
+  font-size: clamp(30px, 3vw, 40px);
+}
+
+.study-hall-catalog > header > strong {
+  color: var(--matths-progress-blue);
+}
+
+.study-hall-catalog > header > strong small,
+.study-hall-catalog > header span,
+.study-hall-series > header > span {
+  color: var(--matths-muted);
+  font-size: 12px;
+}
+
+.study-hall-series + .study-hall-series {
+  border-top-color: var(--matths-line);
+}
+
+.study-hall-card {
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius);
+  transition: transform var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease);
+}
+
+.study-hall-card:hover {
+  border-color: var(--matths-progress-blue);
+  box-shadow: var(--matths-shadow-hover);
+  transform: var(--motion-lift);
+}
+
+.study-hall-cover {
+  height: 174px;
+  padding: 22px;
+  color: var(--matths-on-navy);
+  background: var(--matths-navy);
+  border-bottom: 4px solid var(--matths-progress-blue);
+}
+
+.study-hall-cover::after {
+  content: none;
+}
+
+.study-hall-cover.has-image {
+  padding: 0;
+  background: var(--matths-canvas);
+  border-bottom-color: var(--matths-line);
+}
+
+.study-hall-cover .study-hall-fallback-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  opacity: 0.92;
+}
+
+.study-hall-cover > b {
+  font-size: 20px;
+}
+
+.study-hall-cover > em,
+.study-hall-card-copy > p,
+.study-hall-card-copy dl div,
+.study-hall-progress small,
+.study-hall-card-copy > b {
+  font-size: 13px;
+}
+
+.study-hall-card-copy > p,
+.study-hall-card-copy > b {
+  color: var(--matths-progress-blue);
+}
+
+.study-hall-card-copy dl div {
+  background: var(--matths-canvas);
+}
+
+.study-hall-progress i {
+  background: var(--matths-progress-blue);
+}
+
+.study-hall-card-copy > b {
+  min-height: 44px;
+  border-top: 1px solid var(--matths-line);
+}
+
+.study-hall-empty {
+  color: var(--matths-muted);
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+}
+
+.study-hall-empty > span {
+  color: var(--matths-progress-blue);
+}
+
+/* 수험관 상세·답안 — 목록과 같은 학습 표면 및 역할 색을 사용한다. */
+.study-hall-detail-page .study-hall-back {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--matths-progress-blue);
+}
+
+.study-content-heading,
+.study-content-files,
+.study-error-report,
+.study-answer-sheet {
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius-lg);
+  box-shadow: none;
+}
+
+.study-content-heading > div > p,
+.study-answer-sheet > header p,
+.study-content-files a span,
+.study-error-report small {
+  color: var(--matths-progress-blue);
+  letter-spacing: 0;
+}
+
+.study-content-heading aside {
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+  border-left-color: var(--matths-progress-blue);
+}
+
+.study-content-heading aside i,
+.study-question > header > span {
+  background: var(--matths-progress-blue);
+}
+
+.study-content-files a,
+.study-question,
+.study-question-choices {
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+}
+
+.study-content-files a {
+  min-height: 70px;
+  transition: transform var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease);
+}
+
+.study-content-files a:hover {
+  border-color: var(--matths-progress-blue);
+  transform: var(--motion-lift);
+}
+
+.study-choice-row span {
+  min-width: 47px;
+  min-height: 47px;
+}
+
+.study-choice-row input:focus-visible + span {
+  outline: 3px solid var(--matths-focus);
+  outline-offset: 3px;
+}
+
+.study-choice-row input:checked + span,
+.study-answer-sheet > footer button:not(.secondary),
+.study-answer-sheet > footer a {
+  background: var(--matths-action-primary);
+}
+
+.study-answer-sheet > footer button,
+.study-answer-sheet > footer a {
+  min-height: 48px;
+}
+
+@media (max-width: 1180px) {
+  .study-hall-tabs a {
+    border-bottom: 1px solid var(--matths-line);
+  }
+}
+
+@media (max-width: 760px) {
+  .study-hall-hero {
+    min-height: 0;
+    margin-top: 8px;
+    padding: 24px 20px;
+  }
+
+  .study-hall-hero h1 {
+    font-size: 36px;
+  }
+
+  .study-hall-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .study-hall-tabs a {
+    min-height: 60px;
+  }
+
+  .study-hall-tabs small {
+    display: block;
+  }
+
+  .study-hall-continue > b {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .study-hall-catalog > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .study-hall-catalog > header > strong small {
+    display: inline;
+    margin-left: 4px;
+    text-align: left;
+  }
+}

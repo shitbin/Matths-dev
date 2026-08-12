@@ -1,0 +1,42 @@
+<%
+  const connectedChildren =
+    typeof familyChildren !== "undefined" && Array.isArray(familyChildren)
+      ? familyChildren
+      : [];
+  const activeChildId =
+    typeof selectedChildId !== "undefined" ? String(selectedChildId || "") : "";
+  const returnPath =
+    activeParentPage === "notifications"
+      ? "/parent/notifications"
+      : activeParentPage === "pricing"
+        ? "/parent/pricing"
+        : "/parent";
+%>
+<a class="matths-skip-link" href="#parent-navigation-end">본문으로 바로가기</a>
+<header class="parent-nav">
+  <a class="parent-brand" href="/parent" aria-label="학부모 대시보드">
+    <%- include("brand-primary-logo") %>
+    <small class="brand-context-label">학부모</small>
+  </a>
+  <% if (connectedChildren.length) { %>
+    <form class="parent-child-switcher" action="/parent/children/select" method="post">
+      <input type="hidden" name="returnTo" value="<%= returnPath %>" />
+      <label>
+        <span>확인할 자녀</span>
+        <select name="childUserId" aria-label="확인할 자녀 선택">
+          <% connectedChildren.forEach((entry) => { %>
+            <option value="<%= entry.childId %>" <%= entry.childId === activeChildId ? "selected" : "" %>><%= entry.child.realName || entry.child.name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <% if (connectedChildren.length > 1) { %><button type="submit">전환</button><% } %>
+    </form>
+  <% } %>
+  <nav aria-label="학부모 메뉴">
+    <a class="<%= activeParentPage === 'dashboard' ? 'active' : '' %>" href="/parent" <% if (activeParentPage === 'dashboard') { %>aria-current="page"<% } %>>학습 현황</a>
+    <a class="<%= activeParentPage === 'notifications' ? 'active' : '' %>" href="/parent/notifications" <% if (activeParentPage === 'notifications') { %>aria-current="page"<% } %>>학습 알림</a>
+    <a class="parent-buy-nav <%= activeParentPage === 'pricing' ? 'active' : '' %>" href="/parent/pricing" <% if (activeParentPage === 'pricing') { %>aria-current="page"<% } %>>이용권</a>
+  </nav>
+  <form action="/parent/logout" method="post"><button type="submit">로그아웃</button></form>
+</header>
+<span class="matths-skip-target" id="parent-navigation-end" tabindex="-1"></span>

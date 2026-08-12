@@ -1,0 +1,600 @@
+<%
+  const formError =
+    typeof error !== "undefined"
+      ? error
+      : null;
+
+  const input =
+    typeof oldInput !== "undefined" &&
+    oldInput
+      ? oldInput
+      : {
+          realName: "",
+          birthDate: "",
+          name: "",
+          email: "",
+          schoolGrade: 10,
+          schoolRegion: "",
+          schoolCode: "",
+          universityCode: ""
+        };
+  const social =
+    typeof socialRegistration !== "undefined" && socialRegistration
+      ? socialRegistration
+      : null;
+
+  const regionData =
+    typeof schoolRegions !== "undefined" &&
+    schoolRegions
+      ? schoolRegions
+      : {};
+
+  const regionNames =
+    Object.keys(regionData);
+
+  /*
+   * JSON을 script 태그 안에 안전하게 넣기 위한 처리
+   */
+  const safeSchoolJson =
+    JSON.stringify(regionData)
+      .replace(/</g, "\\u003c")
+      .replace(/\u2028/g, "\\u2028")
+      .replace(/\u2029/g, "\\u2029");
+  const universityData =
+    typeof universities !== "undefined" && Array.isArray(universities)
+      ? universities
+      : [];
+  const safeUniversityJson = JSON.stringify(universityData)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+%>
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <meta
+      name="description"
+      content="Matths에 가입하고 시각적인 수학 학습을 시작하세요."
+    />
+
+    <meta
+      name="theme-color"
+      content="#f5f7fc"
+    />
+
+    <title>회원가입 | Matths</title>
+
+    <link rel="stylesheet" href="/css/matths-theme.css" />
+    <link rel="stylesheet" href="/css/auth.css" />
+
+    <script
+      src="/js/auth.js"
+      defer
+    ></script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png" />
+    <link rel="stylesheet" href="/css/brand.css" />
+  </head>
+
+  <body class="auth-page-register">
+    <a
+      class="skip-link"
+      href="#register-form"
+    >
+      회원가입 폼으로 이동
+    </a>
+
+    <header class="auth-header">
+      <a
+        class="auth-brand"
+        href="/"
+        aria-label="Matths 메인 페이지"
+      >
+        <%- include("partials/brand-primary-logo") %>
+      </a>
+
+      <nav aria-label="회원가입 페이지 메뉴">
+        <span>이미 계정이 있나요?</span>
+        <a href="/login">로그인</a>
+      </nav>
+    </header>
+
+    <main class="auth-layout">
+      <!-- 왼쪽 서비스 소개 영역 -->
+      <section
+        class="auth-visual"
+        aria-labelledby="visual-title"
+      >
+        <div class="visual-copy">
+          <p>학습 시작</p>
+
+          <h1 id="visual-title">
+            수학이 보이면,<br />
+            <strong>풀이가 시작됩니다.</strong>
+          </h1>
+
+          <span>
+            교과서 순서대로 개념을 배우고,
+            틀린 문제는 막힌 장면부터
+            다시 이해하세요.
+          </span>
+        </div>
+
+        <div
+          class="learning-preview"
+          aria-label="Matths 학습 과정"
+        >
+          <article>
+            <span>01</span>
+
+            <div>
+              <small>개념</small>
+              <strong>개념을 그림으로</strong>
+            </div>
+
+            <b>✓</b>
+          </article>
+
+          <article class="active">
+            <span>02</span>
+
+            <div>
+              <small>시각화</small>
+              <strong>공식을 움직임으로</strong>
+            </div>
+
+            <b>→</b>
+          </article>
+
+          <article>
+            <span>03</span>
+
+            <div>
+              <small>연습</small>
+              <strong>문제로 이해 확인</strong>
+            </div>
+
+            <b>○</b>
+          </article>
+
+          <article>
+            <span>04</span>
+
+            <div>
+              <small>복습</small>
+              <strong>오답은 막힌 장면부터</strong>
+            </div>
+
+            <b>○</b>
+          </article>
+        </div>
+
+        <div class="visual-points">
+          <span>
+            <b>220</b>
+            13과목 핵심 개념
+          </span>
+
+          <span>
+            <b>단계</b>
+            단계별 시각화
+          </span>
+
+          <span>
+            <b>시작</b>
+            가입하고 시작
+          </span>
+        </div>
+      </section>
+
+      <!-- 오른쪽 회원가입 폼 -->
+      <section
+        class="auth-panel"
+        id="register-form"
+        aria-labelledby="register-title"
+      >
+        <div class="auth-panel-inner">
+          <div class="auth-heading">
+            <p>계정 만들기</p>
+
+            <h2 id="register-title">
+              Matths 학습을 시작하세요.
+            </h2>
+          </div>
+
+          <% if (formError) { %>
+            <div
+              class="form-alert"
+              role="alert"
+            >
+              <span aria-hidden="true">!</span>
+              <p><%= formError %></p>
+            </div>
+          <% } %>
+
+          <% if (social) { %>
+            <div class="social-registration-banner" role="status">
+              <span class="social-auth-mark" aria-hidden="true"><%- include("partials/google-g-mark") %></span>
+              <div>
+                <strong>Google 계정 확인 완료</strong>
+                <p>확인된 이메일은 바꿀 수 없습니다. 나머지 필수 정보만 입력해 주세요.</p>
+              </div>
+            </div>
+          <% } %>
+
+          <form
+            class="auth-form"
+            action="/register"
+            method="POST"
+            data-register-form
+          >
+            <!-- 실명 -->
+            <div class="form-field">
+              <label for="realName">
+                실명
+              </label>
+
+              <input
+                id="realName"
+                name="realName"
+                type="text"
+                value="<%= input.realName || '' %>"
+                placeholder="본인의 실제 이름"
+                autocomplete="name"
+                minlength="2"
+                maxlength="40"
+                required
+              />
+
+            </div>
+
+            <!-- 생년월일 -->
+            <div class="form-field">
+              <label for="birthDate">
+                생년월일
+              </label>
+
+              <input
+                id="birthDate"
+                name="birthDate"
+                type="date"
+                value="<%= input.birthDate || '' %>"
+                autocomplete="bday"
+                min="1900-01-01"
+                required
+              />
+            </div>
+
+            <!-- 닉네임 -->
+            <div class="form-field">
+              <label for="name">
+                닉네임
+              </label>
+
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value="<%= input.name || '' %>"
+                placeholder="학습 화면에서 사용할 이름"
+                autocomplete="nickname"
+                minlength="2"
+                maxlength="30"
+                required
+              />
+
+            </div>
+
+            <!-- 이메일 -->
+            <div class="form-field">
+              <label for="email">
+                이메일
+              </label>
+
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value="<%= input.email || '' %>"
+                placeholder="student@example.com"
+                autocomplete="email"
+                <% if (social) { %>readonly aria-readonly="true"<% } %>
+                required
+              />
+              <% if (social) { %><small class="field-guide">Google에서 확인된 이메일입니다.</small><% } %>
+            </div>
+
+            <!-- 학년 -->
+            <div class="form-field">
+              <label for="schoolGrade">
+                학년
+              </label>
+
+              <select
+                id="schoolGrade"
+                name="schoolGrade"
+                required
+              >
+                <option
+                  value="10"
+                  <%= Number(input.schoolGrade) === 10
+                    ? "selected"
+                    : "" %>
+                >
+                  고등학교 1학년
+                </option>
+
+                <option
+                  value="11"
+                  <%= Number(input.schoolGrade) === 11
+                    ? "selected"
+                    : "" %>
+                >
+                  고등학교 2학년
+                </option>
+
+                <option
+                  value="12"
+                  <%= Number(input.schoolGrade) === 12
+                    ? "selected"
+                    : "" %>
+                >
+                  고등학교 3학년
+                </option>
+
+                <option
+                  value="13"
+                  <%= Number(input.schoolGrade) === 13
+                    ? "selected"
+                    : "" %>
+                >
+                  N수생
+                </option>
+                <option value="14" <%= Number(input.schoolGrade) === 14 ? "selected" : "" %>>대학생</option>
+                <option value="15" <%= Number(input.schoolGrade) === 15 ? "selected" : "" %>>직장인</option>
+              </select>
+            </div>
+
+            <!-- 학교 선택 -->
+            <fieldset
+              class="school-selector"
+              data-school-selector
+              <%= ![10, 11, 12].includes(Number(input.schoolGrade)) ? "hidden" : "" %>
+            >
+              <legend>재학 중인 고등학교</legend>
+
+              <!-- 시·도 -->
+              <div class="form-field">
+                <label for="schoolRegion">
+                  학교 소재 시·도
+                </label>
+
+                <select
+                  id="schoolRegion"
+                  name="schoolRegion"
+                  required
+                >
+                  <option value="">
+                    시·도를 선택해 주세요
+                  </option>
+
+                  <% regionNames.forEach(
+                    (regionName) => {
+                  %>
+                    <option
+                      value="<%= regionName %>"
+                      <%= input.schoolRegion ===
+                          regionName
+                            ? "selected"
+                            : "" %>
+                    >
+                      <%= regionName %>
+                    </option>
+                  <% }) %>
+                </select>
+              </div>
+
+              <!-- 학교 검색 -->
+              <div class="form-field">
+                <label for="schoolSearch">
+                  학교 검색
+                </label>
+
+                <input
+                  id="schoolSearch"
+                  type="search"
+                  placeholder="학교명을 입력하세요"
+                  autocomplete="off"
+                  disabled
+                />
+
+                <small class="field-guide">
+                  시·도를 선택한 후
+                  학교명을 검색하세요.
+                </small>
+              </div>
+
+              <!-- 학교 -->
+              <div class="form-field">
+                <label for="schoolCode">
+                  고등학교
+                </label>
+
+                <select
+                  id="schoolCode"
+                  name="schoolCode"
+                  data-selected-school="<%= input.schoolCode || '' %>"
+                  required
+                  disabled
+                >
+                  <option value="">
+                    시·도를 먼저 선택해 주세요
+                  </option>
+                </select>
+
+                <small
+                  class="field-guide school-result-count"
+                  id="schoolResultCount"
+                  aria-live="polite"
+                ></small>
+              </div>
+            </fieldset>
+
+            <fieldset
+              class="school-selector university-selector"
+              data-university-selector
+              <%= Number(input.schoolGrade) !== 14 ? "hidden" : "" %>
+            >
+              <legend>재학 중인 대학교</legend>
+              <div class="form-field">
+                <label for="universitySearch">대학교 검색</label>
+                <input id="universitySearch" type="search" placeholder="대학교명을 입력하세요" autocomplete="off" />
+                <small class="field-guide">대학알리미 2026년 공시대상대학 목록을 사용합니다.</small>
+              </div>
+              <div class="form-field">
+                <label for="universityCode">대학교</label>
+                <select id="universityCode" name="universityCode" data-selected-university="<%= input.universityCode || '' %>">
+                  <option value="">대학교를 선택해 주세요</option>
+                </select>
+                <small class="field-guide" id="universityResultCount" aria-live="polite"></small>
+              </div>
+            </fieldset>
+
+            <% if (!social) { %>
+            <!-- 비밀번호 -->
+            <div class="form-field">
+              <label for="password">
+                비밀번호
+              </label>
+
+              <div class="password-field">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="8자 이상 입력하세요"
+                  autocomplete="new-password"
+                  minlength="8"
+                  maxlength="72"
+                  aria-describedby="password-guide"
+                  required
+                />
+
+                <button
+                  type="button"
+                  data-password-toggle="password"
+                  aria-label="비밀번호 표시"
+                  aria-pressed="false"
+                >
+                  보기
+                </button>
+              </div>
+
+              <small
+                class="field-guide"
+                id="password-guide"
+              >
+                영문, 숫자, 특수문자를 포함한
+                8자 이상을 권장합니다.
+              </small>
+            </div>
+
+            <!-- 비밀번호 확인 -->
+            <div class="form-field">
+              <label for="passwordConfirm">
+                비밀번호 확인
+              </label>
+
+              <div class="password-field">
+                <input
+                  id="passwordConfirm"
+                  name="passwordConfirm"
+                  type="password"
+                  placeholder="비밀번호를 다시 입력하세요"
+                  autocomplete="new-password"
+                  minlength="8"
+                  maxlength="72"
+                  aria-describedby="password-match"
+                  required
+                />
+
+                <button
+                  type="button"
+                  data-password-toggle="passwordConfirm"
+                  aria-label="비밀번호 확인 값 표시"
+                  aria-pressed="false"
+                >
+                  보기
+                </button>
+              </div>
+
+              <small
+                class="field-guide"
+                id="password-match"
+                aria-live="polite"
+              ></small>
+            </div>
+            <% } %>
+
+            <!-- 약관 동의 -->
+            <label class="check-field terms-field">
+              <input
+                type="checkbox"
+                name="termsAccepted"
+                value="true"
+                required
+              />
+
+              <span aria-hidden="true"></span>
+
+              <em>
+                <a href="/terms">
+                  이용약관
+                </a>
+
+                과
+
+                <a href="/privacy">
+                  개인정보처리방침
+                </a>
+
+                에 동의합니다.
+              </em>
+            </label>
+
+            <button
+              class="submit-button"
+              type="submit"
+            >
+              가입하고 시작하기
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+
+          <div class="auth-switch">
+            <span>이미 계정이 있나요?</span>
+            <a href="/login">로그인하기</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!--
+      Controller에서 전달받은 학교 데이터를
+      auth.js가 읽습니다.
+    -->
+    <script
+      id="school-data"
+      type="application/json"
+    ><%- safeSchoolJson %></script>
+    <script id="university-data" type="application/json"><%- safeUniversityJson %></script>
+  </body>
+</html>

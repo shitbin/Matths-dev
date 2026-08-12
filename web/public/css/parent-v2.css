@@ -1,0 +1,276 @@
+/* 학부모 화면 — 학습 확인, 알림, 결제의 역할을 한 계층으로 정리한다. */
+
+.parent-page,
+.parent-auth-page,
+.checkout-page {
+  color: var(--matths-ink);
+  background: var(--matths-canvas);
+}
+
+.parent-nav {
+  min-height: 72px;
+  padding-block: 10px;
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  box-shadow: none;
+}
+
+.parent-brand > .brand-logo,
+.parent-auth-brand > .brand-logo {
+  width: 132px;
+  height: auto;
+}
+
+.parent-nav nav a,
+.parent-nav button,
+.parent-child-switcher label > span,
+.parent-child-switcher select,
+.parent-child-switcher button {
+  color: var(--matths-muted);
+  font-size: 13px;
+}
+
+.parent-nav nav a.active {
+  color: var(--matths-progress-blue);
+  background: var(--matths-primary-soft);
+}
+
+.parent-nav nav .parent-buy-nav {
+  color: var(--matths-muted);
+  background: transparent;
+}
+
+.parent-nav nav .parent-buy-nav.active {
+  color: var(--matths-progress-blue);
+  background: var(--matths-primary-soft);
+}
+
+.parent-child-switcher {
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.parent-main {
+  padding-top: 36px;
+}
+
+.parent-hero {
+  align-items: flex-end;
+  padding: 32px;
+  color: var(--matths-ink);
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-left: 4px solid var(--matths-progress-blue);
+  border-radius: var(--matths-radius-lg);
+  box-shadow: none;
+}
+
+.parent-hero p,
+.parent-page-heading p,
+.parent-ranking-section header p,
+.parent-checkout-card > p,
+.student-checkout-card > p,
+.parent-auth-card > p {
+  color: var(--matths-progress-blue);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.parent-hero h1,
+.parent-page-heading h1 {
+  color: var(--matths-ink);
+  font-size: clamp(30px, 4vw, 44px);
+}
+
+.parent-hero > div > span,
+.parent-page-heading > span {
+  color: var(--matths-muted);
+  font-size: 14px;
+}
+
+.parent-hero > a {
+  min-height: 48px;
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  border-radius: var(--matths-radius-md);
+}
+
+.parent-family-strip,
+.parent-summary-grid article,
+.parent-ranking-section,
+.parent-ranking-grid article,
+.parent-product-grid article,
+.parent-alert-status-grid article,
+.parent-alert-card,
+.parent-auth-card,
+.parent-checkout-card,
+.student-checkout-card {
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  box-shadow: none;
+}
+
+.parent-family-strip,
+.parent-summary-grid article,
+.parent-ranking-grid article,
+.parent-product-grid article,
+.parent-alert-status-grid article,
+.parent-alert-card {
+  border-radius: var(--matths-radius-md);
+}
+
+.parent-summary-grid article,
+.parent-alert-status-grid article {
+  border-top: 3px solid var(--matths-progress-blue);
+}
+
+.parent-summary-grid small,
+.parent-summary-grid span,
+.parent-ranking-grid small,
+.parent-ranking-grid span,
+.parent-ranking-section header > span,
+.parent-family-strip small,
+.parent-family-strip p,
+.parent-family-strip a,
+.parent-product-grid > article > small,
+.parent-product-grid p,
+.parent-alert-status-grid small,
+.parent-alert-card header small,
+.parent-alert-card > p,
+.parent-alert-fields label > span,
+.parent-alert-fields select,
+.parent-toggle span,
+.parent-auth-card > span,
+.parent-auth-form label > span,
+.parent-auth-form label small,
+.parent-auth-meta,
+.parent-checkout-card dt,
+.student-checkout-card dt,
+.student-checkout-card > span,
+.parent-pg-note,
+.parent-pending-payment p,
+.parent-pending-payment span,
+.checkout-back,
+.parent-link-card dt,
+.parent-link-card dd,
+.parent-link-cancel,
+.parent-form-message {
+  font-size: 13px;
+}
+
+.parent-ranking-section {
+  padding: 30px;
+  border-radius: var(--matths-radius-lg);
+}
+
+.parent-ranking-grid article {
+  background: var(--matths-canvas);
+}
+
+.parent-product-grid a,
+.parent-auth-form button,
+.parent-checkout-card form button,
+.student-checkout-card form button,
+.parent-alert-delivery button {
+  min-height: 48px;
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  border-radius: var(--matths-radius-md);
+  font-size: 13px;
+}
+
+.parent-auth-card,
+.parent-checkout-card,
+.student-checkout-card {
+  border-radius: var(--matths-radius-lg);
+}
+
+.parent-auth-card {
+  border-top: 4px solid var(--matths-progress-blue);
+}
+
+.parent-auth-form input,
+.student-checkout-card input[type="email"],
+.parent-alert-fields select {
+  min-height: 48px;
+  color: var(--matths-ink);
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+}
+
+.parent-alert-card header small {
+  color: var(--matths-progress-blue);
+  letter-spacing: 0;
+}
+
+.parent-toggle input,
+.parent-alert-delivery input {
+  accent-color: var(--matths-progress-blue);
+}
+
+.parent-alert-delivery {
+  color: var(--matths-ink);
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.parent-alert-delivery > label {
+  color: var(--matths-ink);
+}
+
+.parent-alert-delivery small {
+  color: var(--matths-muted);
+  font-size: 13px;
+}
+
+.parent-pg-note,
+.parent-pending-payment,
+.guardian-consent-card {
+  color: var(--matths-muted);
+  background: var(--matths-primary-soft);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.parent-checkout-unavailable {
+  color: var(--matths-muted);
+  background: var(--matths-canvas);
+  border: 1px solid var(--matths-line);
+}
+
+.parent-form-message.is-error {
+  color: var(--matths-danger);
+  background: var(--matths-danger-soft);
+  border-color: var(--matths-danger);
+}
+
+@media (max-width: 800px) {
+  .parent-nav nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .parent-hero {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .parent-nav nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .parent-nav nav a {
+    min-width: 0;
+    padding-inline: 8px;
+  }
+
+  .parent-summary-grid,
+  .parent-ranking-grid,
+  .parent-product-grid,
+  .parent-alert-status-grid,
+  .parent-alert-fields {
+    grid-template-columns: 1fr;
+  }
+}

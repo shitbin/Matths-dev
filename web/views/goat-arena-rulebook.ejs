@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Matths GOAT Arena 공식 사용자 룰북" />
+    <meta name="theme-color" content="#090c1b" />
+    <title><%= rulebook.title %> | Matths</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/matths-theme.css" />
+    <link rel="stylesheet" href="/css/goat-arena-rulebook.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  </head>
+  <body class="rulebook-page">
+    <a class="skip-link" href="#rulebook-content">본문으로 바로가기</a>
+    <header class="rulebook-topbar">
+      <a class="rulebook-brand" href="/main" aria-label="Matths 학습 홈">
+        <%- include("partials/brand-primary-logo") %>
+      </a>
+      <nav aria-label="룰북 메뉴">
+        <a href="/war-of-masters">Arena</a>
+        <a href="/main">학습 홈</a>
+      </nav>
+    </header>
+
+    <main id="rulebook-content">
+      <section class="rulebook-hero">
+        <div>
+          <p><%= rulebook.label %> · 공식 룰북</p>
+          <h1><%= rulebook.title %></h1>
+          <span><%= rulebook.version %> · 공통 경기 규칙 및 최종 종합 랭킹 v1.4 반영</span>
+        </div>
+        <dl aria-label="공식 경기 요약">
+          <div><dt>문항</dt><dd>5문항</dd></div>
+          <div><dt>문항당 시간</dt><dd>10분</dd></div>
+          <div><dt>증빙</dt><dd>60초</dd></div>
+        </dl>
+      </section>
+
+      <nav class="division-switch" aria-label="Arena 모드 선택">
+        <a class="<%= rulebook.division === 'sub' ? 'active' : '' %>" href="/goat-arena/rules/sub" <%- rulebook.division === 'sub' ? 'aria-current="page"' : '' %>>Unranked</a>
+        <a class="<%= rulebook.division === 'main' ? 'active' : '' %>" href="/goat-arena/rules/main" <%- rulebook.division === 'main' ? 'aria-current="page"' : '' %>>Ranked</a>
+      </nav>
+
+      <section class="quick-rules" aria-labelledby="quick-rules-title">
+        <header><p>먼저 읽어주세요</p><h2 id="quick-rules-title">먼저 알아둘 6가지</h2></header>
+        <ol>
+          <% rulebook.quickRules.forEach(([number, text]) => { %>
+            <li><span><%= number %></span><strong><%= text %></strong></li>
+          <% }) %>
+        </ol>
+      </section>
+
+      <div class="rulebook-layout">
+        <aside class="rulebook-index" aria-label="목차">
+          <p>목차</p>
+          <ol>
+            <% rulebook.sections.forEach((section) => { %>
+              <li><a href="#<%= section.id %>"><span><%= section.number %></span><%= section.title %></a></li>
+            <% }) %>
+          </ol>
+        </aside>
+
+        <div class="rulebook-sections">
+          <% rulebook.sections.forEach((section, sectionIndex) => { %>
+            <article class="rule-section" id="<%= section.id %>">
+              <header>
+                <span><%= section.number %></span>
+                <div><h2><%= section.title %></h2><p><%= section.summary %></p></div>
+              </header>
+              <div class="rule-body">
+                <% section.blocks.forEach((block) => { %>
+                  <% if (block.type === 'p') { %>
+                    <p><%= block.text %></p>
+                  <% } else if (block.type === 'list') { %>
+                    <ul><% block.items.forEach((item) => { %><li><%= item %></li><% }) %></ul>
+                  <% } else if (block.type === 'steps') { %>
+                    <ol class="decision-steps"><% block.items.forEach((item, index) => { %><li><span><%= String(index + 1).padStart(2, '0') %></span><%= item %></li><% }) %></ol>
+                  <% } else if (block.type === 'facts') { %>
+                    <dl class="rule-facts"><% block.items.forEach(([term, value]) => { %><div><dt><%= term %></dt><dd><%= value %></dd></div><% }) %></dl>
+                  <% } else if (block.type === 'timeline') { %>
+                    <ol class="rule-timeline"><% block.items.forEach(([time, text]) => { %><li><time><%= time %></time><p><%= text %></p></li><% }) %></ol>
+                  <% } else if (block.type === 'table') { %>
+                    <div class="table-scroll" role="region" aria-label="<%= section.title %> 표" tabindex="0"><table><thead><tr><% block.headers.forEach((header) => { %><th scope="col"><%= header %></th><% }) %></tr></thead><tbody><% block.rows.forEach((row) => { %><tr><% row.forEach((cell, index) => { %><%- index === 0 ? '<th scope="row">' + cell + '</th>' : '<td>' + cell + '</td>' %><% }) %></tr><% }) %></tbody></table></div>
+                  <% } else if (block.type === 'formula') { %>
+                    <div class="formula"><% block.lines.forEach((line) => { %><code><%= line %></code><% }) %></div>
+                  <% } else if (block.type === 'callout') { %>
+                    <aside class="rule-callout <%= block.tone %>"><strong><%= block.title %></strong><p><%= block.text %></p></aside>
+                  <% } else if (block.type === 'details') { %>
+                    <details><summary><%= block.title %></summary><div class="formula"><% block.lines.forEach((line) => { %><code><%= line %></code><% }) %></div></details>
+                  <% } %>
+                <% }) %>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </main>
+    <footer class="rulebook-footer"><p>GOAT Arena 공식 사용자 룰북 · 서버의 활성 정책과 경기 원장이 최종 판정 기준입니다.</p><a href="/war-of-masters">Arena로 돌아가기 →</a></footer>
+  </body>
+</html>

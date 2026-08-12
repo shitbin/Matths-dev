@@ -1,0 +1,747 @@
+[
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "coordinate-geometry",
+  "conceptId": "distance-and-internal-division",
+  "content": {
+   "estimatedMinutes": 13,
+   "summary": "좌표만 알면 두 점이 얼마나 떨어져 있는지 계산할 수 있습니다. 그 선분을 정해진 비로 자르는 점의 좌표도 같은 방식으로 구합니다.",
+   "keyTakeaway": "거리는 $\\sqrt{(x_2-x_1)^2+(y_2-y_1)^2}$, $m:n$ 내분점은 $\\left(\\frac{mx_2+nx_1}{m+n},\\ \\frac{my_2+ny_1}{m+n}\\right)$로 비와 좌표를 엇갈려 곱합니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "수직선 위 거리를 구합니다",
+     "description": "두 점의 좌표가 $a$, $b$이면 거리는 $|b-a|$입니다. 어느 쪽에서 빼도 절댓값이므로 결과는 같습니다."
+    },
+    {
+     "order": 2,
+     "title": "좌표평면으로 확장합니다",
+     "description": "가로 차와 세로 차를 두 변으로 하는 직각삼각형을 만들고 피타고라스 정리를 씁니다. 그러면 $\\sqrt{(x_2-x_1)^2+(y_2-y_1)^2}$가 나옵니다."
+    },
+    {
+     "order": 3,
+     "title": "내분의 뜻을 정합니다",
+     "description": "선분 AB 위의 점 P가 $\\overline{AP}:\\overline{PB}=m:n$이면 P는 AB를 $m:n$으로 내분하는 점입니다."
+    },
+    {
+     "order": 4,
+     "title": "내분점 좌표를 계산합니다",
+     "description": "x좌표와 y좌표 각각에 $\\frac{mx_2+nx_1}{m+n}$을 적용합니다. 앞쪽 비 $m$에 뒤쪽 점의 좌표가 곱해지는 순서를 헷갈리지 않게 씁니다."
+    },
+    {
+     "order": 5,
+     "title": "중점은 1:1로 처리합니다",
+     "description": "$m=n=1$을 넣으면 $\\left(\\frac{x_1+x_2}{2},\\ \\frac{y_1+y_2}{2}\\right)$, 곧 두 좌표의 평균입니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "coordinate-geometry",
+  "conceptId": "parallel-and-perpendicular-lines",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "두 직선이 나란한지, 직각으로 만나는지는 기울기만 보면 판정됩니다. 그림을 그리지 않고 계수 비교로 끝낼 수 있습니다.",
+   "keyTakeaway": "평행이면 기울기가 같고 y절편이 다르며, 수직이면 두 기울기의 곱이 $-1$입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "기울기를 읽어냅니다",
+     "description": "직선의 식을 $y=mx+n$ 꼴로 정리하면 x의 계수가 기울기입니다."
+    },
+    {
+     "order": 2,
+     "title": "평행 조건을 확인합니다",
+     "description": "기울기가 같고 y절편이 다르면 두 직선은 평행합니다. 절편까지 같으면 서로 같은 직선입니다."
+    },
+    {
+     "order": 3,
+     "title": "수직 조건을 확인합니다",
+     "description": "두 기울기의 곱이 $-1$이면 직각으로 만납니다. 한 직선의 기울기가 $2$면 수직인 직선의 기울기는 $-\\frac{1}{2}$입니다."
+    },
+    {
+     "order": 4,
+     "title": "축에 나란한 경우를 따로 봅니다",
+     "description": "$x=k$ 꼴은 기울기를 정할 수 없으므로 곱셈 조건을 쓸 수 없습니다. 이때는 $y=c$ 꼴과 수직이라는 사실을 그림으로 판단합니다."
+    },
+    {
+     "order": 5,
+     "title": "미지수를 결정합니다",
+     "description": "조건에 맞는 직선을 찾는 문제는 기울기가 같다 또는 곱이 $-1$이다를 방정식으로 세워 계수를 구합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "coordinate-geometry",
+  "conceptId": "point-line-distance",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "점에서 직선까지의 거리는 수선을 내렸을 때의 길이, 즉 가장 짧은 거리입니다. 수선의 발을 직접 구하지 않아도 계수 대입만으로 값이 나옵니다.",
+   "keyTakeaway": "$d=\\frac{|ax_1+by_1+c|}{\\sqrt{a^2+b^2}}$를 쓰려면 직선을 반드시 $ax+by+c=0$ 꼴로 먼저 옮겨야 합니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "최단 거리가 수선임을 확인합니다",
+     "description": "점에서 직선으로 긋는 여러 선분 중 직선과 수직인 것이 가장 짧습니다. 이 수선의 길이를 점과 직선 사이의 거리라고 부릅니다."
+    },
+    {
+     "order": 2,
+     "title": "직선을 일반형으로 정리합니다",
+     "description": "$y=mx+n$은 $mx-y+n=0$처럼 우변을 0으로 만들어 $ax+by+c=0$ 꼴로 바꿉니다."
+    },
+    {
+     "order": 3,
+     "title": "공식에 대입합니다",
+     "description": "분자에는 점의 좌표를 넣고 절댓값을 씌우며, 분모는 $\\sqrt{a^2+b^2}$입니다."
+    },
+    {
+     "order": 4,
+     "title": "평행선 사이 거리를 구합니다",
+     "description": "두 평행선 중 한 직선 위의 점을 아무거나 하나 잡고, 그 점에서 다른 직선까지의 거리를 구하면 됩니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "coordinate-geometry",
+  "conceptId": "circle-equation",
+  "content": {
+   "estimatedMinutes": 14,
+   "summary": "원은 중심에서 같은 거리에 있는 점들의 모임입니다. 그 거리 조건을 좌표로 옮겨 적은 것이 원의 방정식입니다.",
+   "keyTakeaway": "$(x-a)^2+(y-b)^2=r^2$이면 중심 $(a,b)$, 반지름 $r$이므로, 전개된 식은 완전제곱식으로 묶어 이 꼴로 되돌립니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "원을 거리로 정의합니다",
+     "description": "중심에서의 거리가 항상 $r$인 점들이 그리는 자취가 원입니다. 거리 공식을 그대로 쓰고 양변을 제곱합니다."
+    },
+    {
+     "order": 2,
+     "title": "표준형을 세웁니다",
+     "description": "중심이 원점이면 $x^2+y^2=r^2$, 중심이 $(a,b)$이면 $(x-a)^2+(y-b)^2=r^2$입니다."
+    },
+    {
+     "order": 3,
+     "title": "전개된 식을 만납니다",
+     "description": "괄호를 풀면 $x^2+y^2+Ax+By+C=0$ 꼴이 됩니다. 이 상태에서는 중심과 반지름이 바로 보이지 않습니다."
+    },
+    {
+     "order": 4,
+     "title": "완전제곱식으로 묶습니다",
+     "description": "x끼리, y끼리 모은 뒤 일차항 계수의 절반을 제곱해서 더하고 빼면 표준형으로 돌아갑니다."
+    },
+    {
+     "order": 5,
+     "title": "중심과 반지름을 읽고 그립니다",
+     "description": "우변이 양수일 때만 원이 됩니다. 중심을 찍고 반지름만큼 벌려 원을 그립니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "coordinate-geometry",
+  "conceptId": "circle-line-position",
+  "content": {
+   "estimatedMinutes": 14,
+   "summary": "원과 직선은 두 점에서 만나거나, 한 점에서 접하거나, 아예 만나지 않습니다. 어느 경우인지는 중심에서 직선까지의 거리 하나로 갈립니다.",
+   "keyTakeaway": "중심과 직선 사이 거리 $d$와 반지름 $r$을 비교해 $d<r$이면 두 점, $d=r$이면 접함, $d>r$이면 만나지 않습니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "원의 중심과 반지름을 찾습니다",
+     "description": "원의 방정식을 표준형으로 정리해 중심 $(a,b)$와 반지름 $r$을 확보합니다."
+    },
+    {
+     "order": 2,
+     "title": "중심과 직선 사이 거리를 구합니다",
+     "description": "직선을 $ax+by+c=0$ 꼴로 만든 뒤 점과 직선 사이의 거리 공식에 중심 좌표를 대입합니다."
+    },
+    {
+     "order": 3,
+     "title": "거리와 반지름을 비교합니다",
+     "description": "$d$와 $r$의 대소로 세 경우 중 하나를 판정합니다. 그림 없이 수만 비교하면 됩니다."
+    },
+    {
+     "order": 4,
+     "title": "판별식으로 확인합니다",
+     "description": "직선의 식을 원에 대입하면 이차방정식이 나오고, $D>0$, $D=0$, $D<0$이 각각 앞의 세 경우와 일치합니다."
+    },
+    {
+     "order": 5,
+     "title": "접선 조건에 활용합니다",
+     "description": "접하도록 하는 미지수를 구할 때는 $d=r$ 또는 $D=0$을 방정식으로 놓고 풉니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "coordinate-geometry",
+  "conceptId": "geometric-translation",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "도형의 모든 점을 같은 방향으로 같은 거리만큼 옮기는 것이 평행이동입니다. 모양과 크기는 그대로이고 위치만 바뀝니다.",
+   "keyTakeaway": "점은 $(x+a,\\ y+b)$로 더해서 옮기지만, 방정식은 x 대신 $x-a$, y 대신 $y-b$를 넣어 부호가 반대로 들어갑니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "점을 이동합니다",
+     "description": "점 $(x,y)$를 x축 방향으로 $a$, y축 방향으로 $b$만큼 옮기면 $(x+a,\\ y+b)$가 됩니다."
+    },
+    {
+     "order": 2,
+     "title": "도형을 점의 모임으로 봅니다",
+     "description": "도형 위의 모든 점이 똑같이 움직이므로 도형은 형태를 유지한 채 통째로 미끄러집니다."
+    },
+    {
+     "order": 3,
+     "title": "방정식을 바꿉니다",
+     "description": "$f(x,y)=0$인 도형을 같은 만큼 옮기면 $f(x-a,\\ y-b)=0$이 됩니다."
+    },
+    {
+     "order": 4,
+     "title": "부호가 반대인 이유를 확인합니다",
+     "description": "옮겨진 점을 $(X,Y)=(x+a,\\ y+b)$라 두면 $x=X-a$이고, 이것을 원래 식에 대입하기 때문입니다."
+    },
+    {
+     "order": 5,
+     "title": "실제 상황에 적용합니다",
+     "description": "같은 무늬를 일정 간격으로 반복해 배치하거나 화면 속 물체를 옮기는 것도 평행이동입니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "coordinate-geometry",
+  "conceptId": "geometric-reflection",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "기준이 되는 축이나 점을 사이에 두고 도형을 뒤집어 포개는 이동입니다. 좌표는 부호가 바뀌거나 자리가 맞바뀔 뿐입니다.",
+   "keyTakeaway": "x축 대칭은 $(x,-y)$, y축 대칭은 $(-x,y)$, 원점 대칭은 $(-x,-y)$, 직선 $y=x$ 대칭은 $(y,x)$이고, 방정식에도 똑같이 바꿔 넣습니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "x축 대칭을 확인합니다",
+     "description": "위아래로 뒤집히므로 y좌표의 부호만 바뀝니다. 방정식에서는 y 자리에 $-y$를 넣습니다."
+    },
+    {
+     "order": 2,
+     "title": "y축 대칭을 확인합니다",
+     "description": "좌우로 뒤집히므로 x좌표의 부호만 바뀝니다. 방정식에서는 x 자리에 $-x$를 넣습니다."
+    },
+    {
+     "order": 3,
+     "title": "원점 대칭을 확인합니다",
+     "description": "x와 y의 부호가 모두 바뀝니다. x축 대칭을 한 뒤 y축 대칭을 한 것과 결과가 같습니다."
+    },
+    {
+     "order": 4,
+     "title": "직선 y=x 대칭을 확인합니다",
+     "description": "x좌표와 y좌표의 자리가 맞바뀝니다. 방정식에서도 x와 y를 서로 바꿔 씁니다."
+    },
+    {
+     "order": 5,
+     "title": "도형에 그대로 적용합니다",
+     "description": "점에서 정한 규칙을 방정식의 x, y에 그대로 대입하면 대칭이동한 도형의 식이 나옵니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "sets-and-propositions",
+  "conceptId": "set-concept-and-representation",
+  "content": {
+   "estimatedMinutes": 10,
+   "summary": "속하는지 아닌지를 누구나 똑같이 판단할 수 있는 모임이 집합입니다. 기준이 사람마다 달라지는 모임은 집합이 아닙니다.",
+   "keyTakeaway": "'키가 큰 학생의 모임'처럼 기준이 모호하면 집합이 아니고, 조건제시법으로 분명히 적을 수 있으면 집합입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "집합인지 판단합니다",
+     "description": "'6의 약수의 모임'은 기준이 분명하므로 집합이지만, '큰 수의 모임'은 기준이 모호해 집합이 아닙니다."
+    },
+    {
+     "order": 2,
+     "title": "원소 기호를 씁니다",
+     "description": "$a$가 집합 A에 속하면 $a \\in A$, 속하지 않으면 $a \\notin A$로 씁니다. 원소가 하나도 없는 집합은 공집합 $\\varnothing$입니다."
+    },
+    {
+     "order": 3,
+     "title": "유한집합과 무한집합을 구분합니다",
+     "description": "원소의 개수를 셀 수 있으면 유한집합이고 그 개수를 $n(A)$로 나타냅니다. 셀 수 없이 계속되면 무한집합입니다."
+    },
+    {
+     "order": 4,
+     "title": "두 가지 방법으로 나타냅니다",
+     "description": "원소를 그대로 쓰는 원소나열법은 $\\{1,2,3,6\\}$, 조건으로 쓰는 조건제시법은 $\\{x \\mid x는 6의 약수\\}$입니다."
+    },
+    {
+     "order": 5,
+     "title": "벤 다이어그램으로 그립니다",
+     "description": "닫힌 곡선 안에 원소를 적어 두면 어떤 원소가 어디에 속하는지 한눈에 보입니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "sets-and-propositions",
+  "conceptId": "set-inclusion",
+  "content": {
+   "estimatedMinutes": 10,
+   "summary": "한 집합의 원소가 빠짐없이 다른 집합에도 들어 있으면 부분집합입니다. 집합끼리의 크고 작음이 아니라 원소가 담겨 있는지를 봅니다.",
+   "keyTakeaway": "$A \\subset B$와 $B \\subset A$가 동시에 성립하면 $A=B$이며, 두 집합이 같음을 보일 때 이 방법을 씁니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "부분집합을 정의합니다",
+     "description": "A의 모든 원소가 B에도 속하면 A는 B의 부분집합이고 $A \\subset B$로 씁니다."
+    },
+    {
+     "order": 2,
+     "title": "항상 성립하는 경우를 확인합니다",
+     "description": "공집합과 자기 자신은 어떤 집합에 대해서도 부분집합입니다. 즉 $\\varnothing \\subset A$, $A \\subset A$입니다."
+    },
+    {
+     "order": 3,
+     "title": "진부분집합을 구분합니다",
+     "description": "$A \\subset B$이면서 $A \\neq B$일 때 A를 B의 진부분집합이라고 합니다."
+    },
+    {
+     "order": 4,
+     "title": "두 집합이 같은지 판정합니다",
+     "description": "양쪽 방향의 포함관계를 모두 확인해 둘 다 성립하면 두 집합은 같습니다. 원소를 하나씩 대조하는 것과 같은 뜻입니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "sets-and-propositions",
+  "conceptId": "set-operations",
+  "content": {
+   "estimatedMinutes": 14,
+   "summary": "두 집합을 합치거나, 겹치는 부분만 남기거나, 한쪽을 빼내는 것이 집합의 연산입니다. 결과는 벤 다이어그램의 색칠된 영역으로 바로 확인할 수 있습니다.",
+   "keyTakeaway": "여집합이 섞이면 드모르간의 법칙 $(A \\cup B)^c = A^c \\cap B^c$처럼 기호가 뒤집힌다는 점을 이용해 식을 정리합니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "합집합과 교집합을 구합니다",
+     "description": "$A \\cup B$는 두 집합 중 적어도 한쪽에 속하는 원소, $A \\cap B$는 양쪽 모두에 속하는 원소를 모은 것입니다."
+    },
+    {
+     "order": 2,
+     "title": "여집합과 차집합을 구합니다",
+     "description": "전체집합 U에서 A를 뺀 것이 $A^c$이고, $A-B$는 A에서 B의 원소를 덜어낸 것으로 $A \\cap B^c$와 같습니다."
+    },
+    {
+     "order": 3,
+     "title": "서로소인지 확인합니다",
+     "description": "$A \\cap B = \\varnothing$이면 두 집합은 공통 원소가 없는 서로소입니다."
+    },
+    {
+     "order": 4,
+     "title": "법칙을 벤 다이어그램으로 확인합니다",
+     "description": "교환법칙, 결합법칙, 분배법칙은 양변의 색칠 영역이 같은지 그려서 확인하면 됩니다."
+    },
+    {
+     "order": 5,
+     "title": "드모르간의 법칙을 적용합니다",
+     "description": "$(A \\cup B)^c = A^c \\cap B^c$, $(A \\cap B)^c = A^c \\cup A^c$가 아니라 $A^c \\cup B^c$임에 주의하며, 여집합을 안으로 넣을 때 합집합과 교집합이 서로 바뀝니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "sets-and-propositions",
+  "conceptId": "proposition-and-condition",
+  "content": {
+   "estimatedMinutes": 13,
+   "summary": "참인지 거짓인지가 분명히 정해지는 문장이 명제이고, 변수의 값에 따라 갈리는 문장이 조건입니다. 조건은 그것을 참으로 만드는 원소들의 집합으로 다룹니다.",
+   "keyTakeaway": "'모든'이 붙은 명제는 반례 하나로 거짓이 되고, '어떤'이 붙은 명제는 성립하는 예 하나만 찾으면 참입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "명제와 조건을 구분합니다",
+     "description": "'2는 소수이다'는 참·거짓이 정해지므로 명제이고, '$x>3$이다'는 x에 따라 달라지므로 조건입니다."
+    },
+    {
+     "order": 2,
+     "title": "진리집합을 찾습니다",
+     "description": "조건 p를 참이 되게 하는 원소를 모은 집합을 진리집합 P라고 합니다. 조건 문제는 대부분 집합 문제로 바뀝니다."
+    },
+    {
+     "order": 3,
+     "title": "부정을 만듭니다",
+     "description": "'이다'는 '아니다'로, $x \\geq 3$은 $x<3$으로 바꿉니다. 조건 p의 부정 ~p의 진리집합은 $P^c$입니다."
+    },
+    {
+     "order": 4,
+     "title": "모든과 어떤을 판정합니다",
+     "description": "'모든 x에 대해 p이다'는 진리집합이 전체집합과 같을 때 참이고, '어떤 x에 대해 p이다'는 진리집합이 공집합이 아닐 때 참입니다."
+    },
+    {
+     "order": 5,
+     "title": "반례로 거짓임을 보입니다",
+     "description": "'모든'이 붙은 명제를 반박할 때는 조건을 만족하지 않는 원소를 딱 하나만 제시하면 충분합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "sets-and-propositions",
+  "conceptId": "converse-and-contrapositive",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "명제 $p \\to q$에서 가정과 결론의 순서만 바꾼 것이 역이고, 순서와 부정을 함께 바꾼 것이 대우입니다. 겉모습은 비슷해도 참·거짓은 전혀 다르게 움직입니다.",
+   "keyTakeaway": "원래 명제와 대우는 참·거짓이 항상 같지만 역은 그렇지 않으므로, 역은 반드시 따로 확인해야 합니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "가정과 결론을 나눕니다",
+     "description": "$p \\to q$에서 p가 가정, q가 결론입니다. 문장을 이 꼴로 먼저 정리해야 역과 대우를 만들 수 있습니다."
+    },
+    {
+     "order": 2,
+     "title": "역을 만듭니다",
+     "description": "가정과 결론의 자리를 바꿔 $q \\to p$로 씁니다. 부정은 건드리지 않습니다."
+    },
+    {
+     "order": 3,
+     "title": "대우를 만듭니다",
+     "description": "자리를 바꾸면서 양쪽에 부정을 붙여 $\\sim q \\to \\sim p$로 씁니다."
+    },
+    {
+     "order": 4,
+     "title": "대우로 바꿔 판정합니다",
+     "description": "원래 명제가 참이면 대우도 참, 거짓이면 대우도 거짓입니다. 원래 명제를 따지기 어려울 때 대우를 대신 확인합니다."
+    },
+    {
+     "order": 5,
+     "title": "역이 거짓인 예를 확인합니다",
+     "description": "'$x=2$이면 $x^2=4$이다'는 참이지만 역인 '$x^2=4$이면 $x=2$이다'는 $x=-2$라는 반례 때문에 거짓입니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "sets-and-propositions",
+  "conceptId": "sufficient-and-necessary-conditions",
+  "content": {
+   "estimatedMinutes": 13,
+   "summary": "$p \\to q$가 참일 때 p는 q가 되기에 충분하고, q는 p가 되기 위해 반드시 갖춰야 하는 조건입니다. 이름만 다를 뿐 판단 근거는 명제 하나입니다.",
+   "keyTakeaway": "화살표가 나가는 쪽이 충분조건, 들어오는 쪽이 필요조건이며 진리집합으로는 $P \\subset Q$입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "명제의 참·거짓을 확인합니다",
+     "description": "먼저 $p \\to q$가 참인지 판단합니다. 참이 아니면 충분조건이라는 말 자체를 쓸 수 없습니다."
+    },
+    {
+     "order": 2,
+     "title": "이름을 붙입니다",
+     "description": "$p \\to q$가 참이면 p는 q이기 위한 충분조건, q는 p이기 위한 필요조건입니다."
+    },
+    {
+     "order": 3,
+     "title": "진리집합의 포함관계로 바꿉니다",
+     "description": "$p \\to q$가 참인 것은 $P \\subset Q$와 같은 말입니다. 안쪽 집합이 충분조건, 바깥쪽 집합이 필요조건입니다."
+    },
+    {
+     "order": 4,
+     "title": "필요충분조건을 판정합니다",
+     "description": "양쪽 방향이 모두 참이면 $P=Q$이고, 이때 p는 q이기 위한 필요충분조건입니다."
+    },
+    {
+     "order": 5,
+     "title": "구체적인 예로 확인합니다",
+     "description": "'$x=2$'는 '$x^2=4$'이기 위한 충분조건이지만 필요조건은 아닙니다. $\\{2\\} \\subset \\{-2,2\\}$인 관계 그대로입니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "sets-and-propositions",
+  "conceptId": "proof-by-contrapositive-and-contradiction",
+  "content": {
+   "estimatedMinutes": 13,
+   "summary": "곧바로 보이기 어려운 명제를 돌려서 증명하는 두 가지 방법입니다. 대우로 바꿔 증명하거나, 결론을 부정해서 모순을 끌어냅니다.",
+   "keyTakeaway": "대우 증명은 $\\sim q \\to \\sim p$를 보이는 것이고 귀류법은 결론을 부정한 채 논리를 밀어붙여 모순을 찾는 것으로, 무엇을 가정으로 잡느냐가 다릅니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "가정과 결론을 정리합니다",
+     "description": "증명할 명제를 $p \\to q$ 꼴로 적고 무엇을 주어진 것으로 쓰고 무엇을 보여야 하는지 분명히 합니다."
+    },
+    {
+     "order": 2,
+     "title": "대우로 바꿔 증명합니다",
+     "description": "직접 보이기 어려우면 $\\sim q \\to \\sim p$를 대신 증명합니다. 대우가 참이면 원래 명제도 참이므로 이것으로 충분합니다."
+    },
+    {
+     "order": 3,
+     "title": "결론을 부정해 봅니다",
+     "description": "귀류법에서는 결론 q가 거짓이라고 가정하고, 그 가정을 그대로 인정한 채 계산과 추론을 이어갑니다."
+    },
+    {
+     "order": 4,
+     "title": "모순을 찾아냅니다",
+     "description": "이미 참으로 알려진 사실이나 처음의 가정과 어긋나는 결과가 나오면, 잘못은 방금 세운 부정 가정에 있습니다."
+    },
+    {
+     "order": 5,
+     "title": "결론을 씁니다",
+     "description": "부정 가정이 틀렸으므로 원래 결론 q가 참이라고 마무리합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "sets-and-propositions",
+  "conceptId": "absolute-inequality",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "문자에 어떤 실수를 넣어도 항상 성립하는 부등식을 절대부등식이라고 합니다. 해를 구하는 부등식과 달리 성립함을 증명하는 것이 목표입니다.",
+   "keyTakeaway": "좌변에서 우변을 뺀 식을 완전제곱식으로 묶어 0 이상임을 보이고, 등호는 제곱한 것이 0이 될 때 성립합니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "절대부등식의 뜻을 확인합니다",
+     "description": "$x>3$처럼 특정 범위에서만 성립하는 부등식과 달리, 절대부등식은 모든 실수에서 성립합니다."
+    },
+    {
+     "order": 2,
+     "title": "차를 계산합니다",
+     "description": "증명할 부등식의 좌변에서 우변을 뺀 식을 만듭니다. 이 식이 항상 0 이상임을 보이면 됩니다."
+    },
+    {
+     "order": 3,
+     "title": "완전제곱식으로 묶습니다",
+     "description": "실수의 제곱은 항상 0 이상이라는 사실을 씁니다. 예를 들어 $a^2+b^2-2ab=(a-b)^2 \\geq 0$이므로 $a^2+b^2 \\geq 2ab$입니다."
+    },
+    {
+     "order": 4,
+     "title": "등호 성립 조건을 밝힙니다",
+     "description": "제곱한 부분이 0이 되는 때를 찾습니다. 위 예에서는 $a=b$일 때 등호가 성립합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "functions-and-graphs",
+  "conceptId": "function-concept-and-graph",
+  "content": {
+   "estimatedMinutes": 14,
+   "summary": "정의역의 각 원소에 공역의 원소가 하나씩만 짝지어지는 대응이 함수입니다. 이 대응을 좌표평면에 점으로 옮긴 것이 그래프입니다.",
+   "keyTakeaway": "빠짐없이 그리고 오직 하나씩 대응해야 함수이므로, 대응이 없는 원소나 두 곳으로 가는 원소가 하나라도 있으면 함수가 아닙니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "대응을 살펴봅니다",
+     "description": "집합 X의 원소에 집합 Y의 원소를 짝짓는 관계를 화살표로 그려 봅니다."
+    },
+    {
+     "order": 2,
+     "title": "함수인지 판정합니다",
+     "description": "X의 모든 원소에서 화살표가 나가고, 각 원소에서 나가는 화살표가 정확히 하나일 때만 함수입니다."
+    },
+    {
+     "order": 3,
+     "title": "정의역·공역·치역을 구분합니다",
+     "description": "X가 정의역, Y가 공역이고, 실제로 대응된 값들만 모은 것이 치역입니다. 치역은 항상 공역의 부분집합입니다."
+    },
+    {
+     "order": 4,
+     "title": "그래프로 옮깁니다",
+     "description": "$(x,\\ f(x))$를 좌표평면에 찍습니다. 세로 방향 직선과 두 번 이상 만나면 함수의 그래프가 아닙니다."
+    },
+    {
+     "order": 5,
+     "title": "특별한 함수를 정리합니다",
+     "description": "서로 다른 x가 서로 다른 값을 가지면 일대일함수이고, 여기에 치역과 공역까지 같으면 일대일대응입니다. $f(x)=x$는 항등함수, $f(x)=c$는 상수함수입니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "functions-and-graphs",
+  "conceptId": "composite-function",
+  "content": {
+   "estimatedMinutes": 13,
+   "summary": "한 함수가 뱉은 값을 다른 함수에 그대로 집어넣어 만든 새 함수가 합성함수입니다. 기계 두 대를 연달아 통과시키는 것과 같습니다.",
+   "keyTakeaway": "$(f \\circ g)(x)=f(g(x))$이므로 오른쪽에 있는 g가 먼저 작동하며, 순서를 바꾼 $g \\circ f$와는 대체로 결과가 다릅니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "합성의 뜻을 확인합니다",
+     "description": "x에 g를 적용해 나온 값 $g(x)$를 다시 f에 넣어 얻은 값이 합성함수의 값입니다."
+    },
+    {
+     "order": 2,
+     "title": "작동 순서를 읽습니다",
+     "description": "$f \\circ g$는 안쪽, 즉 오른쪽의 g부터 작동합니다. 쓰는 순서와 계산 순서가 반대라는 점을 놓치지 않습니다."
+    },
+    {
+     "order": 3,
+     "title": "식을 대입해 정리합니다",
+     "description": "$f(x)$의 x 자리에 $g(x)$를 통째로 넣고 전개합니다. 괄호를 유지한 채 넣어야 실수를 줄일 수 있습니다."
+    },
+    {
+     "order": 4,
+     "title": "함수값을 계산합니다",
+     "description": "$(f \\circ g)(2)$는 $g(2)$를 먼저 구한 뒤 그 값을 f에 넣습니다. 식을 다 만들 필요 없이 숫자만 두 번 통과시키면 됩니다."
+    },
+    {
+     "order": 5,
+     "title": "순서를 바꿔 비교합니다",
+     "description": "$g \\circ f$를 따로 구해 보면 결과가 다릅니다. 합성에서는 순서를 바꿀 수 없다는 것을 확인합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "functions-and-graphs",
+  "conceptId": "inverse-function",
+  "content": {
+   "estimatedMinutes": 14,
+   "summary": "대응 화살표를 거꾸로 돌려 함숫값에서 원래 값으로 되돌아가는 함수가 역함수입니다. 거꾸로 돌렸을 때도 함수가 되어야 하므로 아무 함수나 역함수를 갖지는 못합니다.",
+   "keyTakeaway": "일대일대응일 때만 역함수가 존재하고, $y=f(x)$를 x에 대해 푼 뒤 x와 y를 맞바꾸면 $f^{-1}$의 식이 나옵니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "존재 조건을 확인합니다",
+     "description": "두 값이 같은 곳으로 대응하면 거꾸로 돌릴 때 갈 곳이 둘이 되어 함수가 아닙니다. 그래서 일대일대응일 때만 역함수가 있습니다."
+    },
+    {
+     "order": 2,
+     "title": "정의역과 치역을 맞바꿉니다",
+     "description": "f의 치역이 $f^{-1}$의 정의역이 되고, f의 정의역이 $f^{-1}$의 치역이 됩니다."
+    },
+    {
+     "order": 3,
+     "title": "식을 구합니다",
+     "description": "$y=f(x)$를 x에 대해 푼 다음 x와 y의 문자를 서로 바꿔 씁니다."
+    },
+    {
+     "order": 4,
+     "title": "성질로 검산합니다",
+     "description": "$b=f(a)$와 $a=f^{-1}(b)$는 같은 말이고, $f^{-1}(f(x))=x$가 되는지 넣어 보면 확인됩니다."
+    },
+    {
+     "order": 5,
+     "title": "그래프를 그립니다",
+     "description": "$y=f(x)$와 $y=f^{-1}(x)$의 그래프는 직선 $y=x$에 대해 대칭입니다. 원래 그래프를 접어 포개면 역함수의 그래프가 됩니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "functions-and-graphs",
+  "conceptId": "rational-function",
+  "content": {
+   "estimatedMinutes": 15,
+   "summary": "분모에 x가 들어 있는 함수가 유리함수입니다. 분모를 0으로 만드는 값 근처에서 그래프가 한없이 뻗어 나가며 점근선이 생깁니다.",
+   "keyTakeaway": "$y=\\frac{k}{x-p}+q$ 꼴로 정리하면 점근선이 곧바로 $x=p$, $y=q$로 읽힙니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "정의역을 확인합니다",
+     "description": "분모가 0이 되는 x는 값을 정할 수 없으므로 정의역에서 제외합니다."
+    },
+    {
+     "order": 2,
+     "title": "기본형을 그립니다",
+     "description": "$y=\\frac{k}{x}$는 원점에 대해 대칭인 곡선이고 점근선은 $x=0$, $y=0$입니다. $k$의 부호에 따라 곡선이 놓이는 사분면이 달라집니다."
+    },
+    {
+     "order": 3,
+     "title": "표준형으로 정리합니다",
+     "description": "$y=\\frac{ax+b}{cx+d}$는 분자를 분모로 나누어 $y=\\frac{k}{x-p}+q$ 꼴로 바꿉니다."
+    },
+    {
+     "order": 4,
+     "title": "점근선을 읽습니다",
+     "description": "기본형을 x축 방향으로 $p$, y축 방향으로 $q$만큼 옮긴 것이므로 점근선도 $x=p$, $y=q$로 함께 이동합니다."
+    },
+    {
+     "order": 5,
+     "title": "그래프를 완성합니다",
+     "description": "점근선을 점선으로 먼저 긋고, 축과의 교점을 몇 개 찍은 뒤 점근선에 다가가도록 곡선을 그립니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "common-math-2",
+  "unitId": "functions-and-graphs",
+  "conceptId": "irrational-function",
+  "content": {
+   "estimatedMinutes": 14,
+   "summary": "근호 안에 x가 들어 있는 함수가 무리함수입니다. 근호 안이 0 이상이어야 하므로 그래프가 한 점에서 시작해 한쪽으로만 뻗습니다.",
+   "keyTakeaway": "$y=a\\sqrt{x-p}+q$의 시작점은 $(p,q)$이고 정의역은 $x \\geq p$이므로, 근호 안을 0으로 만드는 값이 곧 출발점입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "정의역을 구합니다",
+     "description": "근호 안의 식이 0 이상이라는 부등식을 풀어 x의 범위를 먼저 정합니다."
+    },
+    {
+     "order": 2,
+     "title": "기본형을 그립니다",
+     "description": "$y=\\sqrt{x}$는 원점에서 시작해 오른쪽 위로 뻗습니다. $y=-\\sqrt{x}$는 x축 대칭, $y=\\sqrt{-x}$는 y축 대칭 모양입니다."
+    },
+    {
+     "order": 3,
+     "title": "표준형으로 정리합니다",
+     "description": "근호 안을 $a(x-p)$ 꼴로 묶어 $y=a\\sqrt{x-p}+q$ 형태로 바꿉니다."
+    },
+    {
+     "order": 4,
+     "title": "시작점과 방향을 정합니다",
+     "description": "시작점은 $(p,q)$이고, 근호 안 x의 계수 부호로 좌우 방향이, 근호 앞 계수의 부호로 위아래 방향이 정해집니다."
+    },
+    {
+     "order": 5,
+     "title": "그래프를 완성합니다",
+     "description": "시작점에서 출발해 계산하기 쉬운 점을 한두 개 더 찍고 매끄럽게 연결합니다. 치역도 시작점의 y좌표를 기준으로 읽습니다."
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "intro-current",
+    "route": "/intro",
+    "role": "public"
+  },
+  {
+    "slug": "visual-learning-current",
+    "route": "/visual-learning",
+    "role": "public"
+  },
+  {
+    "slug": "learning-flow-current",
+    "route": "/learning-flow",
+    "role": "public"
+  }
+]

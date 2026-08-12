@@ -1,0 +1,212 @@
+<%
+  const loggedIn = typeof user !== "undefined" && Boolean(user);
+  const viewerGrade = loggedIn ? Number(user.schoolGrade) : null;
+  const privateBoard = ({ 13: "retaker", 14: "university", 15: "worker" })[viewerGrade] || "school";
+  const privateBoardCopy = {
+    school: { label: "학교별 게시판", small: loggedIn ? "우리 학교 이야기" : "로그인 후 사용하세요" },
+    retaker: { label: "N수생 게시판", small: "N수생끼리 함께" },
+    university: { label: "대학교별 게시판", small: "우리 대학교 이야기" },
+    worker: { label: "직장인 게시판", small: "직장인끼리 함께" },
+  }[privateBoard];
+  const formatDate = (date) =>
+    new Intl.DateTimeFormat("ko-KR", {
+      timeZone: "Asia/Seoul",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(date));
+  const boardHref = (board, extra = {}) => {
+    const params = new URLSearchParams({ board });
+    Object.entries(extra).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    return `/community?${params.toString()}`;
+  };
+  const pageHref = (page) => {
+    const params = new URLSearchParams({ board: boardData.board, page });
+    if (boardData.search) params.set("search", boardData.search);
+    if (boardData.sort === "popular") params.set("sort", "popular");
+    if (boardData.selectedOperationsCategory) params.set("category", boardData.selectedOperationsCategory);
+    return `/community?${params.toString()}`;
+  };
+  const gradeLabel = (grade) => ({
+    10: "1학년",
+    11: "2학년",
+    12: "3학년",
+    13: "N수생",
+    14: "대학생",
+    15: "직장인",
+  }[Number(grade)] || "");
+  const anonymousSchoolLabel = (post) => {
+    const grade = Number(post.authorSchoolGrade);
+    if (grade === 13) return "N수생";
+    if (grade === 14) return "OO대학교 대학생";
+    if (grade === 15) return "직장인";
+    return [
+          post.authorRegion,
+          "OO고등학교",
+          gradeLabel(grade),
+        ].filter(Boolean).join(" ");
+  };
+  const postHref = (post) =>
+    post.isCommunityNotice
+      ? post.noticeHref
+      : post.isBoardRulesNotice
+      ? post.rulesHref
+      : post.isOperationsNotice
+        ? `/community/operations/${post._id}`
+        : `/community/${post._id}`;
+  const boardAllowsWriting =
+    boardData.board !== "operations" &&
+    (boardData.board !== "school" || boardData.selectedSchool) &&
+    (boardData.board !== "university" || boardData.selectedUniversity);
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="고등학생·N수생·대학생·직장인이 소속별로 학습 이야기를 나누는 Matths 커뮤니티" />
+    <title><%= boardData.boardLabel %> | Matths</title>
+    <link rel="stylesheet" href="/css/community.css" />
+    <link rel="stylesheet" href="/css/public-navigation.css" />
+    <link rel="stylesheet" href="/css/brand.css" />
+    <link rel="stylesheet" href="/css/product-refresh.css" />
+    <link rel="stylesheet" href="/css/community-v2.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  </head>
+  <body>
+    <%- include("partials/public-navigation", { activePage: "community" }) %>
+
+    <main class="community-main">
+      <section class="community-hero">
+        <div><p><%= boardData.board === "operations" ? "운영 안내" : "학습 커뮤니티" %></p><h1><%= boardData.board === "operations" ? "Matths 이용에 필요한" : boardData.board === "retaker" ? "다시 도전하는 수험생의" : boardData.board === "university" ? "같은 대학교 학생의" : boardData.board === "worker" ? "배움을 이어가는 직장인의" : "고등학생의" %><br /><strong><%= boardData.board === "operations" ? "공지와 규칙" : "질문과 학습 기록" %></strong></h1><span><%= boardData.board === "operations" ? "Matths의 공지, 규칙, 방침과 이용 설명을 확인합니다." : boardData.board === "school" ? "가입 정보에 등록된 같은 고등학교 소속 학생만 열람하고 작성할 수 있습니다." : boardData.board === "retaker" ? "현재 N수생으로 등록된 회원만 열람하고 작성할 수 있습니다." : boardData.board === "university" ? "가입 정보에 등록된 같은 대학교 소속 대학생만 열람하고 작성할 수 있습니다." : boardData.board === "worker" ? "직장인으로 등록된 회원만 열람하고 작성할 수 있습니다." : "글은 누구나 읽을 수 있고, 작성은 로그인한 회원만 가능합니다." %></span></div>
+        <% if (boardAllowsWriting) { %>
+          <a href="<%= loggedIn ? `/community/new?board=${boardData.board}` : "/login" %>">
+            <%= loggedIn ? "새 글 쓰기" : "로그인하고 글쓰기" %>
+            <span aria-hidden="true">→</span>
+          </a>
+        <% } %>
+      </section>
+
+      <% if (feedback) { %><div class="community-feedback" role="status"><%= feedback %></div><% } %>
+
+      <nav class="community-board-tabs" aria-label="게시판 선택">
+        <a class="<%= boardData.board === 'high-school' ? 'active' : '' %>" href="<%= boardHref('high-school') %>"><strong>통합 고등학교</strong><small>학교를 넘어 함께</small></a>
+        <a class="<%= boardData.board === privateBoard ? 'active' : '' %>" href="<%= boardHref(privateBoard) %>"><strong><%= privateBoardCopy.label %></strong><small><%= privateBoardCopy.small %></small></a>
+        <a class="<%= boardData.board === 'operations' ? 'active' : '' %>" href="<%= boardHref('operations') %>"><strong>운영 게시판</strong><small>공지·규칙·방침·설명서</small></a>
+      </nav>
+
+      <section class="community-board">
+        <header class="community-board-heading">
+          <div><p>현재 게시판</p><h2><%= boardData.boardLabel %></h2><span><%= boardData.board === "operations" ? "운영 안내" : "게시글" %> <%= boardData.pagination.total %>개</span></div>
+          <form action="/community" method="GET">
+            <input type="hidden" name="board" value="<%= boardData.board %>" />
+            <% if (boardData.sort === "popular") { %><input type="hidden" name="sort" value="popular" /><% } %>
+            <% if (boardData.selectedOperationsCategory) { %><input type="hidden" name="category" value="<%= boardData.selectedOperationsCategory %>" /><% } %>
+            <input type="search" name="search" value="<%= boardData.search %>" aria-label="커뮤니티 제목과 내용 검색" placeholder="제목·내용 검색" />
+            <button type="submit">검색</button>
+          </form>
+        </header>
+
+        <% if (boardData.board !== "operations") { %>
+          <nav class="community-sort-tabs" aria-label="게시글 정렬">
+            <a class="<%= boardData.sort !== 'popular' ? 'active' : '' %>" href="<%= boardHref(boardData.board, { search: boardData.search }) %>">최신 글</a>
+            <a class="<%= boardData.sort === 'popular' ? 'active' : '' %>" href="<%= boardHref(boardData.board, { search: boardData.search, sort: "popular" }) %>">인기 글 <small>72시간 · 추천 100+</small></a>
+          </nav>
+        <% } else { %>
+          <nav class="community-operations-categories" aria-label="운영 게시판 분류">
+            <a class="<%= !boardData.selectedOperationsCategory ? 'active' : '' %>" href="<%= boardHref('operations', { search: boardData.search }) %>">전체</a>
+            <% Object.entries(boardData.operationsCategories || {}).forEach(([value, label]) => { %>
+              <a class="<%= boardData.selectedOperationsCategory === value ? 'active' : '' %>" href="<%= boardHref('operations', { category: value, search: boardData.search }) %>"><%= label %></a>
+            <% }) %>
+          </nav>
+        <% } %>
+        <% if (boardData.sort !== "popular" && boardData.popularPosts.length) { %>
+          <section class="community-popular-strip" aria-label="현재 인기 글">
+            <header><span>인기</span><strong>지금 많이 읽는 글</strong></header>
+            <div>
+              <% boardData.popularPosts.forEach((post) => { %>
+                <a href="<%= postHref(post) %>">
+                  <strong><%= post.title %></strong>
+                  <span>추천 <%= post.upvoteCount || 0 %></span>
+                </a>
+              <% }) %>
+            </div>
+          </section>
+        <% } %>
+
+        <% if (boardData.board === "school" && loggedIn && boardData.selectedSchool) { %>
+          <section class="school-board-membership" aria-label="현재 학교 게시판">
+            <div><span>내 학교 게시판</span><strong><%= boardData.selectedSchool.name %></strong></div>
+            <p>이 게시판은 <b><%= boardData.selectedSchool.name %></b> 소속 학생들만 열람할 수 있습니다. 다른 학교 게시판은 열람하거나 선택할 수 없습니다.</p>
+          </section>
+        <% } else if (boardData.board === "school") { %>
+          <div class="school-board-login-guide">
+            <strong><%= loggedIn ? "등록된 소속 고등학교가 없습니다." : "로그인 후 사용하세요." %></strong>
+            <span><%= loggedIn ? "학교 정보를 등록해야 소속 학교 전용 게시판을 열람할 수 있습니다." : "학교별 게시판은 가입할 때 등록한 학교 소속 학생만 열람할 수 있습니다." %></span>
+            <% if (!loggedIn) { %><a href="/login">로그인</a><% } %>
+          </div>
+        <% } else if (boardData.board === "retaker") { %>
+          <section class="school-board-membership" aria-label="현재 N수생 게시판">
+            <div><span>N수생 게시판</span><strong>N수생 전용 게시판</strong></div>
+            <p>이 게시판은 현재 학년 정보가 <b>N수생</b>인 회원만 열람하고 작성할 수 있습니다.</p>
+          </section>
+        <% } else if (boardData.board === "university" && boardData.selectedUniversity) { %>
+          <section class="school-board-membership" aria-label="현재 대학교 게시판">
+            <div><span>내 대학교 게시판</span><strong><%= boardData.selectedUniversity.name %></strong></div>
+            <p>이 게시판은 <b><%= boardData.selectedUniversity.name %></b> 소속 대학생만 열람하고 작성할 수 있습니다. 다른 대학교 게시판은 열람할 수 없습니다.</p>
+          </section>
+        <% } else if (boardData.board === "worker") { %>
+          <section class="school-board-membership" aria-label="현재 직장인 게시판">
+            <div><span>직장인 게시판</span><strong>직장인 전용 게시판</strong></div>
+            <p>이 게시판은 현재 학습자 구분이 <b>직장인</b>인 회원만 열람하고 작성할 수 있습니다.</p>
+          </section>
+        <% } %>
+
+        <% if (!boardData.posts.length) { %>
+          <div class="community-empty">
+            <h3><%= boardData.board === "operations" ? "아직 공개된 운영 공지가 없습니다." : boardData.board === "school" && !loggedIn ? "로그인 후 사용하세요." : boardData.board === "school" && !boardData.selectedSchool ? "소속 고등학교 정보가 필요합니다." : boardData.board === "university" && !boardData.selectedUniversity ? "소속 대학교 정보가 필요합니다." : "아직 게시글이 없습니다." %></h3>
+            <p><%= boardData.board === "operations" ? "새 공지가 발표되면 이곳에 계속 누적됩니다." : "첫 글을 작성해 게시판을 시작해보세요." %></p>
+          </div>
+        <% } else { %>
+          <div class="community-post-list">
+            <% boardData.posts.forEach((post) => { %>
+              <a class="<%= post.isOperationsNotice ? 'community-operations-post' : '' %> <%= post.isCommunityNotice || post.isBoardRulesNotice ? 'community-rules-post' : '' %> <%= post.isPinned ? 'is-pinned' : '' %>" href="<%= postHref(post) %>">
+                <div>
+                  <span><%= post.isCommunityNotice || post.isBoardRulesNotice ? "게시판 공지" : (post.isOperationsNotice ? post.boardCategoryLabel : (post.isAnonymous ? anonymousSchoolLabel(post) : (post.schoolName || boardData.boardLabel))) %></span>
+                  <% if (post.isPinned) { %><b class="community-pin-badge"><%= post.isCommunityNotice || post.isBoardRulesNotice ? "공지·고정" : "고정" %></b><% } %>
+                  <% if (post.isPopular) { %><b class="community-popular-badge">인기</b><% } %>
+                  <h3><%= post.title %></h3>
+                  <p><%= post.content.length > 120 ? `${post.content.slice(0, 120)}…` : post.content %></p>
+                </div>
+                <aside>
+                  <strong><%= post.authorName %></strong>
+                  <small><%= formatDate(post.publishedAt || post.createdAt) %></small>
+                  <% if (post.isCommunityNotice || post.isBoardRulesNotice) { %>
+                    <small class="community-rules-status">운영 규칙</small>
+                  <% } else if (!post.isOperationsNotice) { %>
+                    <small>조회 <%= post.viewCount || 0 %></small>
+                    <small class="community-list-votes">추천 <%= post.upvoteCount || 0 %> · 비추천 <%= post.downvoteCount || 0 %></small>
+                  <% } else { %>
+                    <small class="community-operations-status">운영 공지</small>
+                  <% } %>
+                </aside>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <% if (boardData.pagination.totalPages > 1) { %>
+          <nav class="community-pagination" aria-label="게시판 페이지">
+            <a class="<%= boardData.pagination.hasPrevious ? '' : 'disabled' %>" href="<%= boardData.pagination.hasPrevious ? pageHref(boardData.pagination.page - 1) : '#' %>">← 이전</a>
+            <span><%= boardData.pagination.page %> / <%= boardData.pagination.totalPages %></span>
+            <a class="<%= boardData.pagination.hasNext ? '' : 'disabled' %>" href="<%= boardData.pagination.hasNext ? pageHref(boardData.pagination.page + 1) : '#' %>">다음 →</a>
+          </nav>
+        <% } %>
+      </section>
+    </main>
+    <footer class="community-footer"><span>© <%= new Date().getFullYear() %> Matths</span><div><a href="/terms">이용약관</a><a href="/privacy">개인정보처리방침</a><%- include("partials/social-footer-links") %></div></footer>
+  </body>
+</html>

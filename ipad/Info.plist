@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>matths</string>
+			</array>
+		</dict>
+	</array>
+	<!-- 로컬 개발 서버(http://MacBook-Pro-3.local:8000)와의 평문 통신 허용.
+	     로컬 네트워크 한정 — 인터넷 http 는 여전히 차단(앱스토어 심사 안전선).
+	     나머지 Info.plist 키는 GENERATE_INFOPLIST_FILE 이 생성·병합한다. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>같은 와이파이의 학습 서버와 진도를 동기화하는 데 사용합니다.</string>
+	<!-- 아래 두 문구는 project.pbxproj 의 INFOPLIST_KEY_NS*UsageDescription 과
+	     **글자까지 같아야 한다.** GENERATE_INFOPLIST_FILE 이 켜져 있으면 같은 키에
+	     대해 빌드 설정 값이 이 파일 값을 덮어쓸 수 있다. 사진은 평소 기기에서
+	     채점·튜터 기능에 쓰지만, 사용자가 풀이 증거 제출을 선택하면 서버에도
+	     전송된다. 권한 문구는 이 실제 경계를 숨기지 않는다. -->
+	<key>NSCameraUsageDescription</key>
+	<string>시험지와 풀이 증거를 촬영하는 데 사용합니다. 풀이 증거 제출을 선택하면 촬영한 사진이 검토를 위해 Matths 서버에 전송됩니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>시험지와 풀이 증거 사진을 선택하는 데 사용합니다. 풀이 증거 제출을 선택하면 선택한 사진이 검토를 위해 Matths 서버에 전송됩니다.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>AkiraExpanded-Bold.otf</string>
+		<string>AkiraExpanded-Outline.ttf</string>
+	</array>
+</dict>
+</plist>

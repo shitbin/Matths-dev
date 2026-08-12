@@ -1,0 +1,966 @@
+.tier-ranking-hub {
+  --tier-surface: #fff;
+  --tier-surface-soft: #f7f8fc;
+  --tier-line: #e1e5ef;
+  --tier-text: #171c2f;
+  --tier-muted: #778096;
+  --tier-accent: #3157f6;
+  --tier-accent-soft: #eef1ff;
+  --tier-shadow:
+    0 18px 45px
+    rgba(29, 42, 103, 0.07);
+}
+
+.tier-ranking-hub.ranking-theme-arena {
+  --tier-surface:
+    rgba(12, 17, 39, 0.92);
+  --tier-surface-soft:
+    rgba(17, 24, 53, 0.86);
+  --tier-line:
+    rgba(139, 158, 239, 0.17);
+  --tier-text: #f3f5ff;
+  --tier-muted: #8995b8;
+  --tier-accent: #7c6cff;
+  --tier-accent-soft:
+    rgba(118, 84, 247, 0.13);
+  --tier-shadow:
+    0 28px 80px
+    rgba(2, 4, 15, 0.36);
+}
+
+.ranking-pool-tabs {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 7px;
+  background:
+    var(--tier-surface-soft);
+  border: 1px solid
+    var(--tier-line);
+  border-radius: 17px;
+}
+
+.ranking-pool-tabs button {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  color: var(--tier-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ranking-pool-tabs button span {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ranking-pool-tabs button small {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ranking-pool-tabs
+  button[aria-selected="true"] {
+  color: #fff;
+  background:
+    linear-gradient(
+      115deg,
+      #683fe0,
+      #3157f6 58%,
+      #1597b8
+    );
+  border-color:
+    rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 12px 27px
+    rgba(68, 65, 199, 0.22);
+}
+
+.ranking-pool-panel[hidden],
+.tier-board-panel[hidden] {
+  display: none;
+}
+
+.tier-my-ranking {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 32px;
+  margin-top: 14px;
+  padding: 25px 28px;
+  color: var(--tier-text);
+  background:
+    radial-gradient(
+      circle at 90% 4%,
+      rgba(101, 91, 255, 0.14),
+      transparent 34%
+    ),
+    var(--tier-surface);
+  border: 1px solid
+    var(--tier-line);
+  border-radius: 21px;
+  box-shadow:
+    var(--tier-shadow);
+}
+
+.tier-my-ranking-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.tier-my-ranking
+  .rank-crest {
+  --rank-crest-width: 74px;
+  height:
+    calc(
+      var(--rank-crest-width) *
+        1.75
+    );
+  margin-block: -22px;
+}
+
+.tier-my-ranking-identity
+  > div {
+  min-width: 0;
+}
+
+.tier-my-ranking small,
+.tier-ranking-board
+  header
+  > div
+  > small {
+  color: var(--tier-accent);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 1.5px;
+}
+
+.tier-my-ranking h2 {
+  margin: 6px 0 0;
+  color: var(--tier-text);
+  font-size: 24px;
+  letter-spacing: -1px;
+}
+
+.tier-my-ranking p {
+  margin: 7px 0 0;
+  color: var(--tier-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.tier-my-ranking dl {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(105px, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+
+.tier-my-ranking dl > div {
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 13px;
+  background:
+    var(--tier-surface-soft);
+  border: 1px solid
+    var(--tier-line);
+  border-radius: 13px;
+}
+
+.tier-my-ranking dt {
+  color: var(--tier-muted);
+  font-size: 12px;
+}
+
+.tier-my-ranking dd {
+  margin: 7px 0 0;
+  color: var(--tier-text);
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.tier-my-ranking dd small {
+  margin-left: 3px;
+  color: var(--tier-muted);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.tier-my-ranking
+  dd.ranking-pool-name {
+  font-size: 12px;
+}
+
+.tier-ranking-unassigned {
+  grid-template-columns: 1fr;
+  min-height: 150px;
+}
+
+.tier-ranking-board {
+  margin-top: 14px;
+  padding: 24px;
+  background:
+    var(--tier-surface);
+  border: 1px solid
+    var(--tier-line);
+  border-radius: 21px;
+  box-shadow:
+    var(--tier-shadow);
+}
+
+.tier-ranking-board > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 18px;
+}
+
+.tier-ranking-board h3 {
+  margin: 6px 0 0;
+  color: var(--tier-text);
+  font-size: 24px;
+  letter-spacing: -1px;
+}
+
+.tier-ranking-board
+  header
+  > div
+  > p {
+  margin: 7px 0 0;
+  color: var(--tier-muted);
+  font-size: 12px;
+}
+
+.tier-ranking-board
+  header
+  > label {
+  display: grid;
+  gap: 6px;
+  color: var(--tier-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.tier-ranking-board select {
+  min-width: 210px;
+  min-height: 42px;
+  padding: 0 36px 0 12px;
+  color: var(--tier-text);
+  background:
+    var(--tier-surface-soft);
+  border: 1px solid
+    var(--tier-line);
+  border-radius: 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tier-ranking-context {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 8px;
+  padding: 0 13px;
+  color: var(--tier-muted);
+  background:
+    var(--tier-surface-soft);
+  border: 1px solid
+    var(--tier-line);
+  border-radius: 11px;
+  font-size: 12px;
+}
+
+.tier-ranking-context strong {
+  margin-right: 5px;
+  color: var(--tier-text);
+}
+
+.tier-ranking-scroll {
+  max-height: 410px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border-radius: 13px;
+}
+
+.tier-ranking-scroll:focus-visible {
+  outline: 3px solid
+    color-mix(
+      in srgb,
+      var(--tier-accent) 28%,
+      transparent
+    );
+  outline-offset: 2px;
+}
+
+.tier-ranking-table {
+  min-width: 730px;
+  display: grid;
+  gap: 6px;
+}
+
+.tier-ranking-row {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns:
+    55px 150px 1.1fr
+    1.15fr 76px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  color: var(--tier-muted);
+  background:
+    var(--tier-surface-soft);
+  border: 1px solid
+    var(--tier-line);
+  border-radius: 12px;
+  font-size: 12px;
+  content-visibility: auto;
+  contain-intrinsic-size: 72px;
+}
+
+.tier-ranking-row[hidden],
+.arena-final-ranking-row[hidden] {
+  display: none;
+}
+
+.tier-ranking-row.is-ranking-target,
+.arena-final-ranking-row.is-ranking-target {
+  animation: ranking-target-pulse 1.4s ease;
+}
+
+.ranking-delta {
+  display: block;
+  margin-top: 3px;
+  color: var(--tier-muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.ranking-delta.is-up { color: #2ccf9a; }
+.ranking-delta.is-down { color: #ff6b82; }
+
+.ranking-freshness {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 12px 0;
+  color: var(--tier-muted, #778096);
+  font-size: 12px;
+}
+
+.ranking-freshness b {
+  padding: 5px 8px;
+  color: #8a5700;
+  background: #fff2c7;
+  border-radius: 999px;
+}
+
+.ranking-freshness button,
+.ranking-list-tools button,
+.ranking-sticky-me {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ranking-freshness button {
+  padding: 7px 10px;
+  color: var(--tier-text, #171c2f);
+  background: var(--tier-surface-soft, #f7f8fc);
+  border: 1px solid var(--tier-line, #e1e5ef);
+  border-radius: 9px;
+}
+
+.ranking-list-tools {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.35fr) minmax(130px, .75fr) minmax(120px, .7fr) auto auto;
+  gap: 8px;
+  align-items: end;
+  margin: 10px 0 8px;
+  padding: 12px;
+  color: var(--tier-text, #171c2f);
+  background: var(--tier-surface, #fff);
+  border: 1px solid var(--tier-line, #e1e5ef);
+  border-radius: 14px;
+}
+
+/* 티어 목록은 이미 하나의 Division·티어로 고정되어 있다. 불필요한
+   중복 필터를 제거해 검색·내 위치 이동만 빠르게 쓸 수 있게 한다. */
+.ranking-list-tools[data-filter-mode="tier"] {
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+}
+
+.ranking-list-tools label {
+  display: grid;
+  gap: 5px;
+  color: var(--tier-muted, #778096);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.ranking-list-tools input,
+.ranking-list-tools select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  color: var(--tier-text, #171c2f);
+  background: var(--tier-surface-soft, #f7f8fc);
+  border: 1px solid var(--tier-line, #e1e5ef);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.goat-arena-page .ranking-list-tools {
+  color: #f3f5ff;
+  background:
+    linear-gradient(145deg, rgba(19, 25, 55, 0.94), rgba(9, 13, 32, 0.96));
+  border-color: rgba(139, 158, 239, 0.18);
+  box-shadow: 0 18px 45px rgba(2, 4, 15, 0.25);
+}
+
+.goat-arena-page .ranking-list-tools label,
+.goat-arena-page .ranking-list-tools output {
+  color: #8995b8;
+}
+
+.goat-arena-page .ranking-list-tools input,
+.goat-arena-page .ranking-list-tools select {
+  color-scheme: dark;
+  color: #f3f5ff;
+  background: rgba(8, 12, 31, 0.9);
+  border-color: rgba(139, 158, 239, 0.22);
+  outline: none;
+}
+
+.goat-arena-page .ranking-list-tools input::placeholder {
+  color: rgba(137, 149, 184, 0.72);
+}
+
+.goat-arena-page .ranking-list-tools input:focus,
+.goat-arena-page .ranking-list-tools select:focus {
+  border-color: rgba(72, 211, 255, 0.66);
+  box-shadow: 0 0 0 3px rgba(72, 211, 255, 0.1);
+}
+
+.ranking-list-tools button {
+  min-height: 44px;
+  padding: 0 13px;
+  color: #fff;
+  background: var(--matths-action-primary, #7b4efc);
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ranking-list-tools button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.ranking-list-tools output {
+  grid-column: 1 / -1;
+  min-height: 12px;
+  color: var(--tier-muted, #778096);
+  font-size: 13px;
+}
+
+.ranking-my-position {
+  opacity: .72;
+  transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease);
+}
+
+.ranking-my-position.is-away {
+  opacity: 1;
+  transform: var(--motion-lift);
+  box-shadow: 0 4px 12px rgba(49, 87, 246, .24);
+}
+
+.ranking-sticky-me {
+  position: sticky;
+  top: 8px;
+  z-index: 4;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 10px 13px;
+  color: var(--tier-text, #171c2f);
+  text-align: left;
+  background: color-mix(in srgb, var(--tier-surface, #fff) 92%, #6b59ff 8%);
+  border: 1px solid color-mix(in srgb, var(--tier-accent, #3157f6) 35%, var(--tier-line, #e1e5ef));
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(20, 29, 70, .13);
+}
+
+.ranking-sticky-me span,
+.ranking-sticky-me em {
+  color: var(--tier-muted, #778096);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.ranking-sticky-me strong { font-size: 12px; }
+
+@keyframes ranking-target-pulse {
+  0%, 100% { box-shadow: none; }
+  35% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--tier-accent, #3157f6) 45%, transparent); }
+}
+
+@media (max-width: 900px) {
+  .ranking-list-tools {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ranking-list-tools label:first-child,
+  .ranking-list-tools output { grid-column: 1 / -1; }
+}
+
+.tier-ranking-row.is-me {
+  color: var(--tier-text);
+  background:
+    var(--tier-accent-soft);
+  border-color:
+    color-mix(
+      in srgb,
+      var(--tier-accent) 42%,
+      var(--tier-line)
+    );
+  box-shadow:
+    inset 3px 0
+    var(--tier-accent);
+}
+
+.tier-ranking-row > b {
+  color: var(--tier-text);
+  font-size: 17px;
+}
+
+.tier-ranking-row > strong {
+  overflow: hidden;
+  color: var(--tier-text);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tier-ranking-row > em {
+  color: var(--tier-accent);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.tier-ranking-row
+  > span
+  > small {
+  display: block;
+  margin-top: 4px;
+  color: var(--tier-muted);
+  font-size: 12px;
+}
+
+.tier-ranking-crest-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tier-ranking-crest-cell
+  .rank-crest {
+  --rank-crest-width: 36px;
+  height: 58px;
+}
+
+.tier-ranking-crest-cell
+  > small {
+  margin: 0 !important;
+  color: var(--tier-text) !important;
+  font-size: 12px !important;
+}
+
+.tier-ranking-head {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  min-height: 37px;
+  color: var(--tier-muted);
+  background:
+    var(--tier-surface);
+  border-color: transparent;
+  border-bottom-color:
+    var(--tier-line);
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.tier-ranking-empty {
+  min-height: 260px;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  color: var(--tier-muted);
+  background:
+    var(--tier-surface-soft);
+  border: 1px dashed
+    var(--tier-line);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.tier-ranking-empty strong {
+  color: var(--tier-text);
+  font-size: 13px;
+}
+
+.tier-ranking-empty span {
+  font-size: 12px;
+}
+
+@media (max-width: 920px) {
+  .tier-my-ranking {
+    grid-template-columns: 1fr;
+  }
+
+  .tier-my-ranking dl {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .ranking-pool-tabs
+    button {
+    min-height: 52px;
+    padding: 0 12px;
+  }
+
+  .ranking-pool-tabs
+    button
+    span {
+    font-size: 12px;
+  }
+
+  .tier-my-ranking,
+  .tier-ranking-board {
+    padding: 18px;
+  }
+
+  .tier-my-ranking-identity {
+    align-items: flex-start;
+  }
+
+  .tier-my-ranking
+    .rank-crest {
+    --rank-crest-width: 62px;
+  }
+
+  .tier-my-ranking dl {
+    grid-template-columns: 1fr;
+  }
+
+  .tier-my-ranking dl > div {
+    min-height: 65px;
+  }
+
+  .tier-ranking-board
+    > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tier-ranking-board select {
+    width: 100%;
+  }
+
+  .tier-ranking-context {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 10px;
+  }
+}
+
+/* Ranking values must remain readable inside the fixed-height scroll panel. */
+.ranking-theme-arena {
+  --tier-muted: #aeb9d8;
+}
+
+.ranking-pool-tabs button small,
+.tier-my-ranking small,
+.tier-ranking-board header > div > small,
+.tier-my-ranking dt,
+.tier-my-ranking dd small,
+.tier-ranking-board header > div > p,
+.tier-ranking-board header > label,
+.tier-ranking-context,
+.tier-ranking-row > span > small,
+.tier-ranking-crest-cell > small,
+.tier-ranking-head {
+  font-size: 12px !important;
+  line-height: 1.45;
+}
+
+.tier-my-ranking p,
+.tier-ranking-board select,
+.tier-ranking-row,
+.tier-ranking-empty span {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.tier-ranking-row > strong {
+  font-size: 12px;
+}
+.matths-final-ranking-hub {
+  display: grid;
+  gap: 24px;
+}
+
+.matths-ranking-table-scroll {
+  max-height: 620px;
+  overflow: auto;
+  border: 1px solid #e1e6f4;
+  border-radius: 20px;
+  background: #fff;
+}
+
+[data-ranking-scroll]:focus-visible {
+  outline: 3px solid
+    color-mix(
+      in srgb,
+      var(--tier-accent, #5368e8) 30%,
+      transparent
+    );
+  outline-offset: 3px;
+}
+
+.school-final-ranking-list {
+  display: grid;
+  gap: 12px;
+}
+
+.school-final-ranking-card {
+  border: 1px solid #dfe5f3;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.school-final-ranking-card summary {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 20px;
+  cursor: pointer;
+}
+
+.school-final-ranking-card summary div,
+.school-final-ranking-card summary strong,
+.school-final-ranking-card summary small {
+  display: block;
+}
+
+.school-final-ranking-card summary > b,
+.school-final-ranking-card summary > em {
+  color: #5368e8;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.school-student-ranking-list {
+  padding: 0 20px 20px;
+}
+
+.school-student-ranking-list p {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 14px;
+  margin: 0;
+  padding: 12px 0;
+  border-top: 1px solid #eef1f8;
+}
+
+@media (max-width: 700px) {
+  .school-final-ranking-card summary {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+  .school-final-ranking-card summary > em {
+    grid-column: 2;
+  }
+}
+.tier-ranking-viewing-notice {
+  display: flex;
+  align-items: center;
+  min-height: 112px;
+  margin-bottom: 20px;
+  padding: 24px 28px;
+  color: #dce7ff;
+  background:
+    linear-gradient(135deg, rgba(90, 65, 215, 0.16), rgba(16, 180, 210, 0.08)),
+    rgba(11, 17, 43, 0.8);
+  border: 1px solid rgba(123, 142, 219, 0.22);
+  border-radius: 22px;
+}
+
+.tier-ranking-viewing-notice small {
+  display: block;
+  margin-bottom: 7px;
+  color: #8aa4ff;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.tier-ranking-viewing-notice strong {
+  display: block;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+.tier-ranking-viewing-notice p {
+  margin: 8px 0 0;
+  color: #8793b7;
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+/*
+ * 이용자당 하나만 배정되는 Arena 공식 랭킹 장식.
+ * 집계형 학교·대학교 카드에는 partial 자체를 렌더하지 않는다.
+ */
+.arena-rank-decoration {
+  --decoration-a: #6457d8;
+  --decoration-b: #2e92da;
+  --decoration-glow: rgba(98, 100, 232, 0.24);
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  min-height: 24px;
+  align-items: center;
+  gap: 5px;
+  margin-left: 7px;
+  padding: 3px 8px 3px 5px;
+  color: #fff;
+  vertical-align: middle;
+  background:
+    linear-gradient(110deg, color-mix(in srgb, var(--decoration-a) 92%, #080b18), var(--decoration-b));
+  border: 1px solid color-mix(in srgb, var(--decoration-b) 58%, #fff);
+  border-radius: 7px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 5px 16px var(--decoration-glow);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transform: translateY(-1px);
+}
+
+.arena-rank-decoration i {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  color: #fff;
+  background: rgba(7, 10, 25, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-size: 12px;
+  font-style: normal;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.38);
+}
+
+.arena-rank-decoration--silver {
+  --decoration-a: #7d8799;
+  --decoration-b: #dce8f7;
+  --decoration-glow: rgba(174, 194, 221, 0.26);
+  color: #111827;
+  border-color: #edf5ff;
+}
+
+.arena-rank-decoration--silver i {
+  color: #f9fcff;
+  background: #536071;
+}
+
+.arena-rank-decoration--gold {
+  --decoration-a: #7a4b06;
+  --decoration-b: #f2bd3f;
+  --decoration-glow: rgba(238, 174, 45, 0.3);
+  border-color: #ffe5a0;
+}
+
+.arena-rank-decoration--violet {
+  --decoration-a: #5f33bb;
+  --decoration-b: #a868ff;
+  --decoration-glow: rgba(147, 88, 245, 0.3);
+}
+
+.arena-rank-decoration--cyan {
+  --decoration-a: #075d77;
+  --decoration-b: #19c7d9;
+  --decoration-glow: rgba(33, 192, 215, 0.28);
+}
+
+.arena-rank-decoration--blue {
+  --decoration-a: #183a8c;
+  --decoration-b: #3484f4;
+  --decoration-glow: rgba(52, 120, 235, 0.25);
+}
+
+.arena-rank-decoration--red {
+  --decoration-a: #7d1b35;
+  --decoration-b: #e34a67;
+  --decoration-glow: rgba(221, 58, 91, 0.24);
+}
+
+.arena-rank-decoration--steel {
+  --decoration-a: #303b52;
+  --decoration-b: #7587a5;
+  --decoration-glow: rgba(99, 118, 151, 0.24);
+}
+
+.tier-ranking-row > strong,
+.arena-final-ranking-row > strong,
+.tier-my-ranking h2,
+.arena-final-my-rank strong {
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .arena-rank-decoration {
+    min-height: 21px;
+    margin: 4px 0 0;
+    padding: 2px 6px 2px 4px;
+    font-size: 12px;
+  }
+
+  .arena-rank-decoration i {
+    width: 14px;
+    height: 14px;
+    font-size: 12px;
+  }
+}

@@ -1,0 +1,22 @@
+<%
+  const paymentsOpen =
+    typeof checkoutEnabled !== "undefined" &&
+    checkoutEnabled === true;
+%>
+<!doctype html>
+<html lang="ko">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>패키지 구매 | Matths 학부모</title><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" /><link rel="stylesheet" href="/css/brand.css" /><link rel="stylesheet" href="/css/parent.css" /><link rel="stylesheet" href="/css/parent-v2.css" /></head>
+  <body class="parent-page">
+    <%- include('partials/parent-navigation', { activeParentPage: 'pricing' }) %>
+    <main class="parent-main">
+      <header class="parent-page-heading"><p>자녀 이용권</p><h1><%= child.realName || child.name %> 학생의 이용권 선택</h1><span>상품·금액·이용 기간을 비교하고 결제가 열렸을 때만 다음 단계로 이동합니다.</span></header>
+      <section class="parent-product-grid">
+        <% products.forEach((product) => { %><article>
+          <small><%= product.periodLabel %> 이용</small><h2><%= product.name %></h2><p><%= product.description %></p><strong><%= new Intl.NumberFormat('ko-KR').format(product.amount) %><em>원</em></strong>
+          <% if (paymentsOpen) { %><a href="/parent/checkout/<%= product.code %>">결제하기</a><% } else { %><span class="parent-checkout-unavailable" aria-disabled="true">결제 준비 중</span><% } %>
+        </article><% }) %>
+      </section>
+      <% if (!paymentsOpen) { %><p class="parent-pg-note">유료 이용권 결제를 준비하고 있습니다. 결제 기능이 열리기 전까지 별도 과금이나 자녀 계정의 유료 이용권 지급은 발생하지 않습니다.</p><% } %>
+    </main>
+  </body>
+</html>

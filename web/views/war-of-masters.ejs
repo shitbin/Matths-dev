@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="description"
+      content="Matths GOAT Arena 최종 종합 랭킹"
+    />
+    <meta name="theme-color" content="#0c1125" />
+    <title>GOAT Arena | Matths</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/war-of-masters.css" />
+    <link rel="stylesheet" href="/css/brand.css" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/images/favicon-32.png"
+    />
+    <script src="/js/main.js" defer></script>
+    <script src="/js/war-of-masters.js" defer></script>
+  </head>
+  <body class="masters-page">
+    <a class="skip-link" href="#masters-main">본문으로 바로가기</a>
+
+    <div class="dashboard-shell">
+      <div
+        class="sidebar-overlay"
+        id="sidebar-overlay"
+        hidden
+      ></div>
+
+      <aside
+        class="sidebar"
+        id="dashboard-sidebar"
+        aria-label="학습 메뉴"
+      >
+        <div class="sidebar-top">
+          <a class="brand" href="/" aria-label="Matths 메인">
+            <%- include("partials/brand-primary-logo") %>
+          </a>
+          <button
+            class="sidebar-close"
+            id="sidebar-close"
+            type="button"
+            aria-label="메뉴 닫기"
+          >×</button>
+        </div>
+
+        <%- include("partials/dashboard-navigation", {
+          activePage: "war-of-masters",
+        }) %>
+
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-profile">
+          <a
+            class="profile-avatar"
+            href="/profile"
+            aria-label="<%= arenaUser.nickname %>님의 프로필"
+          ><%= arenaUser.nickname.slice(0, 1) %></a>
+          <div class="profile-copy">
+            <strong><%= arenaUser.nickname %>님</strong>
+            <small><%= arenaUser.gradeLabel %></small>
+          </div>
+          <form action="/logout" method="POST">
+            <button type="submit" aria-label="로그아웃">↗</button>
+          </form>
+        </div>
+      </aside>
+
+      <main class="dashboard-main masters-main" id="masters-main">
+        <header class="topbar masters-topbar">
+          <div class="topbar-left">
+            <button
+              class="sidebar-open"
+              id="sidebar-open"
+              type="button"
+              aria-label="학습 메뉴 열기"
+              aria-controls="dashboard-sidebar"
+              aria-expanded="false"
+            >
+              <span></span><span></span><span></span>
+            </button>
+            <div>
+              <p>Matths 랭킹 Arena</p>
+              <h1>GOAT Arena</h1>
+            </div>
+          </div>
+          <a class="back-dashboard learning-home-button" href="/main">
+            학습 홈으로 <span aria-hidden="true">→</span>
+          </a>
+        </header>
+
+        <section class="masters-actions" aria-label="GOAT Arena 메뉴">
+          <article class="masters-action-card goat-arena-action-card">
+            <div>
+              <p>일반 쟁탈전</p>
+              <h2>GOAT Arena</h2>
+              <small>
+                확정 GP로 시드를 받고, 1대1 승부에서 상대의 GP와 그 티어·순위를 차지하세요.
+              </small>
+            </div>
+            <a class="goat-arena-entry" href="/goat-arena">
+              <span class="goat-arena-entry-copy">
+                <strong>GOAT Arena 입장</strong>
+                <small>Arena 입장</small>
+              </span>
+              <span class="goat-arena-entry-mark" aria-hidden="true">
+                <i></i>
+                <b>→</b>
+              </span>
+            </a>
+          </article>
+
+          <article class="masters-action-card placement-action-card">
+            <div>
+              <span aria-hidden="true">01</span>
+              <p>배치고사</p>
+              <h2>배치고사</h2>
+              <small>
+                <%= !paidPackageAccess.active
+                  ? "활성 학습권 패키지 회원만 배치고사를 응시할 수 있습니다."
+                  : placement.status === "submitted"
+                  ? `${placement.result.correctCount} / 30문항 정답 · ${placement.result.initialTier}`
+                  : placement.status === "verification-required"
+                    ? `${placement.answeredCount} / 4문항 저장됨 · 준킬러 2 + 킬러 2`
+                  : placement.status === "in-progress"
+                    ? `${placement.answeredCount} / 30문항 저장됨`
+                    : "30문항 · 제한 시간 100분" %>
+              </small>
+            </div>
+            <% if (!paidPackageAccess.active) { %>
+              <button type="button" class="private-mock-disabled-action" disabled aria-disabled="true">배치고사 잠김 <span aria-hidden="true">×</span></button>
+            <% } else if (placement.status === "submitted") { %>
+              <button type="button" class="private-mock-disabled-action placement-complete-action" disabled aria-disabled="true">배치고사 완료 <span aria-hidden="true">✓</span></button>
+            <% } else if (placement.status === "attempt-used") { %>
+              <button type="button" class="private-mock-disabled-action placement-complete-action" disabled aria-disabled="true">배치고사 응시 종료 <span aria-hidden="true">×</span></button>
+            <% } else if (placement.status === "not-started") { %>
+              <button type="button" data-placement-open>
+                <%= placement.ctaLabel %>
+                <span aria-hidden="true">→</span>
+              </button>
+            <% } else { %>
+              <a href="<%= placement.ctaHref %>">
+                <%= placement.ctaLabel %>
+                <span aria-hidden="true">→</span>
+              </a>
+            <% } %>
+          </article>
+
+          <article class="masters-action-card private-mock-action-card">
+            <div>
+              <span aria-hidden="true">02</span>
+              <p>매주 일요일 3회 제공</p>
+              <h2>Matths 주간 공식 모의고사</h2>
+              <small>
+                <%= privateMockEligibility.allowed
+                  ? "매주 일요일 A·B·C형 · 최대 3회 · 대표 표준화 성적 선택"
+                  : privateMockEligibility.message %>
+              </small>
+            </div>
+            <% if (["payment-required", "access-expired", "placement-required", "verification-required", "ranking-pending"].includes(privateMockEligibility.status)) { %>
+              <button
+                type="button"
+                class="private-mock-disabled-action"
+                disabled
+                aria-disabled="true"
+              >
+                Matths 주간 공식 모의고사 응시 잠김
+                <span aria-hidden="true">×</span>
+              </button>
+            <% } else { %>
+              <a href="<%= privateMockEligibility.ctaHref %>">
+                <%= privateMockEligibility.ctaLabel %>
+                <span aria-hidden="true">→</span>
+              </a>
+            <% } %>
+          </article>
+
+          <article class="masters-action-card ranking-action-card">
+            <div>
+              <span aria-hidden="true">03</span>
+              <p>랭킹</p>
+              <h2>랭킹 보기</h2>
+              <small>최종 종합 랭킹과 고등학교·N수생 랭킹</small>
+            </div>
+            <a href="/war-of-masters/rankings">
+              랭킹 페이지 열기
+              <span aria-hidden="true">→</span>
+            </a>
+          </article>
+
+          <article class="masters-action-card identity-action-card">
+            <div>
+              <span aria-hidden="true">04</span>
+              <p>프로필</p>
+              <h2>닉네임 관리</h2>
+              <small>모든 공개 랭킹과 GOAT Arena에는 닉네임만 표시됩니다.</small>
+            </div>
+            <a href="/profile#nickname-settings">
+              닉네임 확인하기
+              <span aria-hidden="true">→</span>
+            </a>
+          </article>
+
+          <article class="masters-action-card objection-action-card">
+            <div>
+              <span aria-hidden="true">05</span>
+              <p>문제 검토</p>
+              <h2>문제 이의신청</h2>
+              <small>공개된 Matths 주간 공식 모의고사 문항이나 정답이 잘못되었다고 판단되면 근거와 함께 알려주세요.</small>
+            </div>
+            <a href="/war-of-masters/objections/new">
+              이의신청 작성
+              <span aria-hidden="true">→</span>
+            </a>
+          </article>
+        </section>
+
+        <p
+          class="sr-only"
+          id="dashboard-status"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </main>
+    </div>
+
+    <dialog
+      class="placement-start-dialog"
+      id="placement-start-dialog"
+      aria-labelledby="placement-dialog-title"
+    >
+      <form method="dialog" class="placement-dialog-card">
+        <button
+          class="placement-dialog-close"
+          type="submit"
+          value="cancel"
+          aria-label="닫기"
+        >×</button>
+        <p>배치고사</p>
+        <h2 id="placement-dialog-title">100분 배치고사를 시작합니다.</h2>
+        <ul>
+          <li>총 30문항이며 만점은 100점입니다.</li>
+          <li>시작한 순간부터 서버에서 100분을 계산합니다.</li>
+          <li>중간에 나가도 답안은 저장되지만 시간은 계속 흐릅니다.</li>
+          <li>미응답 문항은 오답으로 반영되어 초기 랭크에 영향을 줍니다.</li>
+        </ul>
+        <div>
+          <button type="submit" value="cancel">취소</button>
+          <button type="button" data-placement-confirm>
+            확인하고 바로 시작
+          </button>
+        </div>
+      </form>
+      <form
+        id="placement-start-form"
+        action="/war-of-masters/placement/start"
+        method="post"
+        hidden
+      ></form>
+    </dialog>
+  </body>
+</html>

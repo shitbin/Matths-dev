@@ -1,0 +1,21 @@
+# Xcode/Swift build products are reproducible and can contain file-provider metadata.
+build/
+build-*/
+.derived*/
+DerivedData/
+*.xcresult
+*.xcarchive
+
+# llama.xcframework is a large prebuilt dependency. Its source/revision is audited separately.
+Frameworks/
+
+# Captured review media is evidence, not application source.
+screenshots/
+
+# KICE originals are Debug-only local review material and are not licensed source assets.
+Matths/KiceBank/*.pdf
+
+# Local machine metadata and user-specific Xcode state.
+.DS_Store
+*.xcuserstate
+xcuserdata/

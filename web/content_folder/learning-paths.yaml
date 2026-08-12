@@ -1,0 +1,80 @@
+version: 1
+
+# 커리큘럼 전체 목록과 별개로, 처음 들어온 학생이 무엇부터 볼지 정하는 짧은 학습 코스.
+# 개념 본문은 curriculum_folder와 ConceptLesson 시드가 정본이고 여기서는 순서만 묶는다.
+tracks:
+  - id: g10-polynomial-foundations
+    order: 1
+    eyebrow: 고1 첫 주 추천
+    title: 다항식 핵심 3강
+    summary: 계산에서 인수분해까지, 고등수학의 첫 단원을 한 흐름으로 끝냅니다.
+    courseId: common-math-1
+    conceptIds:
+      - polynomial-arithmetic
+      - identity-remainder-theorem
+      - polynomial-factorization
+
+  - id: g10-function-graph-flow
+    order: 2
+    eyebrow: 공통수학2 핵심 흐름
+    title: 함수에서 그래프까지 5강
+    summary: 함수의 뜻을 잡고 합성·역함수를 거쳐 유리함수와 무리함수 그래프까지 연결합니다.
+    courseId: common-math-2
+    conceptIds:
+      - function-concept-and-graph
+      - composite-function
+      - inverse-function
+      - rational-function
+      - irrational-function
+
+  - id: algebra-exp-log-flow
+    order: 3
+    eyebrow: 대수 지수·로그
+    title: 지수와 로그 연결 5강
+    summary: 지수법칙과 로그의 성질을 함수·그래프·활용 문제로 이어서 학습합니다.
+    courseId: algebra
+    conceptIds:
+      - algebra-01-03
+      - algebra-01-04
+      - algebra-01-06
+      - algebra-01-07
+      - algebra-01-08
+
+  - id: calculus-derivative-graph-flow
+    order: 4
+    eyebrow: 미적분Ⅰ 미분
+    title: 미분으로 그래프 읽기 5강
+    summary: 미분계수에서 다항함수의 미분, 접선, 증감과 극값, 그래프 개형까지 한 흐름으로 익힙니다.
+    courseId: calculus-1
+    conceptIds:
+      - calculus-1-02-01
+      - calculus-1-02-04
+      - calculus-1-02-05
+      - calculus-1-02-07
+      - calculus-1-02-08
+
+  - id: probability-conditional-flow
+    order: 5
+    eyebrow: 확률과 통계 확률
+    title: 조건부확률 판단 5강
+    summary: 확률의 기본 성질에서 덧셈정리·조건부확률·독립·곱셈정리까지 판단 순서를 세웁니다.
+    courseId: probability-statistics
+    conceptIds:
+      - probability-statistics-02-01
+      - probability-statistics-02-02
+      - probability-statistics-02-04
+      - probability-statistics-02-05
+      - probability-statistics-02-06
+
+  - id: geometry-vector-flow
+    order: 6
+    eyebrow: 기하 벡터
+    title: 벡터로 공간 표현 5강
+    summary: 벡터의 연산과 위치벡터에서 내적, 직선, 평면과 구의 방정식까지 연결합니다.
+    courseId: geometry
+    conceptIds:
+      - geometry-03-01
+      - geometry-03-02
+      - geometry-03-03
+      - geometry-03-04
+      - geometry-03-05

@@ -1,0 +1,29 @@
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <% if (icon === "home") { %>
+    <path d="M3.75 10.75 12 4l8.25 6.75v8.5a.75.75 0 0 1-.75.75h-5v-5.25h-5V20h-5a.75.75 0 0 1-.75-.75z" />
+  <% } else if (icon === "route") { %>
+    <circle cx="6" cy="6" r="2.25" /><circle cx="18" cy="18" r="2.25" />
+    <path d="M8.25 6h3.25a2.5 2.5 0 0 1 0 5H10a2.5 2.5 0 0 0 0 5h5.75" />
+  <% } else if (icon === "curriculum") { %>
+    <path d="M4 5.25A2.25 2.25 0 0 1 6.25 3H11v16.5H6.25A2.25 2.25 0 0 0 4 21.75zM20 5.25A2.25 2.25 0 0 0 17.75 3H13v16.5h4.75A2.25 2.25 0 0 1 20 21.75z" />
+  <% } else if (icon === "practice") { %>
+    <path d="m13.25 2.75-7 10h5l-.5 8.5 7-11h-5z" />
+  <% } else if (icon === "assessment") { %>
+    <path d="M7 3.75h10A2.25 2.25 0 0 1 19.25 6v14.25H4.75V6A2.25 2.25 0 0 1 7 3.75Z" />
+    <path d="M8 3.75V2.5M16 3.75V2.5M8 9h8M8 13h5M8 17h3" />
+  <% } else if (icon === "review") { %>
+    <path d="M19 8.25A7.75 7.75 0 1 0 19.25 15M19 4.5v4.25h-4.25" />
+    <path d="M12 8v4.25l2.75 1.75" />
+  <% } else if (icon === "arena") { %>
+    <path d="M5 4.25h14v5.5A7 7 0 0 1 12 16.75a7 7 0 0 1-7-7z" />
+    <path d="M5 6.5H2.75v1.75A4.25 4.25 0 0 0 7 12.5M19 6.5h2.25v1.75A4.25 4.25 0 0 1 17 12.5M12 16.75v3.5M8.5 20.25h7" />
+  <% } else if (icon === "store") { %>
+    <path d="M4 9.25h16v11H4zM3 5h18l-1 4.25H4zM9 13h6M12 9.25V20.25" />
+  <% } else if (icon === "suggestion") { %>
+    <path d="M12 3.25a6.25 6.25 0 0 0-3.5 11.43V17h7v-2.32A6.25 6.25 0 0 0 12 3.25Z" />
+    <path d="M9.5 20h5M9.75 12.25h4.5" />
+  <% } else if (icon === "admin") { %>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.64 5.64l1.42 1.42M16.94 16.94l1.42 1.42M18.36 5.64l-1.42 1.42M7.06 16.94l-1.42 1.42" />
+  <% } %>
+</svg>

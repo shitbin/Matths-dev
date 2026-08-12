@@ -1,0 +1,290 @@
+<%
+  const activePool =
+    arenaAccess.activeDivision === "MAIN"
+      ? ranking.pools.main
+      : arenaAccess.activeDivision === "SUB"
+        ? ranking.pools.sub
+        : null;
+  const profileRanking =
+    arenaAccess.standing
+      ? {
+          tier: arenaAccess.standing.tier,
+          division: arenaAccess.standing.division,
+          tierRank: arenaAccess.standing.arenaPosition,
+          gp: arenaAccess.standing.gp,
+        }
+      : activePool?.current || null;
+  const hasSeedGp =
+    seedState.gp !== null &&
+    seedState.gp !== undefined;
+  const connectedHours = Math.max(0, Number(user.totalConnectedSeconds) || 0) / 3600;
+  const connectedHoursLabel = connectedHours < 0.1
+    ? "0시간"
+    : `${connectedHours.toFixed(connectedHours >= 100 ? 0 : 1)}시간`;
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="description"
+      content="GOAT Arena 모드, 티어 랭킹, GP 및 정기권 학습 가능 일수 프로필"
+    />
+    <meta name="theme-color" content="#070913" />
+    <title>내 프로필 | GOAT Arena</title>
+    <link rel="stylesheet" href="/css/goat-arena.css" />
+    <%- include("partials/rank-motion-head") %>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <script src="/js/goat-arena.js" defer></script>
+  </head>
+  <body class="goat-arena-page arena-inner-page">
+    <a class="arena-skip-link" href="#arena-profile-main">본문으로 바로가기</a>
+
+    <%- include("partials/goat-arena-navigation", {
+      activeArenaPage,
+      arenaUser,
+    }) %>
+
+    <main class="arena-page-main" id="arena-profile-main">
+      <header class="arena-page-heading arena-v2-page-heading">
+        <div>
+          <p>내 Arena 프로필</p>
+          <h1>GOAT Arena 프로필</h1>
+        </div>
+        <p>
+          Matths 학습 프로필과 분리된 Arena 전용 상태입니다.
+          현재 모드와 티어, GP를 먼저 확인하고 기록·정산·계정 설정은 아래에서 관리합니다.
+        </p>
+      </header>
+
+      <section class="arena-profile-hero">
+        <div class="arena-profile-identity">
+          <% if (profileRanking) { %>
+            <%- include("partials/rank-crest", {
+              tier: profileRanking.tier,
+              size: "lg",
+            }) %>
+          <% } else { %>
+            <%- include("partials/arena-seed-pending") %>
+          <% } %>
+          <div>
+            <small>Arena 사용자</small>
+            <h2><%= arenaUser.displayName %></h2>
+            <p><%= arenaUser.schoolName %> · <%= arenaUser.gradeLabel %></p>
+          </div>
+        </div>
+
+        <dl>
+          <div>
+            <dt>현재 모드</dt>
+            <dd>
+              <%= arenaAccess.activeDivision
+                ? (arenaAccess.activeDivision === "SUB"
+                  ? "Unranked"
+                  : "Ranked")
+                : "미배정" %>
+            </dd>
+          </div>
+          <div>
+            <dt>현재 티어</dt>
+            <dd class="arena-profile-tier-value">
+              <% if (profileRanking) { %>
+                <span><%= profileRanking.tier %></span>
+                <small><%= profileRanking.division === "MAIN" ? "Ranked" : "Unranked" %></small>
+              <% } else { %>—<% } %>
+            </dd>
+          </div>
+          <div>
+            <dt>티어 내 랭킹</dt>
+            <dd>
+              <%= profileRanking?.tierRank ?? "—" %>
+              <small><%= profileRanking?.tierRank ? "위" : "" %></small>
+            </dd>
+          </div>
+          <% if (arenaAccess.activeDivision === "MAIN") { %>
+            <div>
+              <dt>Ranked 매칭 범위</dt>
+              <dd>전체 Ranked</dd>
+            </div>
+          <% } %>
+          <div>
+            <dt>GP</dt>
+            <dd>
+              <%= profileRanking?.gp ?? seedState.gp ?? "—" %>
+              <small><%= profileRanking || hasSeedGp ? "GP" : "" %></small>
+            </dd>
+          </div>
+          <div>
+            <dt>누적 접속시간</dt>
+            <dd><%= connectedHoursLabel %></dd>
+          </div>
+          <% if (arenaAccess.activeDivision) { %>
+            <div>
+              <dt>자동 방어 배정</dt>
+              <dd>
+                <%= arenaAccess.automaticDefense?.suspended ? "일시 제외" : "참여 중" %>
+                <% if (arenaAccess.automaticDefense?.suspended) { %>
+                  <small>공격 1회 성립 시 복구</small>
+                <% } %>
+              </dd>
+            </div>
+          <% } %>
+        </dl>
+      </section>
+
+      <% if (arenaAccess.automaticDefense?.suspended) { %>
+        <section class="arena-account-feedback is-warning" aria-live="polite">
+          자동 배정된 방어전을 5회 미응시하여 자동 방어 후보에서 제외되었습니다.
+          정기권 학습 가능 일수는 계속 차감되며, 정상적인 공격 경기 1회가 성립하면 누적 기록이 초기화되고 자동 방어 배정이 다시 활성화됩니다.
+        </section>
+      <% } %>
+
+      <section class="arena-rights-section">
+        <header>
+          <div>
+            <small>학습권 패키지 현황</small>
+            <h2>정기권 학습 가능 일수</h2>
+          </div>
+          <p>
+            정기권 학습 가능 일수는 서비스 이용과 경기에 쓰는 권리이고, 페이백 점수는 페이백 구간을 판정하는 별도 값입니다.
+            Unranked 페이백은 점수 조건과 함께 29일 학습을 하루도 빠짐없이 완료해야 합니다.
+          </p>
+        </header>
+
+        <div class="arena-rights-grid">
+          <% if (arenaAccess.learningRights.unlimited) { %>
+            <article>
+              <small>관리자 학습권</small>
+              <strong>무제한</strong>
+              <span>만료일과 일일 차감 없이 Unranked·Ranked 기능을 확인할 수 있습니다.</span>
+            </article>
+            <article>
+              <small>이용 기한</small>
+              <strong>만료 없음</strong>
+              <span>관리자 역할이 유지되는 동안 슈퍼계정 권한이 적용됩니다.</span>
+            </article>
+          <% } else if (arenaAccess.activeDivision === "SUB") { %>
+            <article>
+              <small>Unranked 학습 가능 일수</small>
+              <strong><%= arenaAccess.learningRights.availableDays ?? "—" %></strong>
+              <span>현재 정기권 학습 가능 일수</span>
+            </article>
+            <article>
+              <small>경기 예치 학습일수</small>
+              <strong><%= arenaAccess.learningRights.lockedDays ?? "—" %></strong>
+              <span>진행 중 경기의 정산까지 예치된 일수</span>
+            </article>
+            <article>
+              <small>페이백 점수</small>
+              <strong class="<%= arenaAccess.learningRights.paybackDisqualified ? 'arena-payback-disqualified' : '' %>"><%= arenaAccess.learningRights.paybackScoreDays ?? "—" %></strong>
+              <span><%= arenaAccess.learningRights.paybackDisqualified ? "부정행위 확정으로 이번 이용 주기의 페이백 심사 자격이 박탈되었습니다." : "현재 학습권 패키지 이용 주기의 페이백 점수" %></span>
+            </article>
+            <article>
+              <small>페이백 점수까지</small>
+              <strong class="<%= arenaAccess.learningRights.paybackDisqualified ? 'arena-payback-disqualified' : '' %>"><%= arenaAccess.learningRights.neededForRefund ?? "—" %></strong>
+              <span><%= arenaAccess.learningRights.paybackDisqualified ? "다음 유료 이용 주기에서는 자격이 새로 계산됩니다." : `최소 페이백 점수 ${arenaAccess.learningRights.minimumPaybackScore ?? 30}점까지 더 필요한 점수` %></span>
+            </article>
+            <article>
+              <small>29일 전일 학습</small>
+              <strong class="arena-rights-streak">
+                <%= arenaAccess.learningRights.studyStreakDays ?? 0 %>
+                <span>/ <%= arenaAccess.learningRights.minimumStudyStreakDays ?? 29 %>일</span>
+              </strong>
+              <span>
+                <%= arenaAccess.learningRights.fullAttendanceQualified
+                  ? "전일 학습 조건을 달성했습니다."
+                  : `이번 이용 주기에서 매일 학습해야 하며, 현재 연속 기록에 ${arenaAccess.learningRights.studyDaysNeeded ?? 29}일이 더 필요합니다.` %>
+              </span>
+            </article>
+          <% } else if (arenaAccess.activeDivision === "MAIN") { %>
+            <article>
+              <small>Ranked 사용 가능 일수</small>
+              <strong><%= arenaAccess.learningRights.availableDays ?? "—" %></strong>
+              <span>지금 이용하거나 새 경기에 예치할 수 있는 일수</span>
+            </article>
+            <article>
+              <small>초대 예약 일수</small>
+              <strong><%= arenaAccess.learningRights.reservedDays ?? "—" %></strong>
+              <span>아직 수락되지 않은 하위 티어 초대에 예약된 일수</span>
+            </article>
+            <article>
+              <small>경기 예치 학습일수</small>
+              <strong><%= arenaAccess.learningRights.lockedDays ?? "—" %></strong>
+              <span>성립된 경기의 정산이 끝날 때까지 예치된 일수</span>
+            </article>
+            <article>
+              <small>Ranked 총 학습일수</small>
+              <strong><%= arenaAccess.learningRights.totalMainDays ?? "—" %></strong>
+              <span>사용 가능·예약·경기 예치 학습일수의 합계</span>
+            </article>
+            <article>
+              <small>이용 상태</small>
+              <strong>Ranked</strong>
+              <span>사용 가능·예약·경기 예치 학습일수가 모두 0이고 미정산 경기가 없으면 Ranked 이용이 만료되며, 재구독 규정을 따릅니다.</span>
+            </article>
+          <% } else { %>
+            <article class="arena-rights-pending">
+              <small>학습권 패키지 이용 정보</small>
+              <strong>이용 중인 학습권 패키지 없음</strong>
+              <span>
+                현재 활성 이용 주기가 없습니다. 학습권 패키지를 시작하면 정기권 학습 가능 일수,
+                경기 예치 학습일수와 페이백 점수를 확인할 수 있습니다.
+              </span>
+            </article>
+          <% } %>
+        </div>
+      </section>
+
+      <section class="arena-payback-account-section" id="payback-account">
+        <header>
+          <div>
+            <small>선택 연결</small>
+            <h2>페이백 계좌</h2>
+          </div>
+          <p>계좌 연결은 선택 사항입니다. 다만 페이백 지급 대상이 된 뒤에도 계좌를 연결하지 않으면 운영자 지급 목록에 계좌 미확인 상태로 표시됩니다.</p>
+        </header>
+
+        <% if (accountUpdated) { %>
+          <div class="arena-account-feedback is-success" role="status">계좌번호와 예금주 확인이 완료되었습니다.</div>
+        <% } %>
+        <% if (accountError) { %>
+          <div class="arena-account-feedback is-error" role="alert"><%= accountError %></div>
+        <% } %>
+        <% if (payoutEligible && !paybackAccount.confirmed) { %>
+          <div class="arena-account-feedback is-warning" role="status">페이백 조건을 달성했습니다. 지급을 위해 아래에서 계좌번호와 예금주를 확인해주세요.</div>
+        <% } %>
+
+        <% if (paybackAccount.confirmed) { %>
+          <div class="arena-linked-account">
+            <span aria-hidden="true">✓</span>
+            <div><small>확인된 지급 계좌</small><strong><%= paybackAccount.bankName %> · 끝 <%= paybackAccount.last4 %>자리</strong><p>계좌를 바꾸려면 아래 양식에 새 정보를 입력하고 다시 확인해주세요.</p></div>
+          </div>
+        <% } %>
+
+        <form class="arena-account-form" method="post" action="/goat-arena/profile/payback-account/review">
+          <label><span>은행</span><input name="bankName" list="payback-bank-list" maxlength="40" autocomplete="organization" required placeholder="예: 토스뱅크" /></label>
+          <datalist id="payback-bank-list"><option value="국민은행"></option><option value="신한은행"></option><option value="우리은행"></option><option value="하나은행"></option><option value="농협은행"></option><option value="기업은행"></option><option value="카카오뱅크"></option><option value="토스뱅크"></option><option value="케이뱅크"></option></datalist>
+          <label><span>예금주</span><input name="accountHolderName" maxlength="40" autocomplete="name" required placeholder="계좌의 예금주 이름" /></label>
+          <label><span>계좌번호</span><input name="accountNumber" inputmode="numeric" autocomplete="off" minlength="8" maxlength="24" required placeholder="하이픈 없이 숫자로 입력" /></label>
+          <button type="submit"><%= paybackAccount.confirmed ? "새 계좌 확인하기" : "계좌 정보 확인하기" %></button>
+        </form>
+        <p class="arena-account-security">계좌번호는 암호화해 저장하며, 사용자 화면에는 마지막 4자리만 표시합니다.</p>
+      </section>
+
+      <section class="arena-profile-session-section" aria-labelledby="arena-session-title">
+        <div>
+          <small>접속 관리</small>
+          <h2 id="arena-session-title">로그인 세션</h2>
+          <p>공용 기기에서는 이용을 마친 뒤 반드시 로그아웃해주세요.</p>
+        </div>
+        <form action="/logout" method="post">
+          <button type="submit">GOAT Arena 로그아웃</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

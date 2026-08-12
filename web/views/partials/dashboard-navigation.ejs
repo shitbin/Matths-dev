@@ -1,0 +1,104 @@
+<link rel="stylesheet" href="/css/matths-theme.css" />
+<%
+  const currentDashboardPage =
+    typeof activePage === "string"
+      ? activePage
+      : "";
+  const navigationData =
+    typeof data !== "undefined" && data
+      ? data
+      : {};
+  const navigationStats =
+    navigationData.stats || {};
+  const wrongNoteStats =
+    typeof stats !== "undefined" && stats
+      ? stats
+      : {};
+  const completedConceptCount =
+    Number(navigationData.completedConcepts);
+  const pendingReviewCount =
+    Number(
+      wrongNoteStats.due ??
+        navigationStats.pendingReviewCount
+    );
+  const dashboardNavigationGroups = [
+    {
+      label: "오늘",
+      items: [
+        { id: "main", href: "/main", icon: "home", label: "학습 홈" },
+      ],
+    },
+    {
+      label: "학습",
+      items: [
+        {
+          id: "my-learning",
+          href: "/my-learning",
+          icon: "route",
+          label: "내 학습",
+          badge: Number.isFinite(completedConceptCount) ? completedConceptCount : null,
+        },
+        { id: "curriculum", href: "/log-curriculum", icon: "curriculum", label: "교육과정" },
+        { id: "quick-practice", href: "/quick-practice", icon: "practice", label: "40초 눈풀이" },
+        { id: "assessments", href: "/assessments", icon: "assessment", label: "평가 센터" },
+        {
+          id: "wrong-notes",
+          href: "/wrong-notes",
+          icon: "review",
+          label: "오답 노트",
+          badge: Number.isFinite(pendingReviewCount) && pendingReviewCount > 0
+            ? pendingReviewCount
+            : null,
+        },
+      ],
+    },
+    {
+      label: "경쟁과 자료",
+      items: [
+        { id: "war-of-masters", href: "/war-of-masters", icon: "arena", label: "GOAT Arena" },
+        { id: "store", href: "/store", icon: "store", label: "수험관" },
+        { id: "coach-suggestions", href: "/coach-suggestions", icon: "suggestion", label: "문구 제안소" },
+      ],
+    },
+  ];
+  const navigationUser =
+    typeof user !== "undefined"
+      ? user
+      : null;
+
+  if (
+    navigationUser?.role === "admin"
+  ) {
+    dashboardNavigationGroups.push({
+      label: "관리",
+      items: [{ id: "admin", href: "/admin", icon: "admin", label: "관리자" }],
+    });
+  }
+%>
+
+<nav class="side-nav" aria-label="대시보드 메뉴">
+  <% dashboardNavigationGroups.forEach((group) => { %>
+    <section class="side-nav-group" aria-label="<%= group.label %>">
+      <p><%= group.label %></p>
+      <% group.items.forEach((item) => { %>
+        <% const isActive = item.id === currentDashboardPage; %>
+        <a
+          class="<%= isActive ? 'active' : '' %>"
+          href="<%= item.href %>"
+          <%- isActive ? 'aria-current="page"' : "" %>
+        >
+          <span class="nav-icon"><%- include("dashboard-nav-icon", { icon: item.icon }) %></span>
+          <span><%= item.label %></span>
+          <% if (item.badge !== null && item.badge !== undefined) { %>
+            <b
+              <%- item.id === "my-learning"
+                ? 'id="completed-concept-badge"'
+                : "" %>
+            ><%= item.badge %></b>
+          <% } %>
+        </a>
+      <% }) %>
+    </section>
+  <% }) %>
+</nav>
+<script src="/js/session-usage.js" defer></script>

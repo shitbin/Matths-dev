@@ -1,0 +1,130 @@
+<%
+  const displayName = String(user.name || user.username || "회원");
+  const activeTab = storeData.tabs.find((tab) => tab.code === storeData.activeTab) || storeData.tabs[0];
+  const grouped = storeData.items.reduce((groups, item) => {
+    const key = item.contentType === "DAILY_HALF"
+      ? `${item.year || "연도 미정"}년 ${item.month || "월 미정"}월`
+      : item.series || item.phase || item.finalCategory || item.errorCategory || item.subject || "추천 콘텐츠";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+    return groups;
+  }, {});
+  const actionLabel = (item) => item.progress.status === "SUBMITTED"
+    ? "결과 확인"
+    : item.progress.status === "IN_PROGRESS"
+      ? "이어 하기"
+      : item.contentType === "CONCEPT"
+        ? "학습 시작"
+        : "문제 풀기";
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Matths 고2·고3 수험관에서 N제, 데일리 하프, 실전 모의고사와 파이널 콘텐츠를 학습하세요." />
+    <title>고2·고3 수험관 | Matths</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/store.css" />
+    <link rel="stylesheet" href="/css/brand.css" />
+    <link rel="stylesheet" href="/css/study-hall-v2.css" />
+    <script src="/js/main.js" defer></script>
+  </head>
+  <body class="study-hall-page">
+    <a class="skip-link" href="#study-hall-main">본문으로 바로가기</a>
+    <div class="dashboard-shell study-hall-shell">
+      <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
+      <aside class="sidebar" id="dashboard-sidebar" aria-label="학습 메뉴">
+        <div class="sidebar-top">
+          <a class="brand" href="/main" aria-label="Matths 학습 홈"><%- include("partials/brand-primary-logo") %></a>
+          <button class="sidebar-close" id="sidebar-close" type="button" aria-label="메뉴 닫기">×</button>
+        </div>
+        <%- include("partials/dashboard-navigation", { activePage: "store" }) %>
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-profile">
+          <a class="profile-avatar" href="/profile" aria-label="프로필 설정"><%= displayName.slice(0, 1) %></a>
+          <div class="profile-copy"><strong><%= displayName %>님</strong><small>Matths 회원</small></div>
+          <form action="/logout" method="POST"><button type="submit" aria-label="로그아웃">↗</button></form>
+        </div>
+      </aside>
+
+      <main class="dashboard-main study-hall-main" id="study-hall-main">
+        <header class="study-hall-mobile-header">
+          <button class="sidebar-open" id="sidebar-open" type="button" aria-label="학습 메뉴 열기" aria-controls="dashboard-sidebar" aria-expanded="false"><span></span><span></span><span></span></button>
+          <a class="store-mobile-brand" href="/main" aria-label="Matths 학습 홈">
+            <%- include("partials/brand-primary-logo") %>
+            <small>고2·고3 수험관</small>
+          </a>
+          <a href="/main">학습 홈</a>
+        </header>
+
+        <section class="study-hall-hero" aria-labelledby="study-hall-title">
+          <div>
+            <p>고2·고3 수험관</p>
+            <h1 id="study-hall-title">오늘 이어갈 학습과<br />새 문제를 한곳에서.</h1>
+            <span>회차별 진행률과 답안을 저장하고, N제부터 실전 모의고사까지 같은 흐름으로 이어갑니다.</span>
+          </div>
+          <aside>
+            <span>현재 영역</span>
+            <strong><%= activeTab.label %></strong>
+            <small><%= activeTab.summary %></small>
+          </aside>
+        </section>
+
+        <nav class="study-hall-tabs" aria-label="수험관 콘텐츠">
+          <% storeData.tabs.forEach((tab) => { %>
+            <a href="/store?tab=<%= tab.code %>" class="<%= tab.code === storeData.activeTab ? 'is-active' : '' %>" <% if (tab.code === storeData.activeTab) { %>aria-current="page"<% } %>>
+              <span><%= tab.label %></span><small><%= tab.summary %></small>
+            </a>
+          <% }) %>
+        </nav>
+
+        <% if (storeData.continuing) { %>
+          <a class="study-hall-continue" href="/store/content/<%= storeData.continuing.id %>">
+            <div><small>최근 학습 이어서 하기</small><strong><%= storeData.continuing.title %></strong><span>마지막 문항 <%= storeData.continuing.progress.lastQuestionNumber || 1 %>번 · <%= storeData.continuing.progress.percent %>% 진행</span></div>
+            <b>이어 하기 <i aria-hidden="true">→</i></b>
+          </a>
+        <% } %>
+
+        <section class="study-hall-catalog" aria-labelledby="hall-catalog-title">
+          <header><div><p>현재 목록</p><h2 id="hall-catalog-title"><%= activeTab.label %></h2><span><%= activeTab.summary %></span></div><strong><%= storeData.items.length %><small>개 콘텐츠</small></strong></header>
+
+          <% if (!storeData.items.length) { %>
+            <div class="study-hall-empty"><span aria-hidden="true">◇</span><h3>이 영역의 새 콘텐츠를 준비하고 있습니다.</h3><p>학습 가능한 콘텐츠가 추가되면 이 목록에서 바로 시작할 수 있습니다.</p></div>
+          <% } else { %>
+            <% Object.entries(grouped).forEach(([groupName, items]) => { %>
+              <section class="study-hall-series" aria-label="<%= groupName %>">
+                <header><div><small>시리즈</small><h3><%= groupName %></h3></div><span><%= items.length %>개</span></header>
+                <div class="study-hall-grid">
+                  <% items.forEach((item) => { %>
+                    <a class="study-hall-card" href="/store/content/<%= item.id %>">
+                      <div class="study-hall-cover <%= item.thumbnail ? 'has-image' : '' %>">
+                        <% if (item.thumbnail) { %><img src="/store/content/<%= item.id %>/files/<%= item.thumbnail.id %>" alt="<%= item.title %> 표지" loading="lazy" /><% } else { %><img class="study-hall-fallback-logo" src="/images/brand/matths-symbol.svg" alt="" aria-hidden="true" /><b><%= item.subject || activeTab.label %></b><% } %>
+                        <% if (item.progress.status === 'SUBMITTED') { %><em>완료</em><% } %>
+                      </div>
+                      <div class="study-hall-card-copy">
+                        <p><%= item.grade %><%= item.subject ? ` · ${item.subject}` : '' %><%= item.difficulty ? ` · ${item.difficulty}` : '' %></p>
+                        <h4><%= item.title %></h4>
+                        <span><%= item.description || '상세 페이지에서 학습 구성과 진행 방식을 확인하세요.' %></span>
+                        <dl>
+                          <% if (item.contentType === 'DAILY_HALF') { %><div><dt>회차</dt><dd><%= item.year %>년 <%= item.month %>월 <%= item.week %>주 차 · 제<%= item.session %>회</dd></div><% } %>
+                          <% if (item.itemCount) { %><div><dt>문항</dt><dd><%= item.itemCount %>문항</dd></div><% } %>
+                          <% if (item.timeLimitMinutes) { %><div><dt>제한 시간</dt><dd><%= item.timeLimitMinutes %>분</dd></div><% } %>
+                          <% if (item.recommendedStudyDays) { %><div><dt>권장 기간</dt><dd><%= item.recommendedStudyDays %>일</dd></div><% } %>
+                          <% if (item.estimatedMinutes) { %><div><dt>예상 시간</dt><dd><%= item.estimatedMinutes %>분</dd></div><% } %>
+                        </dl>
+                        <div class="study-hall-progress"><span><i style="width:<%= item.progress.percent %>%"></i></span><small><%= item.progress.percent %>% · <%= item.progress.status === 'SUBMITTED' ? `정답 ${item.progress.correctCount}개` : item.progress.answeredCount ? `${item.progress.answeredCount}문항 입력` : '시작 전' %></small></div>
+                        <b><%= actionLabel(item) %> <i aria-hidden="true">→</i></b>
+                      </div>
+                    </a>
+                  <% }) %>
+                </div>
+              </section>
+            <% }) %>
+          <% } %>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

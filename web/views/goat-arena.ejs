@@ -1,0 +1,127 @@
+<%
+  const activeModeLabel = arenaAccess.activeDivision === "MAIN"
+    ? "Ranked"
+    : arenaAccess.activeDivision === "SUB"
+      ? "Unranked"
+      : "미배정";
+  const currentStanding = arenaAccess.standing || null;
+  const currentTier = currentStanding?.tier || seedState.tier || "배치 전";
+  const currentRank = currentStanding?.arenaPosition || seedState.tierRank || null;
+  const currentGp = currentStanding?.gp ?? seedState.gp ?? null;
+  const availableDays = arenaAccess.learningRights.availableDays ?? "—";
+  const notificationCount = Number(arenaNotifications?.unreadCount || 0);
+  const primaryAction = !seedState.ready
+    ? { href: "/war-of-masters", label: seedState.code === "PLACEMENT" ? "배치고사 시작" : "배치 상태 확인" }
+    : arenaAccess.canUseMain
+      ? { href: "/goat-arena/main", label: notificationCount ? "Ranked 요청 확인" : "Ranked 전장 열기" }
+      : arenaAccess.canUseSub
+        ? { href: "/goat-arena/sub/challenge", label: notificationCount ? "Unranked 요청 확인" : "Unranked 경기 신청" }
+        : { href: "/goat-arena/profile", label: "Arena 이용 조건 확인" };
+  const paybackScore = Number(arenaAccess.learningRights.paybackScoreDays || 0);
+  const paybackGoal = Number(arenaAccess.learningRights.minimumPaybackScore || 30);
+  const paybackPercent = Math.max(0, Math.min(100, Math.round((paybackScore / Math.max(1, paybackGoal)) * 100)));
+  const studyDays = Number(arenaAccess.learningRights.studyStreakDays || 0);
+  const studyGoal = Number(arenaAccess.learningRights.minimumStudyStreakDays || 29);
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Matths GOAT Arena — 현재 순위와 다음 경기를 확인하는 수학 경쟁 공간" />
+    <meta name="theme-color" content="#090c1b" />
+    <title>GOAT Arena | Matths</title>
+    <link rel="stylesheet" href="/css/goat-arena.css" />
+    <%- include("partials/rank-motion-head") %>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <script src="/js/goat-arena.js" defer></script>
+  </head>
+  <body class="goat-arena-page arena-inner-page arena-hub-page">
+    <a class="arena-skip-link" href="#arena-main">본문으로 바로가기</a>
+    <%- include("partials/goat-arena-navigation", { activeArenaPage, arenaUser }) %>
+    <% if (pendingRevengeRight) { %><%- include("partials/arena-revenge-overlay", { revengeRight: pendingRevengeRight, revengeRequestId: pendingRevengeRequestId }) %><% } %>
+
+    <main class="arena-v2-shell" id="arena-main">
+      <header class="arena-v2-statusbar" aria-labelledby="arena-title">
+        <div class="arena-v2-title">
+          <span>GOAT Arena</span>
+          <h1 id="arena-title"><%= currentTier %><%= currentRank ? ` ${currentRank}위` : "" %></h1>
+          <p><%= activeModeLabel %><%= currentGp !== null ? ` · ${currentGp.toLocaleString("ko-KR")} GP` : " · 배치 완료 후 GP가 표시됩니다" %></p>
+        </div>
+        <dl class="arena-v2-metrics" aria-label="현재 Arena 상태">
+          <div><dt>현재 모드</dt><dd><%= activeModeLabel %></dd></div>
+          <div><dt>사용 가능 학습일</dt><dd><%= availableDays %><%= availableDays === "—" || availableDays === "무제한" ? "" : "일" %></dd></div>
+          <div><dt>확인할 알림</dt><dd><%= notificationCount %>건</dd></div>
+          <div><dt>다음 신청 마감</dt><dd>일요일 14:00</dd></div>
+        </dl>
+      </header>
+
+      <section class="arena-v2-command" aria-labelledby="arena-next-title">
+        <div class="arena-v2-command-copy">
+          <p>지금 할 일</p>
+          <h2 id="arena-next-title"><%= primaryAction.label %></h2>
+          <span><%= !seedState.ready
+            ? seedState.detail
+            : notificationCount
+              ? `확인하지 않은 Arena 알림이 ${notificationCount}건 있습니다.`
+              : arenaAccess.canUseMain
+                ? "사용 가능한 학습일과 진행 중인 Ranked 경기를 먼저 확인하세요."
+                : arenaAccess.canUseSub
+                  ? "현재 티어에서 적격 상대를 서버가 자동으로 배정합니다."
+                  : "현재 이용 상태와 Ranked 진입 조건을 확인할 수 있습니다." %></span>
+          <a class="arena-v2-primary" href="<%= primaryAction.href %>"><%= primaryAction.label %><span aria-hidden="true">→</span></a>
+        </div>
+        <div class="arena-v2-crest" aria-label="현재 티어 <%= currentTier %>">
+          <% if (seedState.ready) { %><%- include("partials/rank-crest", { tier: currentTier, size: "lg" }) %><% } else { %><%- include("partials/arena-seed-pending") %><% } %>
+          <div><small>최근 Arena 상태</small><strong><%= currentTier %></strong><span><%= currentGp !== null ? `${currentGp.toLocaleString("ko-KR")} GP` : "배치 대기" %></span></div>
+        </div>
+      </section>
+
+      <div class="arena-v2-grid">
+        <section class="arena-v2-panel arena-v2-progress" aria-labelledby="unranked-progress-title">
+          <header><div><p>Unranked</p><h2 id="unranked-progress-title">페이백 진행</h2></div><a href="/goat-arena/sub">전체 보기</a></header>
+          <div class="arena-v2-progress-value"><strong><%= paybackScore %></strong><span>/ <%= paybackGoal %>점</span></div>
+          <div class="arena-v2-progress-track" aria-label="페이백 점수 <%= paybackPercent %>%"><i style="width:<%= paybackPercent %>%"></i></div>
+          <dl>
+            <div><dt>연속 학습</dt><dd><%= studyDays %> / <%= studyGoal %>일</dd></div>
+            <div><dt>남은 점수</dt><dd><%= Math.max(0, paybackGoal - paybackScore) %>점</dd></div>
+          </dl>
+          <a class="arena-v2-secondary" href="/goat-arena/sub/challenge">자동 매치 신청</a>
+        </section>
+
+        <section class="arena-v2-panel" aria-labelledby="ranked-state-title">
+          <header><div><p>Ranked</p><h2 id="ranked-state-title">진입·운용 상태</h2></div><a href="/goat-arena/main">전체 보기</a></header>
+          <% if (arenaAccess.canUseMain) { %>
+            <div class="arena-v2-key-value"><strong><%= availableDays %>일</strong><span>지금 사용할 수 있는 학습일</span></div>
+            <dl><div><dt>초대 예약</dt><dd><%= arenaAccess.learningRights.reservedDays ?? 0 %>일</dd></div><div><dt>경기 예치</dt><dd><%= arenaAccess.learningRights.lockedDays ?? 0 %>일</dd></div></dl>
+            <a class="arena-v2-secondary" href="/goat-arena/main/battle">Ranked 경기 선택</a>
+          <% } else { %>
+            <div class="arena-v2-key-value"><strong>진입 전</strong><span>Unranked 조건을 완료하면 Ranked가 열립니다.</span></div>
+            <ul class="arena-v2-checklist">
+              <li class="<%= seedState.ready ? 'done' : '' %>">배치 완료</li>
+              <li class="<%= studyDays >= studyGoal ? 'done' : '' %>">연속 학습 <%= studyDays %>/<%= studyGoal %>일</li>
+              <li class="<%= paybackScore >= paybackGoal ? 'done' : '' %>">페이백 <%= paybackScore %>/<%= paybackGoal %>점</li>
+            </ul>
+            <a class="arena-v2-secondary" href="/goat-arena/rules/main">Ranked 진입 조건 보기</a>
+          <% } %>
+        </section>
+
+        <section class="arena-v2-panel" aria-labelledby="ranking-nearby-title">
+          <header><div><p>내 위치</p><h2 id="ranking-nearby-title">티어 순위</h2></div><a href="/goat-arena/rankings">주변 순위 보기</a></header>
+          <div class="arena-v2-key-value"><strong><%= currentRank ? `${currentRank}위` : "미확정" %></strong><span><%= currentTier %> 티어 안에서의 순위</span></div>
+          <p class="arena-v2-note">전체 순위보다 지금 앞뒤에 있는 상대와 GP 차이를 먼저 확인합니다.</p>
+        </section>
+
+        <section class="arena-v2-panel" aria-labelledby="arena-rules-title">
+          <header><div><p>경기 준비</p><h2 id="arena-rules-title">빠른 규칙</h2></div><a href="/goat-arena/rules/sub">룰북 열기</a></header>
+          <dl class="arena-v2-rule-list">
+            <div><dt>문항</dt><dd><%= arenaMatchRules.questionCount %>문항</dd></div>
+            <div><dt>제한</dt><dd>문항당 <%= arenaMatchRules.timeLimitMinutes %>분</dd></div>
+            <div><dt>증빙</dt><dd><%= arenaMatchRules.evidenceSeconds %>초</dd></div>
+          </dl>
+          <details><summary>GOAT Arena 운영 방식</summary><p>배치고사와 주간 공식 모의고사에서 실력을 확인하고, 같은 문제를 푸는 1대1 경기에서 티어·티어 내 순위·GP를 경쟁합니다.</p></details>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

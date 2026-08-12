@@ -1,0 +1,676 @@
+[
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "numbers-and-operations",
+  "conceptId": "vocational-math-01-01",
+  "content": {
+   "estimatedMinutes": 10,
+   "summary": "현장에서 나오는 수량과 금액 문제를 더하기·빼기·곱하기·나누기 중 무엇으로 풀지 골라내는 단원입니다. 계산 자체보다 상황을 식으로 옮기는 판단이 핵심입니다.",
+   "keyTakeaway": "합계는 덧셈, 남은 양은 뺄셈, 단가×수량은 곱셈, 1개당·1인당은 나눗셈으로 연결하면 대부분의 직무 계산이 풀립니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "상황에서 수와 단위를 뽑습니다",
+     "description": "견적서나 작업지시서에서 계산에 필요한 수치와 그 단위를 먼저 표시합니다."
+    },
+    {
+     "order": 2,
+     "title": "필요한 연산을 정합니다",
+     "description": "묻는 것이 합계인지, 남은 양인지, 전체 금액인지, 하나당 값인지에 따라 연산을 고릅니다."
+    },
+    {
+     "order": 3,
+     "title": "식을 세워 계산합니다",
+     "description": "예를 들어 단가 8500원짜리 부품 24개면 $8500 \\times 24 = 204000$원입니다. 자릿수가 크면 계산기를 사용합니다."
+    },
+    {
+     "order": 4,
+     "title": "답을 상황의 말로 되돌립니다",
+     "description": "결과에 단위를 붙이고 현실적으로 말이 되는 값인지 확인합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "numbers-and-operations",
+  "conceptId": "vocational-math-01-02",
+  "content": {
+   "estimatedMinutes": 10,
+   "summary": "수백만, 수억처럼 큰 수를 끝자리까지 따지지 않고 적당한 자리에서 잘라 다루는 방법입니다. 올림·버림·반올림 중 무엇을 쓸지는 상황이 정해 줍니다.",
+   "keyTakeaway": "모자라면 안 되는 재료는 올림, 만들 수 있는 개수는 버림, 보고용 대표 수치는 반올림을 씁니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "어림할 자리를 정합니다",
+     "description": "백만 원 단위 보고인지 천 원 단위 견적인지에 따라 기준이 되는 자리를 먼저 잡습니다."
+    },
+    {
+     "order": 2,
+     "title": "상황에 맞는 어림 방법을 고릅니다",
+     "description": "부족하면 곤란한 양은 올림, 넘치면 곤란한 양은 버림, 크기를 대표하는 값은 반올림으로 처리합니다."
+    },
+    {
+     "order": 3,
+     "title": "어림값을 구합니다",
+     "description": "예를 들어 3,187,000원을 십만의 자리에서 반올림하면 약 3,200,000원입니다."
+    },
+    {
+     "order": 4,
+     "title": "어림값으로 크기를 비교합니다",
+     "description": "자릿수가 다르면 자릿수만으로 판정하고, 자릿수가 같으면 앞자리부터 차례로 비교합니다."
+    },
+    {
+     "order": 5,
+     "title": "생긴 차이를 점검합니다",
+     "description": "어림 때문에 벌어진 차이가 예산이나 발주 결정을 바꿀 정도인지 원래 값과 견줍니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "numbers-and-operations",
+  "conceptId": "vocational-math-01-03",
+  "content": {
+   "estimatedMinutes": 11,
+   "summary": "시간·길이·무게·들이를 서로 통하는 표준 단위로 맞추고, 같은 양을 다른 단위의 값으로 바꾸는 방법입니다.",
+   "keyTakeaway": "큰 단위에서 작은 단위로 갈 때는 곱하고 반대는 나누므로, 1 km = 1000 m 같은 배율만 정확하면 환산은 끝납니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "재는 양의 종류를 확인합니다",
+     "description": "시간·길이·무게·들이 중 무엇을 재는 값인지 정하고 같은 종류의 단위끼리만 환산합니다."
+    },
+    {
+     "order": 2,
+     "title": "단위 사이의 배율을 적습니다",
+     "description": "1 km = 1000 m, 1 kg = 1000 g, 1 L = 1000 mL, 1시간 = 60분처럼 배율을 먼저 써 둡니다."
+    },
+    {
+     "order": 3,
+     "title": "곱할지 나눌지 정합니다",
+     "description": "큰 단위를 작은 단위로 바꿀 때는 배율을 곱하고, 작은 단위를 큰 단위로 바꿀 때는 나눕니다."
+    },
+    {
+     "order": 4,
+     "title": "자료의 단위에 맞춰 답을 씁니다",
+     "description": "인치나 파운드로 적힌 해외 자료, 나라마다 다른 시각은 배율과 시차를 적용해 우리가 쓰는 단위와 시각으로 바꿉니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "change-and-relationships",
+  "conceptId": "vocational-math-02-01",
+  "content": {
+   "estimatedMinutes": 11,
+   "summary": "두 양을 견주어 $a:b$로 적고, 그 비를 유지한 채 필요한 양을 구하는 방법입니다. 재료 배합, 축척, 인원 배분에서 그대로 쓰입니다.",
+   "keyTakeaway": "비례식 $a:b=c:d$에서 바깥끼리의 곱과 안끼리의 곱이 같다는 $ad=bc$ 하나로 모르는 양을 구합니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "두 양을 비로 씁니다",
+     "description": "단위를 같게 맞춘 뒤 비교할 두 양을 $a:b$ 꼴로 적습니다."
+    },
+    {
+     "order": 2,
+     "title": "비를 간단히 합니다",
+     "description": "두 항을 같은 수로 나누어 가장 간단한 자연수 비로 만듭니다."
+    },
+    {
+     "order": 3,
+     "title": "비례식을 세웁니다",
+     "description": "구할 양을 $x$로 두고 $a:b = c:x$ 형태로 씁니다."
+    },
+    {
+     "order": 4,
+     "title": "내항과 외항의 곱으로 풉니다",
+     "description": "$ax = bc$를 정리해 $x$의 값을 구합니다."
+    },
+    {
+     "order": 5,
+     "title": "현장 값으로 검산합니다",
+     "description": "구한 양을 실제 배합이나 배분에 넣어 처음의 비가 유지되는지 확인합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "change-and-relationships",
+  "conceptId": "vocational-math-02-02",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "기준량에 대해 비교하는 양이 얼마인지를 소수나 분수로 나타낸 것이 비율이고, 여기에 100을 곱해 %로 읽은 것이 백분율입니다.",
+   "keyTakeaway": "(비율) = (비교하는 양) ÷ (기준량)이므로, 할인율·이자율·불량률 문제는 무엇이 기준량인지만 정하면 풀립니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "기준량과 비교하는 양을 구분합니다",
+     "description": "문장에서 '~에 대한', '~중에서'에 붙는 쪽이 기준량입니다."
+    },
+    {
+     "order": 2,
+     "title": "비율을 계산합니다",
+     "description": "비교하는 양을 기준량으로 나누어 소수나 분수로 나타냅니다."
+    },
+    {
+     "order": 3,
+     "title": "백분율로 바꿉니다",
+     "description": "비율에 100을 곱하고 %를 붙입니다. 0.15는 15%입니다."
+    },
+    {
+     "order": 4,
+     "title": "금액에 적용합니다",
+     "description": "할인가는 (정가) × (1 − 할인율), 세금이 붙은 금액은 (금액) × (1 + 세율)로 구합니다."
+    },
+    {
+     "order": 5,
+     "title": "변화율로 읽습니다",
+     "description": "늘거나 준 양을 이전 값으로 나누어 몇 % 변했는지 판단합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "change-and-relationships",
+  "conceptId": "vocational-math-02-03",
+  "content": {
+   "estimatedMinutes": 11,
+   "summary": "한 양이 정해지면 다른 양이 따라서 정해지는 관계를 표에서 읽어내는 단원입니다. 요금표와 급여표가 대표적인 대응 관계 표입니다.",
+   "keyTakeaway": "표에서 옆 칸끼리 차가 일정한지 배가 일정한지를 보면 규칙이 $y = ax$인지 $y = ax + b$인지 드러납니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "표의 두 양을 구분합니다",
+     "description": "무엇이 먼저 정해지는 양이고 무엇이 그에 따라 정해지는 양인지 가려냅니다."
+    },
+    {
+     "order": 2,
+     "title": "이웃한 값의 변화를 살핍니다",
+     "description": "한 칸 늘어날 때 얼마씩 커지는지, 몇 배가 되는지를 적어 봅니다."
+    },
+    {
+     "order": 3,
+     "title": "규칙을 식으로 씁니다",
+     "description": "일정하게 늘어나면 $y = ax + b$로 쓰고, $a$는 한 단위당 증가량, $b$는 기본요금에 해당합니다."
+    },
+    {
+     "order": 4,
+     "title": "구간이 나뉜 표를 읽습니다",
+     "description": "요율표처럼 구간마다 값이 달라지면 해당 구간을 먼저 찾은 뒤 그 구간의 규칙을 적용합니다."
+    },
+    {
+     "order": 5,
+     "title": "표에 없는 값을 예측합니다",
+     "description": "찾아낸 식에 값을 넣어 표에 적히지 않은 요금이나 급여를 구합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "change-and-relationships",
+  "conceptId": "vocational-math-02-04",
+  "content": {
+   "estimatedMinutes": 10,
+   "summary": "시간에 따라 양이 늘거나 줄거나 되풀이되는 모습을 그래프의 생김새로 읽는 단원입니다.",
+   "keyTakeaway": "올라감·내려감·그대로, 가파름·완만함, 되풀이됨 이 세 가지만 읽어도 그래프를 상황의 말로 설명할 수 있습니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "두 축이 무엇인지 확인합니다",
+     "description": "가로축의 양, 세로축의 양, 그리고 각각의 단위를 먼저 봅니다."
+    },
+    {
+     "order": 2,
+     "title": "증가와 감소 구간을 나눕니다",
+     "description": "선이 올라가는 구간, 내려가는 구간, 수평인 구간으로 끊어 표시합니다."
+    },
+    {
+     "order": 3,
+     "title": "변화가 빠른 구간을 찾습니다",
+     "description": "같은 시간 동안 더 많이 변한 구간이 더 가파르고, 그 구간에서 변화가 빠릅니다."
+    },
+    {
+     "order": 4,
+     "title": "주기적 변화를 확인합니다",
+     "description": "같은 모양이 일정한 간격으로 되풀이되면 그 간격이 한 주기입니다."
+    },
+    {
+     "order": 5,
+     "title": "상황의 말로 설명합니다",
+     "description": "예를 들어 '오전 11시부터 매출이 가파르게 오르다 오후 3시 이후 완만해진다'처럼 문장으로 옮깁니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "change-and-relationships",
+  "conceptId": "vocational-math-02-05",
+  "content": {
+   "estimatedMinutes": 13,
+   "summary": "현장 문제에서 모르는 양을 $x$로 두고, 조건이 '같다'면 방정식으로 '이하·이상'이면 부등식으로 바꿔 푸는 단원입니다.",
+   "keyTakeaway": "'최대 몇 개까지', '최소 며칠'처럼 한계를 묻는 문제는 등식이 아니라 부등식으로 세워야 답이 나옵니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "구할 양을 $x$로 둡니다",
+     "description": "문제가 묻는 것 자체를 미지수로 잡고 단위까지 함께 적어 둡니다."
+    },
+    {
+     "order": 2,
+     "title": "조건을 식으로 옮깁니다",
+     "description": "'같다'는 $=$, '넘지 않는다'는 $\\le$, '이상이다'는 $\\ge$로 바꿔 씁니다."
+    },
+    {
+     "order": 3,
+     "title": "식을 정리해 풉니다",
+     "description": "양변에 같은 수를 더하거나 곱해 $x$만 남깁니다. 음수를 곱하거나 나눌 때는 부등호 방향을 뒤집습니다."
+    },
+    {
+     "order": 4,
+     "title": "조건에 맞는 답을 고릅니다",
+     "description": "개수나 인원은 자연수여야 하므로 해의 범위 안에서 실제로 가능한 값만 답으로 씁니다."
+    },
+    {
+     "order": 5,
+     "title": "원래 상황에 넣어 검산합니다",
+     "description": "구한 값을 예산이나 작업 시간 조건에 대입해 실제로 만족하는지 확인합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "geometry-and-measurement",
+  "conceptId": "vocational-math-03-01",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "입체를 한 장의 그림으로 보이게 그린 것이 겨냥도이고, 모서리를 잘라 평면에 펼쳐 눕힌 것이 전개도입니다. 상자 제작과 포장재 재단이 이 둘을 오가는 작업입니다.",
+   "keyTakeaway": "전개도에서 접었을 때 맞닿는 두 변의 길이는 반드시 같고, 마주 보는 면은 전개도 위에서 서로 떨어져 있습니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "겨냥도를 그립니다",
+     "description": "보이는 모서리는 실선으로, 가려진 모서리는 점선으로 그려 입체의 모양을 나타냅니다."
+    },
+    {
+     "order": 2,
+     "title": "자를 모서리를 정합니다",
+     "description": "면이 모두 이어진 채 펼쳐지도록 잘라 낼 모서리를 고릅니다."
+    },
+    {
+     "order": 3,
+     "title": "전개도를 펼쳐 그립니다",
+     "description": "각 면의 실제 치수를 적어 넣고 면끼리 겹치지 않도록 배치합니다."
+    },
+    {
+     "order": 4,
+     "title": "접어서 확인합니다",
+     "description": "맞닿는 변의 길이가 같은지, 마주 볼 면이 제대로 떨어져 있는지 점검합니다."
+    },
+    {
+     "order": 5,
+     "title": "재단에 적용합니다",
+     "description": "완성한 전개도를 종이나 판재 위에 놓아 필요한 자재 크기와 남는 부분을 계산합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "geometry-and-measurement",
+  "conceptId": "vocational-math-03-02",
+  "content": {
+   "estimatedMinutes": 11,
+   "summary": "하나의 입체를 위·앞·옆에서 본 세 장의 평면 그림으로 나타내고, 반대로 그 세 그림만 보고 원래 입체를 알아내는 방법입니다.",
+   "keyTakeaway": "위에서 본 그림의 각 칸에 쌓인 개수를 적어 두면, 앞과 옆에서 본 모양은 각 줄의 가장 큰 개수로 정해집니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "보는 방향을 고정합니다",
+     "description": "위, 앞, 옆 세 방향을 정하고 각 방향에서 눈에 들어오는 윤곽만 봅니다."
+    },
+    {
+     "order": 2,
+     "title": "방향별 모양을 그립니다",
+     "description": "각 방향에서 보이는 칸을 정면으로 눕혀 평면 그림으로 옮깁니다."
+    },
+    {
+     "order": 3,
+     "title": "위에서 본 그림에 개수를 적습니다",
+     "description": "각 자리에 쌓인 개수를 숫자로 써 넣어 높이 정보를 함께 담습니다."
+    },
+    {
+     "order": 4,
+     "title": "세 그림으로 입체를 되짚습니다",
+     "description": "앞과 옆에서 본 모양이 각 줄의 최댓값과 맞는지 확인하며 원래 모양을 판별합니다."
+    },
+    {
+     "order": 5,
+     "title": "제품 도면과 연결합니다",
+     "description": "도면의 평면도·정면도·측면도가 위·앞·옆에서 본 모양과 같은 방식임을 확인합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "geometry-and-measurement",
+  "conceptId": "vocational-math-03-03",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "모양을 밀고 뒤집고 돌려도 크기와 모양이 그대로인 것이 합동, 모양은 같고 크기만 일정 배율로 달라진 것이 닮음입니다.",
+   "keyTakeaway": "닮음이면 대응하는 변의 비가 일정하므로, 축척 1:50 도면에서 잰 길이에 50을 곱하면 실제 길이가 나옵니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "이동 방법을 구분합니다",
+     "description": "밀기(평행이동), 뒤집기(대칭이동), 돌리기(회전이동) 중 어떤 이동인지 가려냅니다."
+    },
+    {
+     "order": 2,
+     "title": "합동인지 확인합니다",
+     "description": "이동만으로 완전히 포개지면 대응변과 대응각이 모두 같은 합동입니다."
+    },
+    {
+     "order": 3,
+     "title": "닮음비를 구합니다",
+     "description": "대응하는 변의 길이 비를 계산해 몇 배로 확대 또는 축소되었는지 정합니다."
+    },
+    {
+     "order": 4,
+     "title": "실제 치수를 계산합니다",
+     "description": "도면에서 잰 길이에 축척에 해당하는 배율을 곱해 현장 치수를 구합니다."
+    },
+    {
+     "order": 5,
+     "title": "설계와 배치에 적용합니다",
+     "description": "같은 부품을 이동시켜 반복 배치하며 자재가 덜 남는 배열을 찾습니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "geometry-and-measurement",
+  "conceptId": "vocational-math-03-04",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "바닥·벽면·판재처럼 평평한 면에서 테두리 길이인 둘레와 덮고 있는 넓이를 구하는 단원입니다.",
+   "keyTakeaway": "복잡한 모양은 직사각형·삼각형·원 조각으로 쪼개어 넓이를 더하거나, 큰 도형에서 빈 부분을 빼면 됩니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "도형을 기본 도형으로 나눕니다",
+     "description": "직사각형, 삼각형, 사다리꼴, 원처럼 공식을 아는 조각으로 쪼갭니다."
+    },
+    {
+     "order": 2,
+     "title": "길이의 단위를 맞춥니다",
+     "description": "cm와 m가 섞여 있으면 한쪽으로 환산한 뒤에 계산에 들어갑니다."
+    },
+    {
+     "order": 3,
+     "title": "넓이 공식을 적용합니다",
+     "description": "직사각형은 가로×세로, 삼각형은 $\\frac{1}{2}ah$, 원은 $\\pi r^2$로 구합니다."
+    },
+    {
+     "order": 4,
+     "title": "조각을 더하거나 뺍니다",
+     "description": "쪼갠 조각의 넓이를 더하고, 창이나 구멍처럼 빠지는 부분은 뺍니다."
+    },
+    {
+     "order": 5,
+     "title": "둘레를 따로 구합니다",
+     "description": "바깥 테두리만 따라가며 길이를 더해 몰딩이나 테이프에 필요한 길이를 계산합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "geometry-and-measurement",
+  "conceptId": "vocational-math-03-05",
+  "content": {
+   "estimatedMinutes": 13,
+   "summary": "겉넓이는 입체의 바깥면 전체 넓이이고, 부피는 그 안에 담기는 양입니다. 포장재는 겉넓이로, 적재량은 부피로 계산합니다.",
+   "keyTakeaway": "기둥 모양이면 (겉넓이) = (밑넓이) × 2 + (옆넓이), (부피) = (밑넓이) × (높이) 두 식으로 대부분 해결됩니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "입체의 종류를 정합니다",
+     "description": "직육면체인지 각기둥인지 원기둥인지 확인하고 밑면이 어디인지 찾습니다."
+    },
+    {
+     "order": 2,
+     "title": "밑넓이를 구합니다",
+     "description": "밑면 모양에 맞는 평면도형의 넓이 공식을 씁니다. 원기둥이면 $\\pi r^2$입니다."
+    },
+    {
+     "order": 3,
+     "title": "겉넓이를 계산합니다",
+     "description": "전개도를 떠올려 밑면 두 개와 옆면을 더합니다. 원기둥의 옆넓이는 $2\\pi r h$입니다."
+    },
+    {
+     "order": 4,
+     "title": "부피를 계산합니다",
+     "description": "(밑넓이) × (높이)로 구하고 단위를 cm³나 m³로 붙입니다."
+    },
+    {
+     "order": 5,
+     "title": "포장과 적재에 적용합니다",
+     "description": "겉넓이로 필요한 포장재 양을, 부피로 상자나 컨테이너에 몇 개가 들어가는지 판단합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "data-and-chance",
+  "conceptId": "vocational-math-04-01",
+  "content": {
+   "estimatedMinutes": 11,
+   "summary": "상품 구성이나 좌석 배치처럼 고를 수 있는 방법이 모두 몇 가지인지 빠짐없이 세는 단원입니다.",
+   "keyTakeaway": "단계를 이어서 모두 거치면 곱하고, 둘 중 한쪽만 고르면 더한다는 두 규칙이 판단의 전부입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "선택 단계를 나눕니다",
+     "description": "'메인 고르기 → 음료 고르기'처럼 결정 과정을 순서대로 적습니다."
+    },
+    {
+     "order": 2,
+     "title": "단계별 가짓수를 셉니다",
+     "description": "각 단계에서 고를 수 있는 개수를 표로 정리합니다."
+    },
+    {
+     "order": 3,
+     "title": "곱할지 더할지 정합니다",
+     "description": "두 단계를 모두 거쳐야 하면 곱하고, 둘 중 하나만 고르는 상황이면 더합니다."
+    },
+    {
+     "order": 4,
+     "title": "제한 조건을 반영합니다",
+     "description": "같은 것을 다시 고를 수 없으면 가짓수를 하나씩 줄이고, 금지된 조합은 빼 줍니다."
+    },
+    {
+     "order": 5,
+     "title": "수형도로 검산합니다",
+     "description": "가짓수가 적을 때는 나뭇가지 그림으로 직접 세어 계산 결과와 맞는지 확인합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "data-and-chance",
+  "conceptId": "vocational-math-04-02",
+  "content": {
+   "estimatedMinutes": 10,
+   "summary": "'일어날 것 같다'는 말을 0과 1 사이의 수로 바꿔 말하는 단원입니다. 실제 기록 자료에서 얻은 비율이 그 수가 됩니다.",
+   "keyTakeaway": "가능성은 (해당 경우의 수) ÷ (전체 경우의 수)이고 항상 0 이상 1 이하이며, 확실하면 1, 불가능하면 0입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "전체 경우를 정합니다",
+     "description": "지난 기간의 전체 생산량이나 전체 시도 횟수처럼 기준이 되는 수를 잡습니다."
+    },
+    {
+     "order": 2,
+     "title": "해당 경우를 셉니다",
+     "description": "불량품 수나 성공 횟수처럼 관심 있는 경우가 몇 번이었는지 셉니다."
+    },
+    {
+     "order": 3,
+     "title": "비로 나타냅니다",
+     "description": "해당 경우의 수를 전체 경우의 수로 나누어 0과 1 사이의 값으로 만듭니다."
+    },
+    {
+     "order": 4,
+     "title": "백분율로 말합니다",
+     "description": "0.03이면 3%처럼 현장에서 바로 통하는 표현으로 바꿔 전달합니다."
+    },
+    {
+     "order": 5,
+     "title": "자료를 근거로 해석합니다",
+     "description": "값이 클수록 자주 일어난다는 뜻이며, 모은 자료가 적을수록 이 값이 흔들린다는 점도 함께 밝힙니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "data-and-chance",
+  "conceptId": "vocational-math-04-03",
+  "content": {
+   "estimatedMinutes": 12,
+   "summary": "흩어져 있는 기록을 목적에 맞는 표로 모으고, 그 표를 어떤 그래프로 그릴지 고르는 단원입니다.",
+   "keyTakeaway": "시간 흐름은 선그래프, 항목 비교는 막대그래프, 전체에서 차지하는 몫은 비율그래프, 두 양의 관계는 산점도가 맞습니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "정리 목적을 정합니다",
+     "description": "항목을 비교하려는지, 변화를 추적하려는지, 구성 비율을 보려는지 먼저 정합니다."
+    },
+    {
+     "order": 2,
+     "title": "항목을 정해 표로 모읍니다",
+     "description": "여러 장에 나뉜 기록을 같은 항목과 같은 구간 기준으로 한 표에 합칩니다."
+    },
+    {
+     "order": 3,
+     "title": "그래프 종류를 고릅니다",
+     "description": "목적에 따라 그림그래프·선그래프·비율그래프·방사형그래프·산점도 중에서 고릅니다."
+    },
+    {
+     "order": 4,
+     "title": "눈금과 단위를 정합니다",
+     "description": "가장 큰 값이 들어가도록 눈금 간격을 잡고 두 축에 단위를 적습니다."
+    },
+    {
+     "order": 5,
+     "title": "제목과 범례를 붙입니다",
+     "description": "무엇을 언제 조사한 자료인지, 각 색과 선이 무엇을 뜻하는지 밝혀 남이 봐도 읽히게 만듭니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "data-and-chance",
+  "conceptId": "vocational-math-04-04",
+  "content": {
+   "estimatedMinutes": 11,
+   "summary": "이미 만들어진 표와 그래프에서 축·눈금·범례를 확인하고 그 자료가 무엇을 말하는지 읽어내는 단원입니다.",
+   "keyTakeaway": "결론을 내기 전에 축이 어디서 시작하고 눈금 간격이 얼마인지 먼저 보십시오. 같은 자료도 눈금을 바꾸면 변화가 과장돼 보입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "제목과 축, 단위를 확인합니다",
+     "description": "무엇을 언제 잰 자료이고 각 축의 단위가 무엇인지부터 읽습니다."
+    },
+    {
+     "order": 2,
+     "title": "가장 큰 값과 작은 값을 찾습니다",
+     "description": "최고점과 최저점, 그리고 그때에 해당하는 항목이나 시각을 짚습니다."
+    },
+    {
+     "order": 3,
+     "title": "전체 흐름을 읽습니다",
+     "description": "값이 늘어나는지 줄어드는지, 특정 구간에서 갑자기 변하는지 확인합니다."
+    },
+    {
+     "order": 4,
+     "title": "그래프 종류에 맞게 해석합니다",
+     "description": "비율그래프는 차지하는 몫을, 산점도는 두 양이 함께 늘어나는 경향을, 방사형그래프는 항목 사이의 균형을 봅니다."
+    },
+    {
+     "order": 5,
+     "title": "오해할 지점을 걸러냅니다",
+     "description": "세로축이 0에서 시작하지 않거나 조사 대상이 적어 생기는 착시를 확인하고 결론에 반영합니다."
+    }
+   ]
+  }
+ },
+ {
+  "curriculumId": "kr-2022",
+  "courseId": "vocational-math",
+  "unitId": "data-and-chance",
+  "conceptId": "vocational-math-04-05",
+  "content": {
+   "estimatedMinutes": 13,
+   "summary": "여러 자료를 견주어 어떤 선택이 나은지 근거를 가지고 정하는 단원입니다. 표와 그래프는 그 결정을 남에게 설명하는 근거가 됩니다.",
+   "keyTakeaway": "'왜 그렇게 정했는가'에 자료 속 수치 하나로 답할 수 있어야 합리적인 의사 결정입니다.",
+   "steps": [
+    {
+     "order": 1,
+     "title": "결정할 문제를 한 문장으로 씁니다",
+     "description": "'어느 상품의 재고를 늘릴까'처럼 고를 대상과 판단할 내용을 분명히 적습니다."
+    },
+    {
+     "order": 2,
+     "title": "판단 기준을 고릅니다",
+     "description": "매출액, 판매량, 증가율, 불량률 가운데 목적에 맞는 지표를 정합니다."
+    },
+    {
+     "order": 3,
+     "title": "자료를 기준에 맞게 정리합니다",
+     "description": "필요한 항목만 뽑아 표로 모으고 목적에 맞는 그래프로 나타냅니다."
+    },
+    {
+     "order": 4,
+     "title": "선택지를 비교합니다",
+     "description": "지표별 값을 나란히 두고 어느 쪽이 유리한지, 차이가 뚜렷한지 확인합니다."
+    },
+    {
+     "order": 5,
+     "title": "근거를 들어 결론을 말합니다",
+     "description": "수치와 그래프를 함께 제시하고, 자료가 짧은 기간의 것이라면 그 한계도 덧붙입니다."
+    }
+   ]
+  }
+ }
+]

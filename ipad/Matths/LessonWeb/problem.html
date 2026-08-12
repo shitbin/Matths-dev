@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="katex.min.css">
+<style>
+/* 뱅크(exam-bank.js) 문항 렌더 — $...$ KaTeX 발제문 + 5지선다.
+   네이티브가 window.MATTHS_PROBLEM 으로 {prompt, choices, picked} 를 주입한다.
+   선택은 choicePick 메시지로 네이티브에 보고한다. */
+@font-face {
+  font-family: "PretendardVar";
+  src: url("PretendardVariable.woff2") format("woff2");
+  font-weight: 45 920; font-display: swap;
+}
+:root {
+  --p-surface: #ffffff; --p-ink: #111426; --p-text2: #4a5268;
+  --p-line: #e3e8f4; --p-primary: #327ffa; --p-primary-soft: #e8edff;
+  --content-scale: 1; font-size: calc(16px * var(--content-scale));
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --p-surface: #141a2e; --p-ink: #eef1fa; --p-text2: #a6aec2;
+    --p-line: #232a44; --p-primary: #7e9bff; --p-primary-soft: #14203f;
+  }
+}
+html, body { margin: 0; padding: 0; background: transparent; color: var(--p-ink);
+  font-family: "PretendardVar", -apple-system, "Apple SD Gothic Neo", sans-serif; }
+#prompt { font-size: 1.0625rem; line-height: 1.75; padding: 2px 2px 10px; }
+.choice {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left; margin: 7px 0; padding: 12px 14px;
+  border-radius: 12px; border: 1.3px solid var(--p-line);
+  background: var(--p-surface); color: var(--p-ink);
+  min-height: 44px; font-family: inherit; font-size: .9375rem; font-weight: 600; cursor: pointer;
+}
+.choice .no {
+  flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.3px solid var(--p-line); font-size: .8125rem; font-weight: 800;
+}
+.choice.picked { border-color: var(--p-primary); background: var(--p-primary-soft); }
+.choice.picked .no { border-color: var(--p-primary); color: var(--p-primary); }
+</style>
+</head>
+<body>
+<div id="prompt" role="heading" aria-level="2"></div>
+<div id="choices" role="group" aria-label="보기"></div>
+
+<script src="katex.min.js"></script>
+<script>
+(function () {
+  const data = window.MATTHS_PROBLEM || {};
+  const CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+  // $...$ 인라인, \[...\] · $$...$$ 디스플레이를 모두 KaTeX 로.
+  //
+  // 예전엔 \( \) 만 $ 로 정규화하고 \[ \] 는 손대지 않았다. 그래서 표 발문
+  // (\[\begin{array}{c|cccc}…\end{array}\])이 **LaTeX 원문 그대로** 화면에 나왔다
+  // — 학생이 표 대신 소스를 보고 있었다(2026-07-29 시뮬 확인).
+  function texRender(el, tex, display) {
+    const span = document.createElement("span");
+    if (display) span.style.display = "block";
+    try { katex.render(tex, span, { throwOnError: false, displayMode: display }); }
+    catch (e) { span.textContent = tex; }
+    el.appendChild(span);
+  }
+  function texify(el, text) {
+    const normalized = String(text || "")
+      .replaceAll("\\(", "$").replaceAll("\\)", "$")
+      // 주의: replaceAll 의 치환 문자열에서 "$$" 는 **달러 한 개**로 해석된다.
+      // 그대로 쓰면 디스플레이가 인라인이 돼 표가 한 줄로 뭉갠다 — 함수형으로 넘긴다.
+      .replaceAll("\\[", () => "$$").replaceAll("\\]", () => "$$");
+    // 디스플레이를 먼저 가른다 — 안쪽 줄바꿈도 삼켜야 해서 [\s\S] 를 쓴다
+    normalized.split(/\$\$([\s\S]+?)\$\$/).forEach((chunk, i) => {
+      if (i % 2 === 1) { texRender(el, chunk, true); return; }
+      chunk.split(/\$([^$]+)\$/).forEach((part, j) => {
+        if (j % 2 === 0) el.appendChild(document.createTextNode(part));
+        else texRender(el, part, false);
+      });
+    });
+  }
+
+  texify(document.getElementById("prompt"), data.prompt);
+
+  (data.choices || []).forEach((choice, i) => {
+    const btn = document.createElement("button");
+    btn.className = "choice" + (data.picked === choice.key ? " picked" : "");
+    btn.setAttribute("aria-pressed", data.picked === choice.key ? "true" : "false");
+    const no = document.createElement("span");
+    no.className = "no"; no.textContent = CIRCLED[i] || choice.key;
+    btn.appendChild(no);
+    const body = document.createElement("span");
+    texify(body, choice.text);
+    btn.appendChild(body);
+    btn.onclick = () => {
+      document.querySelectorAll(".choice").forEach((b) => b.classList.remove("picked"));
+      document.querySelectorAll(".choice").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.classList.add("picked");
+      btn.setAttribute("aria-pressed", "true");
+      window.webkit?.messageHandlers?.choicePick?.postMessage(choice.key);
+    };
+    document.getElementById("choices").appendChild(btn);
+  });
+
+  const report = () => {
+    window.webkit?.messageHandlers?.problemHeight?.postMessage(document.body.scrollHeight);
+  };
+  new ResizeObserver(report).observe(document.body);
+  setTimeout(report, 200);
+})();
+</script>
+</body>
+</html>

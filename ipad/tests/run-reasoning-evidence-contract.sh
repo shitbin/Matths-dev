@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+cat > "$work/reasoning-selftest.jsonl" <<'JSONL'
+{"availableBytes":5000000000,"event":"launch","model":"DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf","residentBytes":100000000,"tier":"deepseek7B"}
+{"availableBytes":2100000000,"elapsedMs":9000,"event":"load-complete","maximumResidentBytes":3000000000,"minimumAvailableBytes":1900000000,"model":"DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf","tier":"deepseek7B","visionReady":false}
+{"elapsedMs":14000,"event":"reasoning-complete","firstTokenMs":900,"generatedTokens":120,"maximumResidentBytes":3200000000,"minimumAvailableBytes":1700000000,"model":"DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf","tier":"deepseek7B","tokensPerSecond":8.5}
+JSONL
+
+node "$root/scripts/verifyReasoningEvidence.js" \
+  "$work/reasoning-selftest.jsonl" --output "$work/reasoning-evidence.json"
+grep -Fq '"schema": "MATTHS_REASONING_DEVICE_EVIDENCE_V1"' "$work/reasoning-evidence.json"
+grep -Fq '"result": "PASS"' "$work/reasoning-evidence.json"
+
+cat > "$work/private.jsonl" <<'JSONL'
+{"event":"launch","model":"DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf","tier":"deepseek7B"}
+{"elapsedMs":1,"event":"load-complete","maximumResidentBytes":1,"minimumAvailableBytes":1,"model":"DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf","tier":"deepseek7B"}
+{"elapsedMs":1,"event":"reasoning-complete","firstTokenMs":1,"generatedTokens":1,"maximumResidentBytes":1,"minimumAvailableBytes":1,"model":"DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf","tier":"deepseek7B","tokensPerSecond":1,"prompt":"private"}
+JSONL
+if node "$root/scripts/verifyReasoningEvidence.js" "$work/private.jsonl" >/dev/null 2>&1; then
+  echo "reasoning evidence must reject prompt/output fields" >&2
+  exit 1
+fi
+
+grep -Fq 'verifyReasoningEvidence.js' "$root/device-qa.sh"
+echo "Reasoning device evidence contracts passed"
+

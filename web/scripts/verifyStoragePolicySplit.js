@@ -1,0 +1,124 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+
+process.env.NODE_ENV = "test";
+process.env.FILE_STORAGE_PROVIDER = "cloudinary";
+delete process.env.CLOUDINARY_URL;
+delete process.env.CLOUDINARY_CLOUD_NAME;
+delete process.env.CLOUDINARY_API_KEY;
+delete process.env.CLOUDINARY_API_SECRET;
+delete process.env.R2_ACCOUNT_ID;
+delete process.env.R2_ACCESS_KEY_ID;
+delete process.env.R2_SECRET_ACCESS_KEY;
+delete process.env.R2_BUCKET;
+const userCloudTempDirectory = fs.mkdtempSync(
+  path.join(os.tmpdir(), "matths-user-cloud-temp-")
+);
+process.env.USER_CLOUD_UPLOAD_TEMP_DIR = userCloudTempDirectory;
+
+const {
+  STORAGE_PURPOSES,
+  storagePolicyFor,
+  storeUploadedFile,
+} = require("../services/fileStorageService");
+const {
+  purgeStaleUserCloudUploadTemps,
+  USER_CLOUD_UPLOAD_TEMP_RETENTION_MS,
+} = require("../middleware/userCloudUploadStorage");
+
+async function run() {
+  assert.equal(storagePolicyFor(STORAGE_PURPOSES.ADMIN_ARCHIVE).provider, "r2");
+  assert.equal(storagePolicyFor(STORAGE_PURPOSES.ADMIN_WEEKLY_MOCK).provider, "r2");
+  assert.equal(storagePolicyFor(STORAGE_PURPOSES.USER_COMMUNITY).provider, "cloudinary");
+  assert.equal(storagePolicyFor(STORAGE_PURPOSES.USER_ARENA_EVIDENCE).provider, "cloudinary");
+
+  await assert.rejects(
+    () => storeUploadedFile(
+      {
+        path: path.join(os.tmpdir(), "missing-admin-archive.pdf"),
+        filename: "archive.pdf",
+        originalname: "archive.pdf",
+        mimetype: "application/pdf",
+      },
+      {
+        purpose: STORAGE_PURPOSES.ADMIN_ARCHIVE,
+      }
+    ),
+    (error) => error?.code === "R2_STORAGE_NOT_CONFIGURED"
+  );
+
+  await assert.rejects(
+    () =>
+      storeUploadedFile(
+        {
+          path: path.join(os.tmpdir(), "missing-user-evidence.png"),
+          filename: "evidence.png",
+          originalname: "evidence.png",
+          mimetype: "image/png",
+        },
+        { purpose: STORAGE_PURPOSES.USER_ARENA_EVIDENCE }
+      ),
+    (error) => error?.code === "CLOUDINARY_NOT_CONFIGURED"
+  );
+
+  const staleTempPath = path.join(userCloudTempDirectory, "stale-upload.tmp");
+  await fs.promises.writeFile(staleTempPath, "stale");
+  const staleAt = new Date(
+    Date.now() - USER_CLOUD_UPLOAD_TEMP_RETENTION_MS - 60_000
+  );
+  await fs.promises.utimes(staleTempPath, staleAt, staleAt);
+  const purgeResult = await purgeStaleUserCloudUploadTemps();
+  assert.equal(purgeResult.deleted, 1);
+  assert.equal(fs.existsSync(staleTempPath), false);
+
+  const sourceChecks = [
+    ["services/archiveService.js", "STORAGE_PURPOSES.ADMIN_ARCHIVE"],
+    ["services/privateMockExamService.js", "STORAGE_PURPOSES.ADMIN_WEEKLY_MOCK"],
+    ["services/communityAttachmentService.js", "STORAGE_PURPOSES.USER_COMMUNITY"],
+    ["services/arenaMatchEvidenceService.js", "STORAGE_PURPOSES.USER_ARENA_EVIDENCE"],
+    ["middleware/communityUpload.js", "userCloudUploadStorage"],
+    ["middleware/arenaEvidenceUpload.js", "userCloudUploadStorage"],
+    ["middleware/archiveUpload.js", "userCloudUploadStorage"],
+    ["services/archiveService.js", "signedStoredAssetUrl"],
+  ];
+  for (const [file, text] of sourceChecks) {
+    assert.ok(fs.readFileSync(path.resolve(__dirname, "..", file), "utf8").includes(text), `${file} 저장 목적 누락`);
+  }
+
+  const archiveSource = fs.readFileSync(
+    path.resolve(__dirname, "..", "services", "archiveService.js"),
+    "utf8"
+  );
+  for (const feature of [
+    "ARCHIVE_TRASH_RETENTION_MS",
+    "restoreArchiveItem",
+    "purgeExpiredArchiveTrash",
+    "startArchiveTrashPurgeScheduler",
+  ]) {
+    assert.ok(archiveSource.includes(feature), `아카이브 휴지통 기능 누락: ${feature}`);
+  }
+
+  const evidenceSource = fs.readFileSync(
+    path.resolve(__dirname, "..", "services", "arenaMatchEvidenceService.js"),
+    "utf8"
+  );
+  for (const feature of ["ARENA_EVIDENCE_RETENTION_MS", "retentionUntil", "purgeExpiredArenaEvidence"]) {
+    assert.ok(evidenceSource.includes(feature), `풀이 증거 보존 기능 누락: ${feature}`);
+  }
+
+  console.log("운영자 R2·사용자 Cloudinary 분리 저장 정책 검증 완료");
+}
+
+run()
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await fs.promises.rm(userCloudTempDirectory, {
+      recursive: true,
+      force: true,
+    });
+  });

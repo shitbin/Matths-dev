@@ -1,0 +1,280 @@
+/* 오답노트 — 오늘 복습할 문제와 반복 원인을 먼저 보여 주는 작업 표면 */
+
+.review-command-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 42px;
+  margin-top: 24px;
+  padding: 32px;
+  color: var(--matths-ink);
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-lg);
+  box-shadow: var(--matths-shadow);
+}
+
+.review-command-center .wrong-hero-copy,
+.review-command-center .review-summary {
+  position: static;
+}
+
+.review-command-center .wrong-hero-copy > span {
+  padding: 0;
+  color: var(--matths-progress-blue);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 13px;
+}
+
+.review-command-center .wrong-hero-copy h2,
+.review-command-center.is-empty .wrong-hero-copy h2 {
+  max-width: 680px;
+  margin: 12px 0 0;
+  color: var(--matths-ink);
+  font-size: clamp(31px, 4vw, 46px);
+  line-height: 1.16;
+  letter-spacing: -0.045em;
+}
+
+.review-command-center .wrong-hero-copy h2 strong,
+.review-command-center.is-empty .wrong-hero-copy h2 strong {
+  color: var(--matths-progress-blue);
+}
+
+.review-command-center .wrong-hero-copy > p,
+.review-command-center.is-empty .wrong-hero-copy > p {
+  max-width: 680px;
+  margin: 16px 0 0;
+  color: var(--matths-muted) !important;
+  font-size: 15px;
+  line-height: 1.72;
+}
+
+.review-command-center .review-status-guide {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.review-command-center .review-status-guide strong {
+  color: var(--matths-ink);
+}
+
+.review-command-center .review-summary {
+  grid-template-columns: minmax(160px, 0.9fr) minmax(180px, 1.1fr);
+  padding: 10px;
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+  border-radius: var(--matths-radius);
+}
+
+.review-command-center .review-focus {
+  padding: 20px 14px;
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.review-command-center .review-focus span,
+.review-command-center .review-focus small,
+.review-command-center .review-breakdown span {
+  color: var(--matths-muted);
+  font-size: 12px;
+}
+
+.review-command-center .review-focus strong {
+  color: var(--matths-ink);
+  font-size: 48px;
+}
+
+.review-command-center .review-focus a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  padding: 0 15px;
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  border-radius: var(--matths-radius-md);
+  font-size: 13px;
+  font-weight: 820;
+  transition: transform var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease);
+}
+
+.review-command-center .review-focus a:hover {
+  background: var(--matths-action-primary-pressed);
+  transform: var(--motion-lift);
+}
+
+.review-command-center .review-breakdown > div {
+  border-bottom-color: var(--matths-line);
+}
+
+.review-command-center .review-breakdown strong {
+  color: var(--matths-ink);
+}
+
+.review-command-center.is-empty {
+  grid-template-columns: 1fr;
+  padding: 28px;
+  box-shadow: none;
+}
+
+.review-tabs {
+  gap: 0;
+  overflow: hidden;
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.review-tabs a {
+  min-height: 56px;
+  color: var(--matths-muted);
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--matths-line);
+  border-radius: 0;
+  font-size: 13px;
+}
+
+.review-tabs a:last-child {
+  border-right: 0;
+}
+
+.review-tabs a.active {
+  color: var(--matths-ink);
+  background: var(--matths-primary-soft);
+  box-shadow: inset 0 -3px 0 var(--matths-progress-blue);
+}
+
+.review-tabs a.active b {
+  color: var(--matths-progress-blue);
+  background: var(--matths-surface);
+}
+
+.wrong-content {
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+  box-shadow: none;
+}
+
+.review-filter {
+  background: var(--matths-canvas);
+  border-color: var(--matths-line);
+}
+
+.review-filter label > span,
+.review-filter input,
+.review-filter select,
+.filter-actions button,
+.filter-actions a,
+.result-heading > div > p,
+.result-heading > p {
+  font-size: 13px;
+}
+
+.filter-actions button {
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  border-color: var(--matths-action-primary);
+}
+
+.wrong-item {
+  background: var(--matths-surface);
+  border-color: var(--matths-line);
+}
+
+.wrong-number {
+  background: var(--matths-canvas);
+}
+
+.wrong-number span {
+  background: var(--matths-progress-blue);
+  font-size: 12px;
+}
+
+.wrong-number small,
+.problem-origin span,
+.problem-origin small,
+.review-state > span,
+.review-state small,
+.problem-meta > span,
+.attempt-details summary strong,
+.attempt-details summary small,
+.attempt-details > div span,
+.attempt-details > div strong,
+.wrong-item-actions > p,
+.wrong-item-actions a {
+  font-size: 13px;
+}
+
+.wrong-item-body > h3 {
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.problem-meta .error-reason {
+  color: var(--matths-progress-blue);
+  background: var(--matths-primary-soft);
+}
+
+.wrong-item-actions > p {
+  color: var(--matths-muted);
+}
+
+.wrong-item-actions a {
+  min-height: 44px;
+  padding-inline: 15px;
+  border-radius: var(--matths-radius-md);
+}
+
+.wrong-item-actions a.primary {
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  border-color: var(--matths-action-primary);
+}
+
+@media (max-width: 900px) {
+  .review-command-center {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .review-command-center {
+    gap: 24px;
+    padding: 22px 18px;
+    border-radius: var(--matths-radius);
+  }
+
+  .review-command-center .review-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .review-command-center .review-breakdown > div {
+    min-height: 48px;
+  }
+
+  .review-tabs {
+    overflow-x: auto;
+  }
+
+  .review-tabs a {
+    min-width: 116px;
+  }
+
+  .wrong-item-actions > div {
+    width: 100%;
+  }
+
+  .wrong-item-actions a {
+    flex: 1;
+    white-space: normal;
+    text-align: center;
+  }
+}

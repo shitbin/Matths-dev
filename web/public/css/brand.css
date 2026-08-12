@@ -1,0 +1,81 @@
+/* 모든 페이지에 걸리는 브랜드 오버라이드 — 토큰 정본은 matths-brand-tokens.css */
+@import url("/css/matths-brand-tokens.css");
+@import url("/css/product-refresh.css");
+
+.brand-mark,
+body,
+button,
+input,
+select,
+textarea {
+  font-family:
+    "SUIT Variable",
+    "Pretendard Variable",
+    Pretendard,
+    "Avenir Next",
+    "Segoe UI",
+    "Noto Sans KR",
+    sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family:
+    "SUIT Variable",
+    "Pretendard Variable",
+    Pretendard,
+    "Avenir Next",
+    "Segoe UI",
+    "Noto Sans KR",
+    sans-serif;
+  font-optical-sizing: auto;
+  text-wrap: balance;
+}
+
+/* CI 가이드북 스무딩 최종본의 공식 에셋만 사용한다.
+   밝은 면의 워드마크 조합은 /images/brand/matths-logo.svg 전체 락업을 쓰고,
+   심볼 옆에 Matths를 일반 텍스트로 재입력하지 않는다(CI p.5, 15–16).
+   아래 brand-mark는 공간이 제한된 심볼 전용 위치만을 위한 규칙이다. */
+.brand-logo {
+  width: 132px;
+  min-width: 120px;
+  max-width: 132px;
+  height: auto;
+  display: block;
+  flex: 0 0 132px;
+  object-fit: contain;
+}
+
+.brand-context-label {
+  color: var(--matths-muted, #68718a);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  overflow: visible !important;
+  padding: 0 !important;
+  color: transparent !important;
+  /* 밝은 내비 위에서는 타일 없이 풀컬러 심볼만 — 공식 라이트 배경 변형.
+     (네이비 타일 변형은 어두운 면 전용이다) */
+  background-color: transparent !important;
+  background-image: url("/images/brand/matths-symbol.svg") !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  font-size: 0 !important;
+  letter-spacing: 0 !important;
+  transform: none !important;
+}
+
+.auth-brand > .brand-mark {
+  flex: 0 0 auto;
+}

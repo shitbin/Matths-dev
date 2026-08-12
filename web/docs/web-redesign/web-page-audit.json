@@ -1,0 +1,1060 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-11",
+  "scopeDecision": {
+    "source": "docs/웹_리디자인_인수인계_코덱스.md v2 §1–§3",
+    "learningAndCommon": "2,000개 디자인 원칙과 288개 냄새 제거 체크 전부 적용",
+    "arena": "접근성, 상태 표현, 신뢰 경계, 성능 체크를 적용하고 장식 절제 항목은 적용하지 않음",
+    "excluded": [
+      "서버 출제 난이도 조정",
+      "허수 보정",
+      "API 계약 변경",
+      "운영 DB 쓰기 실험"
+    ]
+  },
+  "sourceVerification": {
+    "designPrinciples": {
+      "title": "iPhone·iPad 앱 디자인 원칙 2,000",
+      "pages": 84,
+      "idRange": "0001–2000",
+      "extractedCount": 2000,
+      "uniqueCount": 2000
+    },
+    "vibeSmellChecklist": {
+      "title": "바이브코딩 냄새 제거론",
+      "pages": 204,
+      "domains": ["P", "V", "X", "F", "B", "S", "Q", "M"],
+      "itemsPerDomain": 36,
+      "extractedCount": 288,
+      "uniqueCount": 288
+    }
+  },
+  "latestPass": {
+    "id": "WEB-REDESIGN-PASS-20260811-03",
+    "scope": [
+      "알림 목록·상세",
+      "커뮤니티 글·댓글·작성·규칙",
+      "평가 응시·배치고사",
+      "오답 재풀이",
+      "문구 제안·닉네임·이용 제한·이의 신청",
+      "자료실",
+      "인증·결제·약관·오류",
+      "학부모·관리자·GOAT Arena"
+    ],
+    "violations": [
+      {
+        "id": "WEB-VISUAL-010",
+        "principleIds": ["0013", "0052", "0438", "0751"],
+        "smellIds": ["V-01-B", "V-04-B"],
+        "location": "목록에서 진입하는 세부·작업 화면",
+        "severity": "high",
+        "finding": "대표 목록 화면과 달리 상세 화면은 거대한 제목·다른 카드 반경·다른 표면색을 유지해 같은 제품으로 이어지지 않았다.",
+        "resolution": "세부 화면을 공통 캔버스·흰 작업 면·12px 반경·1px 경계로 수렴하고 좁은 폭 min-width와 44px 입력 계약을 추가했다.",
+        "status": "fixed-code-pending-visual"
+      },
+      {
+        "id": "WEB-COPY-003",
+        "principleIds": ["0075", "0081", "0082", "1112"],
+        "smellIds": ["V-04-C", "X-06-B"],
+        "location": "공개 학습 소개·알림·커뮤니티·오답 상세",
+        "severity": "medium",
+        "finding": "LEARNING FLOW, INBOX, ATTACHMENTS, STEP처럼 기능 이해에 필요 없는 영문 장식이 화면군마다 반복됐다.",
+        "resolution": "고유 기능명과 수학 기호는 유지하고 장식용 영문 라벨을 학생이 바로 이해하는 한국어 기능명으로 교체했다.",
+        "status": "fixed-code-pending-visual"
+      }
+    ],
+    "verification": {
+      "ejsCompiled": 117,
+      "manifestedTests": 65,
+      "pageFamilyContract": "passed",
+      "publicLanguageContract": "passed",
+      "responsiveEvidence": "pending-new-captures"
+    }
+  },
+  "pages": [
+    {
+      "page": "/",
+      "view": "views/index.ejs",
+      "surface": "arena-first-public",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-IA-001",
+          "principleIds": ["0001", "0002", "0013", "0051", "0060", "0751"],
+          "smellIds": ["V-04-B", "X-06-B"],
+          "location": "첫 화면 전체",
+          "severity": "critical",
+          "finding": "제품의 주 기능이 GOAT Arena인데 학습 데모가 히어로이고 아레나는 두 번째 섹션이었다.",
+          "resolution": "아레나 실데이터 랭킹과 배치 CTA를 첫 화면으로 승격하고 학습 데모를 두 번째 증명 섹션으로 강등했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-IA-002",
+          "principleIds": ["0052", "0061", "0075", "0081", "0082", "0772"],
+          "smellIds": ["V-04-C"],
+          "location": "공개 상단 내비게이션",
+          "severity": "high",
+          "finding": "8개 기능 링크와 인증 행동이 한 줄에 같은 위계로 나열됐다.",
+          "resolution": "GOAT Arena를 전면 배치하고 학습 3개, 서비스 5개를 드롭다운 그룹으로 묶었다. 모든 기존 진입점은 유지했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-FE-001",
+          "principleIds": ["0459", "0751"],
+          "smellIds": ["F-01-B", "F-07-B"],
+          "location": "public/css/index.css",
+          "severity": "medium",
+          "finding": "공개 내비게이션 CSS가 index.css와 public-navigation.css에 중복 소유됐다.",
+          "resolution": "index.css의 전용 내비게이션 규칙을 제거하고 public-navigation.css를 단일 소유자로 유지했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-A11Y-001",
+          "principleIds": ["0492", "1152", "1195"],
+          "smellIds": ["X-09-A", "X-09-C"],
+          "location": "아레나 배경 궤도·스캔·LIVE 상태",
+          "severity": "high",
+          "finding": "아레나 장식 모션은 허용되지만 감소된 모션 대안이 필수다.",
+          "resolution": "transform/opacity만 사용하고 prefers-reduced-motion에서 궤도·스캔·LIVE 반복을 정지했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-A11Y-005",
+          "principleIds": ["0609", "0712", "1202", "1261"],
+          "smellIds": ["X-09-A", "V-06-B"],
+          "location": "학습 데모 단계 버튼·보조 링크·공개 공통 크롬",
+          "severity": "high",
+          "finding": "단계 선택은 28px, 일부 보조/푸터 링크는 높이 12–30px여서 터치 목표가 부족했다.",
+          "resolution": "단계 버튼, 보조 링크, 로그인, 푸터, 건너뛰기 링크를 최소 44px 목표로 맞췄다. 공개 주요 5개 페이지 실브라우저 검사에서 44px 미만의 보이는 조작이 0건이다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/intro",
+      "view": "views/intro.ejs",
+      "surface": "public-learning-with-arena-showcase",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-007",
+          "principleIds": ["0303", "0304", "0609", "0712", "1152", "1184", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A", "X-09-C"],
+          "location": "학습 데모 단계 버튼·코치 모드·보조 레이블·반복 모션",
+          "severity": "high",
+          "finding": "단계 버튼은 25–27px, 코치 모드는 27px였고 여러 사용자 레이블이 9–10px였다. 학습 데모에는 장식용 무한 반복과 scale 중심 상태 변화도 남아 있었다.",
+          "resolution": "모든 단계·모드 조작을 44px 이상, 사용자 레이블을 11px 이상으로 올렸다. 학습 데모 모션은 motion 토큰을 쓰는 1회성 translate/opacity 전환으로 바꾸고 무한 반복을 제거했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-002",
+          "principleIds": ["0438", "0510", "0556", "1915"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "학습 소개 히어로·데모·학습 시스템·마감 CTA",
+          "severity": "medium",
+          "finding": "학습 표면의 격자, 점무늬, 연결선 그라디언트와 마감 CTA 장식이 콘텐츠 위계보다 강했다.",
+          "resolution": "학습·공용 영역의 장식 격자와 점무늬를 제거하고 연결선·CTA를 브랜드 단색 표면으로 정리했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-FE-004",
+          "principleIds": ["0459", "0751"],
+          "smellIds": ["F-01-B", "F-07-B"],
+          "location": "public/css/intro.css 공개 내비게이션·로고 규칙",
+          "severity": "medium",
+          "finding": "페이지 CSS가 공개 내비게이션과 로고 렌더 규칙을 다시 정의해 공통 소유권과 충돌했다.",
+          "resolution": "intro.css의 내비게이션·로고 규칙과 반응형 잔재를 제거하고 public-navigation.css와 brand.css를 단일 소유자로 유지했다.",
+          "status": "fixed"
+        }
+      ],
+      "skippedRules": [
+        {
+          "principleIds": ["0438", "0510", "0556", "1915"],
+          "reason": "GOAT Arena 소개 구간은 합의된 아레나 표면 예외이므로 티어·아레나 그라디언트와 앰비언스를 유지한다. 학습 소개와 공용 크롬에는 예외를 확장하지 않았다.",
+          "status": "skipped-by-scope"
+        }
+      ]
+    },
+    {
+      "page": "/faq",
+      "view": "views/faq.ejs",
+      "surface": "common-support",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-008",
+          "principleIds": ["0103", "0110", "0111", "0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A", "X-09-C"],
+          "location": "FAQ 검색 지우기·카테고리·빈 상태 행동·반응형 레이아웃",
+          "severity": "high",
+          "finding": "검색 지우기와 빈 상태 행동이 30–39px이고 여러 레이블이 9–10px였다. 768px 폭에서 FAQ 열이 가로로 넘쳤다.",
+          "resolution": "보이는 조작을 44px 이상, 사용자 레이블을 11px 이상으로 올리고 레이아웃·카테고리 열에 min-width: 0과 폭 제한을 적용해 390px와 768px의 가로 넘침을 없앴다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-003",
+          "principleIds": ["0438", "0510", "0556", "1915"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "FAQ 히어로·문의 CTA",
+          "severity": "medium",
+          "finding": "격자 히어로와 그라디언트 문의 CTA가 지원 정보보다 시각적으로 앞섰다.",
+          "resolution": "히어로와 문의 CTA를 브랜드 단색 표면으로 바꾸고 장식 격자를 제거했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-FE-005",
+          "principleIds": ["0459", "0751"],
+          "smellIds": ["F-01-B", "F-07-B"],
+          "location": "public/css/faq.css 공개 내비게이션·모바일 메뉴·로고 규칙",
+          "severity": "medium",
+          "finding": "실제 공통 공개 내비게이션과 별개인 내비게이션·모바일 메뉴·로고 CSS가 중복으로 남아 있었다.",
+          "resolution": "중복 규칙과 관련 미디어쿼리 잔재를 제거하고 공개 내비게이션과 브랜드 렌더의 공통 소유권을 복원했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/terms",
+      "view": "views/terms.ejs",
+      "surface": "common-legal",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-009",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A", "X-09-C"],
+          "location": "건너뛰기 링크·조항 목차·문의/푸터 링크·보조 레이블",
+          "severity": "high",
+          "finding": "조항 목차는 약 33px, 소셜·푸터 링크는 약 30px였고 조항 번호와 표·푸터 텍스트가 9–10px였다.",
+          "resolution": "법률 페이지의 모든 보조 행동을 44px 이상, 사용자 텍스트를 11px 이상으로 올렸다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-004",
+          "principleIds": ["0438", "0510", "1915"],
+          "smellIds": ["V-01-B"],
+          "location": "약관 히어로·public/css/legal.css",
+          "severity": "medium",
+          "finding": "법적 정보 표면에 장식용 방사 그라디언트가 있고 실제 뷰가 쓰지 않는 별도 헤더·로고 CSS가 남아 있었다.",
+          "resolution": "히어로를 네이비 단색으로 정리하고 죽은 법률 전용 헤더·로고 규칙을 제거했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/privacy",
+      "view": "views/privacy.ejs",
+      "surface": "common-legal",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-010",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A", "X-09-C"],
+          "location": "건너뛰기 링크·조항 목차·문의/푸터 링크·보조 레이블",
+          "severity": "high",
+          "finding": "조항 목차와 푸터 행동의 터치 영역이 44px 미만이고 조항 번호와 표·푸터 텍스트가 9–10px였다.",
+          "resolution": "법률 페이지 공통 CSS에서 모든 보조 행동을 44px 이상, 사용자 텍스트를 11px 이상으로 올렸다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-005",
+          "principleIds": ["0438", "0510", "1915"],
+          "smellIds": ["V-01-B"],
+          "location": "개인정보 처리방침 히어로·public/css/legal.css",
+          "severity": "medium",
+          "finding": "개인정보 안내에 다중 그라디언트가 사용되고 공통 공개 헤더와 별개의 죽은 헤더 CSS가 남아 있었다.",
+          "resolution": "히어로를 네이비 단색으로 정리하고 사용하지 않는 법률 전용 헤더·로고 규칙을 제거했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/main",
+      "view": "views/main.ejs",
+      "surface": "authenticated-mixed",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-IA-003",
+          "principleIds": ["0002", "0013", "0060", "0751"],
+          "smellIds": ["V-04-A"],
+          "location": "대시보드 콘텐츠 순서",
+          "severity": "critical",
+          "finding": "로그인 후 첫 행동이 학습이었고 아레나는 두 번째 스트립이었다.",
+          "resolution": "아레나 상태와 진입 CTA를 첫 카드로 승격하고 학습 행동을 두 번째로 이동했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-IA-004",
+          "principleIds": ["0052", "0075", "0081", "0082", "0771", "0772"],
+          "smellIds": ["V-07-A", "X-06-C"],
+          "location": "대시보드 사이드바",
+          "severity": "high",
+          "finding": "9개 기능이 LEARNING 한 그룹에 섞여 아레나와 학습의 관계가 보이지 않았다.",
+          "resolution": "ARENA 2개, LEARNING 6개, COMMUNITY 1개로 그룹화하고 기능과 링크는 유지했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-STATE-001",
+          "principleIds": ["1111", "1112", "1119", "1124"],
+          "smellIds": ["X-01-C", "X-04-C"],
+          "location": "아레나 집계 실패 상태",
+          "severity": "high",
+          "finding": "실패 사실만 알리고 영향 범위와 계속 이용 가능한 기능을 설명하지 않았다.",
+          "resolution": "학습 기능은 정상임을 알리고 아레나에서 재확인하는 다음 행동을 제시했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/authenticated/*",
+      "view": "views/* using public/css/main.css",
+      "surface": "common-dashboard-shell",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-011",
+          "principleIds": ["0303", "0304", "0609", "0712", "1152", "1184", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A", "X-09-C"],
+          "location": "공통 사이드바·상단바·알림 패널",
+          "severity": "high",
+          "finding": "건너뛰기·브랜드·프로필·로그아웃·뒤로/홈·연속 학습·알림·모바일 사이드바 조작이 30–43px였고 공통 레이블 다수가 9–10px였다. 알림 아이콘은 계속 흔들렸다.",
+          "resolution": "공통 셸 조작을 44px 이상, 사용자 레이블을 11px 이상으로 올렸다. 알림 흔들림은 motion 토큰 기반 1회 재생으로 바꾸고 reduced-motion에서는 정지한다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-FE-006",
+          "principleIds": ["0439", "0440", "0459", "0751"],
+          "smellIds": ["F-01-B", "F-07-B"],
+          "location": "public/css/main.css .brand-mark",
+          "severity": "medium",
+          "finding": "공통 대시보드 CSS가 브랜드 심볼에 별도 타일·회전·그림자를 적용해 brand.css의 공식 에셋 렌더와 충돌했다.",
+          "resolution": "main.css에서는 심볼의 배치 크기만 소유하고 색·타일·회전·그림자 렌더는 brand.css에 맡겼다.",
+          "status": "fixed"
+        }
+      ],
+      "skippedRules": [
+        {
+          "principleIds": ["0438", "0510", "0556", "1915"],
+          "reason": "공통 셸 안의 GOAT Arena 스트립은 아레나 진입 표면이므로 네이비 면과 제한된 앰비언스를 유지한다. 이 예외는 학습 카드·설정·알림 표면에 적용하지 않는다.",
+          "status": "skipped-by-scope"
+        }
+      ]
+    },
+    {
+      "page": "/login",
+      "view": "views/login.ejs",
+      "surface": "common-auth",
+      "auditStatus": "fixed-and-verified",
+      "violations": [
+        {
+          "id": "WEB-AUTH-001",
+          "principleIds": ["0726", "0727", "1063", "1064"],
+          "smellIds": ["X-02-C"],
+          "location": "로그인 제출 버튼",
+          "severity": "medium",
+          "finding": "제출 중 버튼이 '처리 중...'으로 바뀌어 어떤 요청인지 사라졌다.",
+          "resolution": "'로그인 중…'으로 바꾸고 aria-busy를 설정했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-AUTH-002",
+          "principleIds": ["0749", "0899"],
+          "smellIds": ["Q-03-C"],
+          "location": "로그인 폼 실제 제출",
+          "severity": "critical",
+          "finding": "브라우저 클릭 제출이 되지 않는다는 인수인계 이슈가 있었다.",
+          "resolution": "Chromium에서 테스트 계정으로 클릭 제출해 /main 이동, 콘솔·요청 오류 0건을 확인했다.",
+          "status": "verified-not-reproduced"
+        },
+        {
+          "id": "WEB-AUTH-005",
+          "principleIds": ["0303", "0304", "0438", "0510", "0609", "0712", "1202", "1261", "1915"],
+          "smellIds": ["V-01-B", "V-06-B", "X-09-A", "X-09-C"],
+          "location": "로그인 브랜드·보조 내비게이션·비밀번호 표시·보조 링크·인증 배경",
+          "severity": "high",
+          "finding": "브랜드/내비게이션/비밀번호 표시/보조 링크 일부가 34–38px이고 보조 텍스트가 10px였다. 인증 시각 면에는 다중 그라디언트와 격자가 있었다.",
+          "resolution": "인증 보조 조작을 44px 이상, 사용자 레이블을 11px 이상으로 올렸다. 인증 배경을 브랜드 단색으로 바꾸고 공식 로고 렌더를 brand.css에 맡겼다. CSS 로드 순서도 theme → auth → brand로 고정했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/register",
+      "view": "views/register.ejs",
+      "surface": "common-auth",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-AUTH-003",
+          "principleIds": ["0726", "0727", "1063"],
+          "smellIds": ["X-02-C"],
+          "location": "회원가입 제출 버튼",
+          "severity": "medium",
+          "finding": "제출 중 작업 이름이 사라졌다.",
+          "resolution": "'회원가입 처리 중…'으로 구체화하고 aria-busy를 설정했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-AUTH-004",
+          "principleIds": ["1111", "1112", "1115", "1139"],
+          "smellIds": ["X-04-C"],
+          "location": "학교·대학교 목록 준비 실패",
+          "severity": "medium",
+          "finding": "목록을 불러오지 못했다는 사실만 표시하고 입력 전송 여부와 복구 행동이 없었다.",
+          "resolution": "입력 내용이 전송되지 않았음을 알리고 페이지 새로고침이라는 구체적 복구 행동을 선택 항목과 라이브 상태에 표시했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-AUTH-006",
+          "principleIds": ["0303", "0304", "0438", "0510", "0609", "0712", "1202", "1261", "1915"],
+          "smellIds": ["V-01-B", "V-06-B", "X-09-A", "X-09-C"],
+          "location": "회원가입 브랜드·보조 내비게이션·약관/체크 조작·인증 배경",
+          "severity": "high",
+          "finding": "브랜드/내비게이션/약관·체크 조작 일부가 44px 미만이고 보조 레이블이 10px였다. 인증 시각 면에는 장식용 그라디언트와 격자가 있었다.",
+          "resolution": "인증 조작을 44px 이상, 사용자 레이블을 11px 이상으로 올리고 인증 배경을 브랜드 단색으로 정리했다. 로고는 brand.css의 공식 에셋만 렌더하도록 하고 CSS 로드 순서를 고정했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/password-reset",
+      "view": "views/password-reset.ejs",
+      "surface": "common-auth",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-AUTH-007",
+          "principleIds": ["0303", "0304", "0438", "0510", "0609", "0712", "1202", "1261", "1915"],
+          "smellIds": ["V-01-B", "V-06-B", "X-09-A", "X-09-C"],
+          "location": "재전송·보조 내비게이션·인증 배경·로고",
+          "severity": "high",
+          "finding": "재전송과 인증 보조 행동의 조작 영역이 44px 미만이고 레이블은 10px였다. 공통 인증 표면의 장식 그라디언트와 페이지 로고 스타일이 브랜드 규율과 충돌했다.",
+          "resolution": "재전송과 보조 행동을 44px 이상, 사용자 레이블을 11px 이상으로 올렸다. 인증 표면을 브랜드 단색으로 바꾸고 theme → auth → brand CSS 순서로 공식 로고 소유권을 보장했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/my-learning",
+      "view": "views/my-learning.ejs",
+      "surface": "learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-STATE-002",
+          "principleIds": ["0395", "1111", "1112", "1115", "1139"],
+          "smellIds": ["X-04-B", "X-04-C"],
+          "location": "학습 목록 실패 상태",
+          "severity": "high",
+          "finding": "YAML과 MongoDB라는 내부 구현 용어를 사용자에게 노출하고 복구 행동이 없었다.",
+          "resolution": "진도 보존을 알리고 다시 불러오기와 학습 홈 이동을 제공했다. 정상 상태의 DB 표현도 자동 저장이라는 사용자 언어로 교체했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/curriculum",
+      "view": "views/curriculum.ejs",
+      "surface": "public-learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-STATE-003",
+          "principleIds": ["0005", "1111", "1112", "1139"],
+          "smellIds": ["X-04-B", "X-04-C"],
+          "location": "교육과정 실패 상태",
+          "severity": "high",
+          "finding": "서버 폴더명과 로그 확인을 사용자에게 지시했다.",
+          "resolution": "다시 불러오기와 로그인/내 학습 이동을 제공하는 사용자 언어로 교체했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-A11Y-004",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "F-01-B"],
+          "location": "교육과정 레이블·빈 상태 행동·페이지 CSS",
+          "severity": "high",
+          "finding": "여러 레이블이 9px이고 빈 상태 링크가 40px였으며 공개 내비게이션과 로고 CSS가 페이지에 중복됐다.",
+          "resolution": "사용자 레이블을 11px 이상, 행동을 44px 이상으로 올렸다. 장식 그리드·진행바·잠금 카드 그라디언트를 단색으로 바꾸고 내비게이션/로고 중복 소유를 제거했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/log-curriculum",
+      "view": "views/log-curriculum.ejs",
+      "surface": "learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-STATE-004",
+          "principleIds": ["1112", "1115", "1139"],
+          "smellIds": ["X-04-C"],
+          "location": "교육과정 실패 상태",
+          "severity": "high",
+          "finding": "실패 제목만 있고 진도 보존 여부와 다음 행동이 없었다.",
+          "resolution": "진도 보존 안내와 다시 불러오기/학습 홈 이동을 추가했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/wrong-notes/:id/review",
+      "view": "views/wrong-note-review.ejs",
+      "surface": "learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-022",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A"],
+          "location": "뒤로 가기·개념 이동·그래프 힌트 닫기 조작",
+          "severity": "high",
+          "finding": "복습 화면의 핵심 이동·닫기 조작이 31–43px여서 터치 오작동 가능성이 있었다.",
+          "resolution": "모든 실제 조작을 최소 44×44px로 올리고 모바일 축소 규칙도 같은 하한으로 통일했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-009",
+          "principleIds": ["0438", "0541", "1152"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "복습 히어로·원문 문제·재도전 문제 표면",
+          "severity": "medium",
+          "finding": "학습 집중과 무관한 방사형·점무늬 그라디언트가 세 표면에 반복됐다.",
+          "resolution": "정보 위계를 유지하면서 학습 표면을 단색 네이비와 중립 배경으로 정리했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/visual-learning",
+      "view": "views/visual-learning.ejs",
+      "surface": "public-learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-VISUAL-001",
+          "principleIds": ["0438", "0541", "1152"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "히어로·데모 표면",
+          "severity": "medium",
+          "finding": "그라디언트와 장식 표면이 학습 표면 규율보다 강하다.",
+          "resolution": "히어로·비교 카드·마감 CTA의 장식 그라디언트를 단색 표면으로 바꾸고, 설명에 필요한 부채꼴 분할만 시각 자료로 남겼다. 자동 단계 재생은 한 사이클 뒤 멈추며 전환은 motion 토큰을 쓴다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-A11Y-002",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["X-09-A", "V-06-B"],
+          "location": "단계 선택 버튼·보조 레이블·푸터 링크",
+          "severity": "high",
+          "finding": "단계 버튼이 26×24px이고 사용자 레이블 다수가 9px여서 iPad의 일반 시청 거리와 터치 목표에 부족했다.",
+          "resolution": "단계 버튼을 최소 44×44px로 키우고 사용자 레이블의 글자 하한을 11–12px로 올렸다. 390px와 768px에서 가로 넘침이 없음을 확인했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-FE-002",
+          "principleIds": ["0459", "0751"],
+          "smellIds": ["F-01-B", "F-07-B"],
+          "location": "public/css/visual-learning.css",
+          "severity": "medium",
+          "finding": "공개 내비게이션과 로고 렌더 규칙을 페이지 CSS가 다시 정의했다.",
+          "resolution": "페이지 CSS의 내비게이션·로고 규칙과 관련 반응형 잔재를 제거하고 public-navigation.css와 brand.css를 단일 소유자로 유지했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/learning-flow",
+      "view": "views/learning-flow.ejs",
+      "surface": "public-learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-006",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A"],
+          "location": "복습 단계·코치 모드·보조 레이블",
+          "severity": "high",
+          "finding": "복습 단계가 27×25px, 코치 모드와 여러 설명 레이블이 9px였다.",
+          "resolution": "두 컨트롤을 44px 이상, 설명 레이블을 11px 이상으로 올리고 390/768px 가로 넘침과 이름 없는 조작이 없음을 확인했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-FE-003",
+          "principleIds": ["0459", "0751"],
+          "smellIds": ["F-01-B", "F-07-B"],
+          "location": "public/css/learning-flow.css",
+          "severity": "medium",
+          "finding": "공개 내비게이션/로고 CSS가 중복됐고 기존 장식 선언 일부가 새 표면 규율과 겹쳤다.",
+          "resolution": "내비게이션/로고 중복 소유를 제거하고, 학습 표면에 남아 있던 격자·장식 그라디언트와 나중 규칙으로 덮던 중복 선언을 원래 선택자에서 제거했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/pricing",
+      "view": "views/pricing.ejs",
+      "surface": "common-commerce",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-TRUST-001",
+          "principleIds": ["0466", "1261", "1601"],
+          "smellIds": ["V-01-B", "X-05-A"],
+          "location": "가격·결제 전 표면",
+          "severity": "high",
+          "finding": "가격 페이지의 장식 그라디언트가 결제 범위와 조건보다 강하게 보일 수 있다.",
+          "resolution": "가격 카드와 CTA를 브랜드 단색으로 정리하고, 첫 카드보다 앞에 PG 미연결·실제 과금/권한 지급 없음 상태를 명시했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/profile",
+      "view": "views/profile.ejs",
+      "surface": "common-settings",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-SETTINGS-001",
+          "principleIds": ["0065", "1651", "1652", "1654"],
+          "smellIds": ["V-07-B"],
+          "location": "설정 그룹 전체",
+          "severity": "medium",
+          "finding": "긴 단일 열에서 계정·학습·보안 작업의 그룹 관계가 약하다.",
+          "resolution": "상단 바로가기와 본문을 학습 프로필(닉네임·말투·학교), 계정·보안(비밀번호·탈퇴) 두 그룹으로 나누고 각 그룹의 범위를 설명했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-A11Y-003",
+          "principleIds": ["0303", "0304", "0712", "1202", "1261"],
+          "smellIds": ["X-02-C", "X-09-A"],
+          "location": "설정 내비게이션·비밀번호 표시·저장 버튼",
+          "severity": "high",
+          "finding": "일부 링크와 비밀번호 표시 버튼의 높이가 44px 미만이고 저장 중 동작명이 사라졌다.",
+          "resolution": "모든 소형 설정 행동을 최소 44px로 맞추고 제출 버튼에 aria-busy와 '닉네임 저장 중…'처럼 원래 작업명이 남는 상태를 적용했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/nickname-change/:token",
+      "view": "views/nickname-change.ejs",
+      "surface": "common-settings",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-STATE-005",
+          "principleIds": ["1111", "1112", "1115", "1139"],
+          "smellIds": ["X-04-B", "X-04-C"],
+          "location": "닉네임 중복 확인 네트워크 실패",
+          "severity": "medium",
+          "finding": "일시 오류만 말하고 입력 보존 여부와 사용자가 눌러야 할 복구 행동을 밝히지 않았다.",
+          "resolution": "입력 보존을 알리고 인터넷 연결 확인 후 중복 확인 버튼을 다시 누르도록 구체화했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-010",
+          "principleIds": ["0438", "0541", "1152"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "닉네임 변경 안내 패널",
+          "severity": "low",
+          "finding": "설정 화면의 안내 패널에 장식 방사형 그라디언트가 남아 있었다.",
+          "resolution": "네이비 단색 표면으로 바꿔 설정 화면의 절제 규율과 맞췄다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/quick-practice",
+      "view": "views/quick-practice.ejs",
+      "surface": "learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-STATE-006",
+          "principleIds": ["1112", "1115", "1139"],
+          "smellIds": ["X-04-C"],
+          "location": "문항 시작 실패 상태",
+          "severity": "medium",
+          "finding": "'잠시 후 다시 시도'만 표시해 기록 영향과 다시 실행할 조작을 알 수 없었다.",
+          "resolution": "진행 기록이 변경되지 않았음을 알리고 시작 버튼을 다시 누르도록 안내했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/unit-learning/:courseId/:unitId/:conceptId",
+      "view": "views/unit-learning.ejs",
+      "surface": "learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-STATE-007",
+          "principleIds": ["0395", "1111", "1112", "1115", "1139"],
+          "smellIds": ["X-04-B", "X-04-C"],
+          "location": "토픽 진도 저장 성공·실패 피드백",
+          "severity": "high",
+          "finding": "성공 메시지에 DB를 노출하고 실패 때 되돌림 여부와 다시 할 행동을 말하지 않았다.",
+          "resolution": "자동 저장이라는 사용자 언어로 바꾸고 실패 시 표시가 이전 상태로 돌아갔음과 다시 선택할 행동을 알렸다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-A11Y-023",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A"],
+          "location": "학습 경로·학습 종료·모션 실행·개념 실험·완료 이동 조작",
+          "severity": "high",
+          "finding": "단원·개념 학습의 반복 조작 일부가 35–42px로 터치 목표 하한보다 작았다.",
+          "resolution": "경로 링크·버튼·완료 이동을 최소 44px로 통일하고 그래프 확대·축소 도구의 모바일 축소 규칙도 제거했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-011",
+          "principleIds": ["0438", "0541", "1152"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "단원 히어로·개념 소개·실험 무대·진도 막대",
+          "severity": "medium",
+          "finding": "학습 표면에 장식 방사형·격자·진도 그라디언트가 여러 겹으로 남아 있었다.",
+          "resolution": "단색 표면과 단색 진행 막대로 정리하고, 완료 상태의 전용 그라디언트만 규율에 따라 유지했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/community/*",
+      "view": "views/community*.ejs",
+      "surface": "common-community",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-012",
+          "principleIds": ["0103", "0110", "0111", "0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A", "X-09-C"],
+          "location": "검색·작성·정렬·카테고리·페이지 이동·댓글·투표·신고·푸터 조작",
+          "severity": "high",
+          "finding": "커뮤니티 목록과 상세/작성 화면의 조작 다수가 35–42px이고 메타데이터와 상태 레이블이 9–10px였다.",
+          "resolution": "공통 community.css에서 보이는 조작을 44px 이상, 사용자 레이블을 11px 이상으로 올렸다. 390px와 768px 실브라우저 검사에서 가로 넘침, 44px 미만 조작, 이름 없는 조작과 깨진 이미지가 0건임을 확인했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-006",
+          "principleIds": ["0438", "0510", "0556", "1915"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "커뮤니티 히어로·학교 인증·공지·인기글·운영 규칙 표면",
+          "severity": "medium",
+          "finding": "지원·커뮤니티 공용 표면 전반에 방사/선형 그라디언트가 반복되어 상태와 콘텐츠보다 장식이 앞섰다.",
+          "resolution": "네이비 또는 의미색 단색 표면으로 정리하고 공지·규칙의 강조선도 단일 브랜드 색으로 통일했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-FE-007",
+          "principleIds": ["0439", "0440", "0459", "0751"],
+          "smellIds": ["F-01-B", "F-07-B"],
+          "location": "public/css/community.css 커뮤니티 전용 헤더·로고 규칙",
+          "severity": "medium",
+          "finding": "실제 뷰는 공통 공개 내비게이션을 쓰지만 사용되지 않는 커뮤니티 전용 헤더·내비게이션·로고 CSS가 별도로 남아 있었다.",
+          "resolution": "죽은 전용 헤더 규칙을 제거하고 public-navigation.css와 brand.css를 단일 소유자로 유지했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/contact",
+      "view": "views/contact.ejs",
+      "surface": "common-support",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-TRUST-002",
+          "principleIds": ["0395", "1261", "1601"],
+          "smellIds": ["X-05-A"],
+          "location": "문의 제출 전 보관 안내",
+          "severity": "medium",
+          "finding": "DB 저장이라는 구현 용어가 보관 목적보다 앞섰다.",
+          "resolution": "답변과 처리 이력 확인을 위해 안전하게 보관한다는 목적 중심 문장으로 바꿨다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-A11Y-013",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A", "X-09-C"],
+          "location": "문의 상태·사용자 정보·입력 도움말·처리 절차·최근 문의·공개 푸터",
+          "severity": "high",
+          "finding": "문의 화면의 상태·설명·메타데이터 다수가 9–10px였고 공통 소셜 푸터 조작은 30px였다.",
+          "resolution": "문의 사용자 텍스트를 11px 이상으로 올리고 공통 소셜 푸터 링크를 44×44px로 확대했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-007",
+          "principleIds": ["0438", "0510", "0556", "1915"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "문의 히어로",
+          "severity": "medium",
+          "finding": "문의 목적과 무관한 방사/선형 그라디언트와 격자 패턴이 히어로에 중첩됐다.",
+          "resolution": "히어로를 공용 단색 표면으로 정리하고 장식 격자 레이어를 제거했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/error",
+      "view": "views/error.ejs",
+      "surface": "common-state",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-STATE-008",
+          "principleIds": ["0391", "0392", "0438", "1111", "1139"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "공통 오류 화면 시각 위계",
+          "severity": "medium",
+          "finding": "복구 행동보다 다중 그라디언트와 장식 광원이 강해 공통 상태 화면의 위계를 흐렸다.",
+          "resolution": "네이비 단색 시각 면과 블루 단색 주 행동으로 정리하고 오류 코드·이전 페이지·FAQ·문의 행동은 유지했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/wrong-notes",
+      "view": "views/wrong-notes.ejs",
+      "surface": "learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-014",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-06-C"],
+          "location": "검색·필터·빈 상태 행동",
+          "severity": "high",
+          "finding": "필터 입력과 행동이 40px이고 보조 레이블이 9~10px였다.",
+          "resolution": "필터와 행동을 최소 44px, 사용자 레이블을 최소 11px로 올렸다. 768px·390px 실브라우저 검사에서 잔여 위반이 없다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/assessments",
+      "view": "views/assessment-center.ejs",
+      "surface": "learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-015",
+          "principleIds": ["0303", "0609", "0712", "1202"],
+          "smellIds": ["V-06-B"],
+          "location": "잠긴 과목·평가·OMR 행동",
+          "severity": "high",
+          "finding": "잠긴 과목의 학습 링크와 평가 조작 일부가 텍스트 높이에만 의존했다.",
+          "resolution": "잠금 안내 링크, 평가 행동, 문제 이동, OMR 조작을 최소 44px로 통일했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-MOTION-003",
+          "principleIds": ["0492", "1152", "1195"],
+          "smellIds": ["X-09-A"],
+          "location": "학습 평가 상태 모션",
+          "severity": "medium",
+          "finding": "학습 표면에 장식성 반복 모션이 남아 있었다.",
+          "resolution": "반복 모션을 제거하고 상태 변화는 공용 모션 토큰과 정적 표현으로 제한했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/private-mock-exams",
+      "view": "views/private-mock-exams.ejs",
+      "surface": "learning",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-016",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A"],
+          "location": "응시·타이머·OMR·키보드 조작",
+          "severity": "high",
+          "finding": "다수 보조 문자가 9~10px이고 일부 시험 조작과 수학 키가 44px보다 작으며 경고 모션이 반복됐다.",
+          "resolution": "문자를 11px 이상, 실제 조작을 44px 이상으로 올리고 반복 경고 모션을 정적 상태로 바꿨다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/account/private-mock-restriction",
+      "view": "views/private-mock-restriction.ejs",
+      "surface": "common-account-state",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-024",
+          "principleIds": ["0303", "0304", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B", "X-09-A"],
+          "location": "알림·문의·아레나 이동 행동",
+          "severity": "high",
+          "finding": "계정 제한 상태의 복구·이동 링크 높이가 39px로 터치 목표 하한보다 작았다.",
+          "resolution": "세 행동을 최소 44px 높이의 중앙 정렬 터치 목표로 통일했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-VISUAL-012",
+          "principleIds": ["0438", "0541", "1152"],
+          "smellIds": ["V-01-B", "V-04-B"],
+          "location": "응시 제한 상태 히어로",
+          "severity": "medium",
+          "finding": "계정 상태 안내에 다중 방사형·선형 그라디언트가 사용돼 제한 사유와 복구 행동보다 장식이 강했다.",
+          "resolution": "일반·제한 상태를 각각 단색 네이비·레드 표면으로 정리하고 사유·기간·문의 행동은 유지했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/coach-suggestions",
+      "view": "views/coach-suggestions.ejs",
+      "surface": "learning-support",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-017",
+          "principleIds": ["0303", "0609", "0712", "1202"],
+          "smellIds": ["V-06-B"],
+          "location": "제안 목록·폼 행동",
+          "severity": "medium",
+          "finding": "상태·메타 레이블이 9~10px이고 보조 행동의 터치 목표가 일관되지 않았다.",
+          "resolution": "레이블을 11px 이상, 입력과 행동을 44px 이상으로 통일했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/archive",
+      "view": "views/archive.ejs",
+      "surface": "common-content",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-018",
+          "principleIds": ["0303", "0304", "0609", "0712"],
+          "smellIds": ["V-06-B"],
+          "location": "자료 메타·필터·페이지 이동",
+          "severity": "medium",
+          "finding": "자료 메타 레이블에 9~10px가 남고 조작 크기가 혼재했다.",
+          "resolution": "사용자 문자를 11px 이상, 모든 보이는 조작을 44px 이상으로 정리했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/notifications",
+      "view": "views/notifications.ejs",
+      "surface": "common-state",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-A11Y-019",
+          "principleIds": ["0303", "0609", "0712", "1202"],
+          "smellIds": ["V-06-B", "X-04-C"],
+          "location": "알림 목록·상세 행동",
+          "severity": "medium",
+          "finding": "알림 시각·상태 레이블이 작고 상세 행동의 터치 목표가 일관되지 않았다.",
+          "resolution": "상태 문자를 11px 이상, 목록과 상세 행동을 44px 이상으로 맞췄다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/parent/*",
+      "view": "views/parent-*.ejs",
+      "surface": "common-parent",
+      "auditStatus": "fixed",
+      "violations": [
+        {
+          "id": "WEB-VISUAL-008",
+          "principleIds": ["0438", "0510", "0556", "1915"],
+          "smellIds": ["V-01-B", "V-04-B", "F-01-B"],
+          "location": "학부모 내비·인증·결제 표면",
+          "severity": "high",
+          "finding": "페이지 CSS가 공식 로고 외형을 다시 소유하고 학습 공용 표면에 다중 그라디언트를 사용했다.",
+          "resolution": "로고 외형은 brand.css에 맡기고 학부모 히어로·인증·주 행동을 토큰 기반 단색 표면으로 정리했다.",
+          "status": "fixed"
+        },
+        {
+          "id": "WEB-A11Y-020",
+          "principleIds": ["0303", "0609", "0712", "1202", "1261"],
+          "smellIds": ["V-06-B"],
+          "location": "학부모 내비·자녀 선택·알림 설정",
+          "severity": "high",
+          "finding": "내비와 자녀 선택 조작 일부가 29~42px이고 보조문자가 9~10px였다.",
+          "resolution": "사용자 문자를 11px 이상, 링크·버튼·선택·체크 레이블을 44px 이상으로 통일했다.",
+          "status": "fixed"
+        }
+      ]
+    },
+    {
+      "page": "/store",
+      "view": "views/store.ejs",
+      "surface": "arena-commerce",
+      "auditStatus": "engineering-audit-only",
+      "violations": [
+        {
+          "id": "WEB-A11Y-021",
+          "principleIds": ["0303", "0609", "0712", "1202"],
+          "smellIds": ["V-06-B"],
+          "location": "상점 카테고리·검색·관리 조작",
+          "severity": "high",
+          "finding": "짧은 카테고리 링크와 관리 조작 일부가 38~42px였다.",
+          "resolution": "카테고리·검색·관리 행동을 최소 44px로 맞추고 768px·390px 실화면을 검증했다.",
+          "status": "fixed"
+        }
+      ],
+      "skippedRules": [
+        {
+          "principleIds": ["0012", "0391", "0392", "1152"],
+          "reason": "상점은 회의 결정 ②의 아레나 경쟁 표면이므로 장식 절제 규칙은 적용하지 않고 접근성과 신뢰 경계만 적용한다.",
+          "status": "skipped-by-scope"
+        }
+      ]
+    },
+    {
+      "page": "/war-of-masters",
+      "view": "views/war-of-masters.ejs",
+      "surface": "arena",
+      "auditStatus": "engineering-audit-only",
+      "violations": [],
+      "skippedRules": [
+        {
+          "principleIds": ["0012", "0391", "0392", "1152"],
+          "reason": "회의 결정 ②에 따라 아레나의 장식·앰비언스 절제 규칙은 적용하지 않는다. reduced-motion과 접근성은 계속 적용한다.",
+          "status": "skipped-by-scope"
+        }
+      ]
+    },
+    {
+      "page": "/goat-arena/*",
+      "view": "views/goat-arena-*.ejs",
+      "surface": "arena",
+      "auditStatus": "engineering-audit-only",
+      "violations": [
+        {
+          "id": "WEB-STATE-009",
+          "principleIds": ["0395", "1111", "1112", "1139"],
+          "smellIds": ["X-04-B", "X-04-C"],
+          "location": "승급 연출 미디어 실패 상태",
+          "severity": "medium",
+          "finding": "사용자에게 티어 값과 영상 파일 경로를 지정하라는 내부 구현 지시를 노출했다.",
+          "resolution": "승급 연출 준비/재생 실패로 표현하고 창을 닫은 뒤 Arena에서 다시 확인하도록 안내했다. 개발자 예외 메시지는 콘솔용으로 유지했다.",
+          "status": "fixed"
+        }
+      ],
+      "skippedRules": [
+        {
+          "principleIds": ["0012", "0391", "0392", "1152"],
+          "reason": "아레나 도파민 표면의 합의된 예외. 기능 상태·포커스·감소된 모션·신뢰 경계만 검사한다.",
+          "status": "skipped-by-scope"
+        }
+      ]
+    }
+  ]
+}

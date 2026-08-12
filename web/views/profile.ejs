@@ -1,0 +1,626 @@
+<%
+  const learner = profileUser;
+  const displayName = String(learner.name || "학생");
+  const currentSchool = learner.school || {};
+  const values =
+    typeof formValues !== "undefined" && formValues
+      ? formValues
+      : {};
+  const message =
+    typeof feedback !== "undefined"
+      ? feedback
+      : null;
+  const withdrawalAuth =
+    typeof withdrawalAuthentication !== "undefined" && withdrawalAuthentication
+      ? withdrawalAuthentication
+      : {
+          googleLinked: false,
+          googleConfigured: false,
+          reauthenticationReady: false,
+        };
+  const regionData =
+    typeof schoolRegions !== "undefined" && schoolRegions
+      ? schoolRegions
+      : {};
+  const regionNames = Object.keys(regionData);
+  const selectedRegion =
+    values.schoolRegion !== undefined
+      ? values.schoolRegion
+      : currentSchool.region || "";
+  const selectedSchoolCode =
+    values.schoolCode !== undefined
+      ? values.schoolCode
+      : currentSchool.code || "";
+  const nicknameValue =
+    values.nickname !== undefined
+      ? values.nickname
+      : displayName;
+  const coachModeValue =
+    values.coachMode !== undefined
+      ? values.coachMode
+      : learner.preferences?.coachMode ||
+        "spicy";
+  const gradeLabel =
+    Number(learner.schoolGrade) === 10
+      ? "고등학교 1학년"
+      : Number(learner.schoolGrade) === 11
+        ? "고등학교 2학년"
+        : Number(learner.schoolGrade) === 12
+          ? "고등학교 3학년"
+          : Number(learner.schoolGrade) === 13
+            ? "N수생"
+            : Number(learner.schoolGrade) === 14
+              ? "대학생"
+              : Number(learner.schoolGrade) === 15
+                ? "직장인"
+                : "학년 미설정";
+  const educationStatusLabel =
+    learner.educationStatus === "graduated" ||
+    [13, 15].includes(Number(learner.schoolGrade))
+      ? "졸업"
+      : "재학";
+  const safeSchoolJson =
+    JSON.stringify(regionData)
+      .replace(/</g, "\\u003c")
+      .replace(/\u2028/g, "\\u2028")
+      .replace(/\u2029/g, "\\u2029");
+  const connectedHours = Math.max(0, Number(learner.totalConnectedSeconds) || 0) / 3600;
+  const connectedHoursLabel = connectedHours < 0.1
+    ? "0시간"
+    : `${connectedHours.toFixed(connectedHours >= 100 ? 0 : 1)}시간`;
+%>
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Matths 닉네임, 학교와 비밀번호를 관리하는 프로필 설정 페이지입니다."
+    />
+    <meta name="theme-color" content="#f5f7fc" />
+    <title>프로필 설정 | Matths</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/profile.css" />
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/profile.js" defer></script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png" />
+    <link rel="stylesheet" href="/css/brand.css" />
+    <link rel="stylesheet" href="/css/matths-theme.css" />
+    <link rel="stylesheet" href="/css/product-refresh.css" />
+    <link rel="stylesheet" href="/css/profile-v2.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#profile-main">프로필 설정으로 바로가기</a>
+
+    <div class="profile-page-shell">
+      <header class="profile-header">
+        <a class="brand" href="/" aria-label="Matths 학습 홈">
+          <%- include("partials/brand-primary-logo") %>
+        </a>
+
+        <a class="back-link learning-home-button" href="/main">
+          <span aria-hidden="true">←</span>
+          학습 홈으로
+        </a>
+      </header>
+
+      <main class="profile-main" id="profile-main">
+        <section class="profile-hero" aria-labelledby="profile-title">
+          <div class="profile-hero-copy">
+            <p>내 정보</p>
+            <h1 id="profile-title">프로필 설정</h1>
+            <span>
+              학습 화면의 표시 정보와 로그인 보안을 구분해 관리합니다.
+            </span>
+          </div>
+
+          <div class="profile-summary">
+            <span class="profile-summary-avatar" aria-hidden="true">
+              <%= displayName.slice(0, 1) %>
+            </span>
+            <div>
+              <strong><%= displayName %>님</strong>
+              <small><%= learner.email %></small>
+              <p>
+                <%= currentSchool.name || "학교 미설정" %>
+                <i aria-hidden="true">·</i>
+                <%= gradeLabel %>
+                <i aria-hidden="true">·</i>
+                <%= educationStatusLabel %>
+              </p>
+              <p>누적 접속 <strong><%= connectedHoursLabel %></strong></p>
+            </div>
+          </div>
+        </section>
+
+        <nav class="profile-section-nav" aria-label="프로필 설정 항목">
+          <div>
+            <span>학습 프로필</span>
+            <a href="#nickname-settings">닉네임</a>
+            <a href="#coach-mode-settings">학습 모드</a>
+            <a href="#school-settings">고등학교</a>
+          </div>
+          <div>
+            <span>계정·보안</span>
+            <a href="#password-settings">비밀번호</a>
+            <a href="#withdrawal-settings">계정 탈퇴</a>
+          </div>
+        </nav>
+
+        <div class="settings-grid">
+          <header class="settings-group-heading" id="learning-profile-group">
+            <p>학습 화면 설정</p>
+            <h2>학습 프로필</h2>
+            <span>학습 화면에서 사용하는 이름, 코치 말투와 학교 정보를 관리합니다.</span>
+          </header>
+          <section
+            class="settings-card"
+            id="nickname-settings"
+            aria-labelledby="nickname-title"
+          >
+            <div class="settings-card-heading">
+              <div>
+                <p>화면에 표시할 이름</p>
+                <h2 id="nickname-title">닉네임 변경</h2>
+              </div>
+            </div>
+
+            <p class="settings-description">
+              대시보드와 학습 화면에서 불러드릴 이름이에요.
+            </p>
+
+            <% if (message && message.section === "nickname") { %>
+              <div
+                class="settings-alert <%= message.type %>"
+                role="<%= message.type === 'error' ? 'alert' : 'status' %>"
+              >
+                <span aria-hidden="true">
+                  <%= message.type === "error" ? "!" : "✓" %>
+                </span>
+                <%= message.message %>
+              </div>
+            <% } %>
+
+            <form
+              class="settings-form"
+              action="/profile/nickname"
+              method="POST"
+              data-settings-form
+            >
+              <div class="form-field">
+                <label for="nickname">새 닉네임</label>
+                <input
+                  id="nickname"
+                  name="nickname"
+                  type="text"
+                  value="<%= nicknameValue %>"
+                  placeholder="새 닉네임을 입력하세요"
+                  autocomplete="nickname"
+                  minlength="2"
+                  maxlength="30"
+                  required
+                />
+                <small class="field-guide">
+                  2자 이상 30자 이하로 입력해주세요.
+                </small>
+              </div>
+
+              <button class="save-button" type="submit">
+                닉네임 저장
+                <span aria-hidden="true">→</span>
+              </button>
+            </form>
+          </section>
+
+          <section
+            class="settings-card coach-mode-card"
+            id="coach-mode-settings"
+            aria-labelledby="coach-mode-title"
+          >
+            <div class="settings-card-heading">
+              <div>
+                <p>학습 안내 방식</p>
+                <h2 id="coach-mode-title">학습 코치 말투</h2>
+              </div>
+            </div>
+
+            <p class="settings-description">
+              문제를 맞히거나 틀렸을 때 받을 코치 문구의 말투를 선택합니다.
+              무음 모드는 문구를 표시하지 않습니다.
+            </p>
+
+            <% if (message && message.section === "coach-mode") { %>
+              <div
+                class="settings-alert <%= message.type %>"
+                role="<%= message.type === 'error' ? 'alert' : 'status' %>"
+              >
+                <span aria-hidden="true">
+                  <%= message.type === "error" ? "!" : "✓" %>
+                </span>
+                <%= message.message %>
+              </div>
+            <% } %>
+
+            <form
+              class="settings-form"
+              action="/profile/coach-mode"
+              method="POST"
+              data-settings-form
+            >
+              <fieldset class="identity-choices">
+                <legend>학습 모드 선택</legend>
+                <div class="identity-choice-grid coach-mode-choice-grid">
+                  <% [
+                    ["mild", "순한맛", "차분하고 다정한 피드백"],
+                    ["spicy", "매운맛", "직설적이고 강한 동기 부여"],
+                    ["silent", "무음", "코치 문구를 표시하지 않음"],
+                  ].forEach(([value, label, description]) => { %>
+                    <label>
+                      <input
+                        type="radio"
+                        name="mode"
+                        value="<%= value %>"
+                        <%= coachModeValue === value ? "checked" : "" %>
+                        required
+                      />
+                      <span>
+                        <b><%= label %></b>
+                        <small><%= description %></small>
+                      </span>
+                    </label>
+                  <% }) %>
+                </div>
+              </fieldset>
+
+              <button class="save-button" type="submit">
+                학습 모드 저장
+                <span aria-hidden="true">→</span>
+              </button>
+            </form>
+          </section>
+
+          <section
+            class="settings-card"
+            id="school-settings"
+            aria-labelledby="school-title"
+          >
+            <div class="settings-card-heading">
+              <div>
+                <p>학교 정보</p>
+                <h2 id="school-title">고등학교 변경</h2>
+              </div>
+            </div>
+
+            <p class="settings-description">
+              현재 학교는
+              <strong><%= currentSchool.name || "미설정" %></strong>이에요.
+            </p>
+
+            <% if (message && message.section === "school") { %>
+              <div
+                class="settings-alert <%= message.type %>"
+                role="<%= message.type === 'error' ? 'alert' : 'status' %>"
+              >
+                <span aria-hidden="true">
+                  <%= message.type === "error" ? "!" : "✓" %>
+                </span>
+                <%= message.message %>
+              </div>
+            <% } %>
+
+            <form
+              class="settings-form"
+              action="/profile/school"
+              method="POST"
+              data-settings-form
+            >
+              <div class="school-fields">
+                <div class="form-field">
+                  <label for="schoolRegion">학교 소재 시·도</label>
+                  <select id="schoolRegion" name="schoolRegion" required>
+                    <option value="">시·도를 선택해 주세요</option>
+                    <% regionNames.forEach((regionName) => { %>
+                      <option
+                        value="<%= regionName %>"
+                        <%= selectedRegion === regionName ? "selected" : "" %>
+                      >
+                        <%= regionName %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label for="schoolSearch">학교 검색</label>
+                  <input
+                    id="schoolSearch"
+                    type="search"
+                    placeholder="학교명을 입력하세요"
+                    autocomplete="off"
+                    <%= selectedRegion ? "" : "disabled" %>
+                  />
+                </div>
+
+                <div class="form-field school-select-field">
+                  <label for="schoolCode">고등학교</label>
+                  <select
+                    id="schoolCode"
+                    name="schoolCode"
+                    data-selected-school="<%= selectedSchoolCode %>"
+                    required
+                    disabled
+                  >
+                    <option value="">시·도를 먼저 선택해 주세요</option>
+                  </select>
+                  <small
+                    class="field-guide school-result-count"
+                    id="schoolResultCount"
+                    aria-live="polite"
+                  ></small>
+                </div>
+              </div>
+
+              <button class="save-button" type="submit">
+                고등학교 저장
+                <span aria-hidden="true">→</span>
+              </button>
+            </form>
+          </section>
+
+          <header class="settings-group-heading" id="account-security-group">
+            <p>로그인과 데이터</p>
+            <h2>계정과 보안</h2>
+            <span>비밀번호를 변경하거나 계정과 보관 데이터의 처리를 확인합니다.</span>
+          </header>
+          <section
+            class="settings-card password-card"
+            id="password-settings"
+            aria-labelledby="password-title"
+          >
+            <div class="settings-card-heading">
+              <div>
+                <p>비밀번호</p>
+                <h2 id="password-title">비밀번호 변경</h2>
+              </div>
+            </div>
+
+            <p class="settings-description">
+              현재 비밀번호를 확인한 뒤 새 비밀번호로 변경합니다.
+            </p>
+
+            <% if (message && message.section === "password") { %>
+              <div
+                class="settings-alert <%= message.type %>"
+                role="<%= message.type === 'error' ? 'alert' : 'status' %>"
+              >
+                <span aria-hidden="true">
+                  <%= message.type === "error" ? "!" : "✓" %>
+                </span>
+                <%= message.message %>
+              </div>
+            <% } %>
+
+            <form
+              class="settings-form"
+              action="/profile/password"
+              method="POST"
+              data-password-form
+              data-settings-form
+            >
+              <div class="password-fields">
+                <div class="form-field">
+                  <label for="currentPassword">현재 비밀번호</label>
+                  <div class="password-field">
+                    <input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type="password"
+                      placeholder="현재 비밀번호"
+                      autocomplete="current-password"
+                      maxlength="72"
+                      required
+                    />
+                    <button
+                      type="button"
+                      data-password-toggle="currentPassword"
+                      aria-label="현재 비밀번호 표시"
+                      aria-pressed="false"
+                    >보기</button>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="newPassword">새 비밀번호</label>
+                  <div class="password-field">
+                    <input
+                      id="newPassword"
+                      name="newPassword"
+                      type="password"
+                      placeholder="8자 이상 입력"
+                      autocomplete="new-password"
+                      minlength="8"
+                      maxlength="72"
+                      required
+                    />
+                    <button
+                      type="button"
+                      data-password-toggle="newPassword"
+                      aria-label="새 비밀번호 표시"
+                      aria-pressed="false"
+                    >보기</button>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="newPasswordConfirm">비밀번호 확인</label>
+                  <div class="password-field">
+                    <input
+                      id="newPasswordConfirm"
+                      name="newPasswordConfirm"
+                      type="password"
+                      placeholder="새 비밀번호 재입력"
+                      autocomplete="new-password"
+                      minlength="8"
+                      maxlength="72"
+                      aria-describedby="new-password-match"
+                      required
+                    />
+                    <button
+                      type="button"
+                      data-password-toggle="newPasswordConfirm"
+                      aria-label="비밀번호 확인 값 표시"
+                      aria-pressed="false"
+                    >보기</button>
+                  </div>
+                  <small
+                    class="field-guide"
+                    id="new-password-match"
+                    aria-live="polite"
+                  >
+                    영문, 숫자, 특수문자를 함께 사용하면 더 안전해요.
+                  </small>
+                </div>
+              </div>
+
+              <button class="save-button password-save" type="submit">
+                비밀번호 변경
+                <span aria-hidden="true">→</span>
+              </button>
+            </form>
+          </section>
+
+          <section
+            class="settings-card withdrawal-card"
+            id="withdrawal-settings"
+            aria-labelledby="withdrawal-title"
+          >
+            <div class="settings-card-heading">
+              <div>
+                <p>계정 관리</p>
+                <h2 id="withdrawal-title">계정 탈퇴</h2>
+              </div>
+            </div>
+
+            <p class="settings-description">
+              탈퇴하면 실명·이메일·닉네임·정확한 학교와 로그인 정보는
+              복구할 수 없도록 제거됩니다. 문제 풀이, 정답 여부, 소요 시간,
+              평가 결과와 학습 진도는 개인을 식별할 수 없는 익명 데이터로만
+              보존됩니다.
+            </p>
+
+            <div class="withdrawal-retention-note">
+              <strong>익명으로 남는 학습 정보</strong>
+              <span>
+                개념 진도 · 문제 및 시험 답안 · 정오답 · 풀이 시간 · 힌트 사용 ·
+                GP 변동 기록
+              </span>
+            </div>
+
+            <% if (message && message.section === "withdrawal") { %>
+              <div
+                class="settings-alert <%= message.type %>"
+                role="alert"
+              >
+                <span aria-hidden="true">!</span>
+                <%= message.message %>
+              </div>
+            <% } %>
+
+            <% if (learner.role === "admin") { %>
+              <div class="settings-alert error" role="status">
+                <span aria-hidden="true">!</span>
+                관리자 계정은 역할을 해제한 뒤 탈퇴할 수 있습니다.
+              </div>
+            <% } else { %>
+              <form
+                class="withdrawal-form"
+                action="/profile/withdraw"
+                method="POST"
+                data-withdraw-form
+              >
+                <div class="withdrawal-fields">
+                  <% if (withdrawalAuth.reauthenticationReady) { %>
+                    <div class="withdrawal-retention-note" role="status">
+                      <strong>Google 본인 확인 완료</strong>
+                      <span>이 확인은 5분 동안 한 번만 사용할 수 있습니다.</span>
+                    </div>
+                  <% } else { %>
+                    <div class="form-field">
+                      <label for="withdrawCurrentPassword">현재 비밀번호</label>
+                      <input
+                        id="withdrawCurrentPassword"
+                        name="currentPassword"
+                        type="password"
+                        placeholder="현재 비밀번호"
+                        autocomplete="current-password"
+                        maxlength="72"
+                        required
+                      />
+                    </div>
+
+                    <% if (withdrawalAuth.googleLinked) { %>
+                      <div class="form-field">
+                        <% if (withdrawalAuth.googleConfigured) { %>
+                          <a
+                            class="save-button"
+                            href="/profile/withdraw/google"
+                          >
+                            <%- include("partials/google-g-mark") %>
+                            Google로 본인 확인
+                          </a>
+                          <small class="field-guide">
+                            Google로 가입해 비밀번호가 없다면 이 방법을 사용해주세요.
+                          </small>
+                        <% } else { %>
+                          <small class="field-guide invalid">
+                            Google 본인 확인이 아직 서버에 설정되지 않았습니다.
+                          </small>
+                        <% } %>
+                      </div>
+                    <% } %>
+                  <% } %>
+
+                  <div class="form-field">
+                    <label for="withdrawConfirmation">탈퇴 확인</label>
+                    <input
+                      id="withdrawConfirmation"
+                      name="confirmation"
+                      type="text"
+                      placeholder="탈퇴"
+                      autocomplete="off"
+                      pattern="탈퇴"
+                      required
+                    />
+                    <small class="field-guide">
+                      확인란에 ‘탈퇴’를 정확히 입력해주세요.
+                    </small>
+                  </div>
+
+                <label class="withdrawal-consent">
+                  <input
+                    type="checkbox"
+                    name="acknowledgeAnonymousRetention"
+                    value="true"
+                    required
+                  />
+                  <span>
+                    개인정보와 로그인 정보는 제거되며, 학습 기록은 익명
+                    데이터로 보존된다는 내용을 확인했습니다.
+                  </span>
+                </label>
+
+                <button class="withdrawal-button" type="submit">
+                  개인정보 제거 후 계정 탈퇴
+                </button>
+              </form>
+            <% } %>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script id="school-data" type="application/json"><%- safeSchoolJson %></script>
+  </body>
+</html>
