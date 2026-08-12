@@ -1,27 +1,62 @@
 {
-  "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V1",
-  "createdAt": "2026-08-13T01:38:53+09:00",
+  "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V2",
+  "createdAt": "2026-08-13T08:23:05+09:00",
+  "productionOrigin": "https://www.matths.kr",
   "upstream": {
     "repository": "https://github.com/is4553807/Matths.git",
     "mainCommit": "023a47368bef13d763eda0377b45c989f59ef01b",
     "pushAllowed": false
   },
   "web": {
-    "sourceCommit": "0734ce03586ae11010c748e9679651d8c62e8348",
-    "path": "web"
+    "sourceCommit": "d6c62938fdd3726e0f7d052b47b57142eb42c68a",
+    "path": "web",
+    "testManifest": 138,
+    "regression": "138/138 passed in canonical and public integration workspaces"
   },
   "ipad": {
-    "sourceCommit": "4b9e4670ed669e6ab8ab900b8e5522ae3843cea6",
-    "path": "ipad"
-  },
-  "verification": {
-    "webTests": "130/130 passed",
-    "webTemplates": 119,
-    "ipadContracts": "55/55 passed",
-    "publicCheckoutContracts": "53/55 passed without non-redistributable resources",
-    "externalResourceOverlay": "55/55 passed with local llama.xcframework and Debug-only KICE PDFs",
+    "sourceCommit": "8869906fbb9a376b7015820a824506a79b7d2989",
+    "path": "ipad",
+    "contracts": "57/57 passed in canonical workspace",
+    "curriculumBundle": "220/220 stories and 15/15 bundle checks passed",
     "signedDeviceBuild": "passed",
-    "physicalDeviceInstall": "passed (iPad14,3)",
-    "physicalDeviceLaunch": "passed against http://192.168.0.35:8000"
+    "physicalDeviceInstall": "passed",
+    "physicalDeviceLaunch": "passed",
+    "internalDebugIpa": "Matths-internal-debug-8869906.ipa",
+    "internalDebugIpaSha256": "9bab3ec428fa64253322c951c7d5ab920ce8c4a52ae12091c022b744a1bbdf30"
+  },
+  "curriculum": {
+    "courseCount": 13,
+    "storyCount": 220,
+    "sceneCount": 1100,
+    "webIpadByteParity": "passed",
+    "defaultVoice": "ko-KR female system TTS",
+    "studioExportTarget": "ElevenLabs v3"
+  },
+  "rankPromotion": {
+    "format": "H.264 MP4 with AAC",
+    "tierCount": 9,
+    "webIncluded": true,
+    "ipadIncluded": true,
+    "signedDeviceEvidence": "9/9 passed"
+  },
+  "publicCheckout": {
+    "excluded": [
+      "web evidence/dist/tmp/generated screenshots/PDF",
+      "node_modules and environment secrets",
+      "iPad KICE PDFs",
+      "Frameworks/llama.xcframework",
+      "DerivedData/build/IPA/xcarchive",
+      "signing and runtime credentials"
+    ],
+    "ipadContractsWithoutNonRedistributableOverlay": "55/57 pass when MATTHS_WEB_REPO points to ../web from ipad/; Ling runtime and KICE resource checks require excluded overlays"
+  },
+  "rollback": {
+    "commit": "5575b8b50043006bb9c2b4a6f7b8f40bbbb8a336",
+    "branch": "rollback/pre-curriculum-sync-20260813-5575b8b",
+    "annotatedTag": "snapshot/pre-curriculum-sync-20260813-5575b8b"
+  },
+  "arenaLogic": {
+    "status": "frozen",
+    "policy": "Do not change gameplay, rules, economy, settlement, difficulty, tier definitions, or shop policy without explicit product approval."
   }
 }

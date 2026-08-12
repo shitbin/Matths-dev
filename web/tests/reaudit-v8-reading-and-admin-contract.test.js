@@ -21,8 +21,8 @@ assert.match(
 );
 assert.match(
   admin,
-  /@media \(min-width: 761px\) and \(max-width: 980px\)[\s\S]*?\.user-filter-bar[\s\S]*?repeat\(2, minmax\(150px, 1fr\)\)/,
-  "태블릿 사용자 필터는 상태값을 읽을 수 있는 최소 폭을 유지해야 한다",
+  /@media \(min-width: 761px\) and \(max-width: 1050px\)[\s\S]*?\.user-filter-bar[\s\S]*?repeat\(2, minmax\(150px, 1fr\)\)/,
+  "981~1050px를 포함한 태블릿 사용자 필터는 상태값을 읽을 수 있는 최소 폭을 유지해야 한다",
 );
 assert.match(
   admin,

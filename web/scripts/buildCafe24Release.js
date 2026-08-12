@@ -3,6 +3,7 @@
 "use strict";
 
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const { spawnSync } = require("node:child_process");
@@ -122,6 +123,65 @@ function runPrePackagingTests() {
   };
 }
 
+function runCurriculumReleaseGate() {
+  const startedAt = new Date().toISOString();
+  const outputDirectory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "matths-curriculum-release-gate-"),
+  );
+  const commands = [
+    {
+      label: "curriculum story index",
+      args: [path.join(root, "scripts", "buildCurriculumStoryIndex.js"), "--check"],
+      command: "node scripts/buildCurriculumStoryIndex.js --check",
+    },
+    {
+      label: "curriculum story completeness",
+      args: [path.join(root, "scripts", "auditCurriculumStories.js"), "--require-complete"],
+      command: "node scripts/auditCurriculumStories.js --require-complete",
+    },
+    {
+      label: "actual web/iPad curriculum story parity",
+      args: [path.join(root, "scripts", "syncIpadCurriculumStories.js"), "--check"],
+      command: "node scripts/syncIpadCurriculumStories.js --check",
+    },
+    {
+      label: "curriculum Eleven v3 export",
+      args: [
+        path.join(root, "scripts", "buildCurriculumVoiceStudioManifest.js"),
+        "--require-complete",
+        `--output=${path.join(outputDirectory, "eleven-v3-prompts.json")}`,
+      ],
+      command: "node scripts/buildCurriculumVoiceStudioManifest.js --require-complete",
+    },
+  ];
+
+  try {
+    for (const item of commands) {
+      const result = spawnSync(process.execPath, item.args, {
+        cwd: root,
+        stdio: "inherit",
+        env: { ...process.env, MATTHS_RELEASE_PACKAGING: "1" },
+      });
+      if (result.status !== 0) {
+        throw new Error(
+          `Cafe24 패키징 전 ${item.label} 검사가 실패했습니다 `
+          + `(exit ${result.status ?? "signal"}).`,
+        );
+      }
+    }
+  } finally {
+    fs.rmSync(outputDirectory, { recursive: true, force: true });
+  }
+
+  return {
+    commands: commands.map((item) => item.command),
+    result: "PASS",
+    requiredPublishedStories: 220,
+    startedAt,
+    completedAt: new Date().toISOString(),
+  };
+}
+
 function main() {
   const dirty = git(["status", "--porcelain"]);
   if (dirty) {
@@ -129,6 +189,7 @@ function main() {
   }
 
   const prePackagingTests = runPrePackagingTests();
+  const curriculumReleaseGate = runCurriculumReleaseGate();
 
   const releaseCommit = safeRef("HEAD");
   const rollbackCommit = safeRef(rollbackRef);
@@ -141,7 +202,7 @@ function main() {
   const manifest = {
     schemaVersion: "MATTHS_CAFE24_RELEASE_V1",
     builtAt: new Date().toISOString(),
-    publicBaseUrl: "https://matths.kr",
+    publicBaseUrl: "https://www.matths.kr",
     release: {
       commit: releaseCommit,
       file: path.basename(releaseArchive),
@@ -167,8 +228,10 @@ function main() {
       "NODE_ENV=production npm run preflight",
     ],
     prePackagingTests,
+    curriculumReleaseGate,
     crossWorkspaceTestsVerifiedBeforePackaging: [
       "tests/arena-ipad-visualization-contract.test.js",
+      "tests/curriculum-story-ipad-parity.test.js",
       "tests/final-release-readiness.test.js",
       "tests/goat-arena-main-native.test.js",
       "tests/goat-arena-production-adapter.test.js",

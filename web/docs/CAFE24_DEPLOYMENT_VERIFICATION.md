@@ -1,10 +1,10 @@
 # Cafe24 배포 뒤 확인
 
-이 검사는 `matths.kr`을 읽기만 한다. 파일 업로드, DB 변경, 로그인, 결제 요청은 하지 않는다.
+이 검사는 운영 정본 `www.matths.kr`을 읽기만 한다. 파일 업로드, DB 변경, 로그인, 결제 요청은 하지 않는다.
 
 ```sh
 npm run release:cafe24:verify -- \
-  --base-url=https://matths.kr \
+  --base-url=https://www.matths.kr \
   --output=../evidence/cafe24/deployment-verification.json
 ```
 

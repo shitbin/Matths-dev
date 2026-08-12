@@ -7,7 +7,7 @@
 
 - `GOOGLE_OAUTH_CLIENT_ID`
 - `GOOGLE_OAUTH_CLIENT_SECRET`
-- `GOOGLE_OAUTH_REDIRECT_URI=https://matths.kr/auth/google/callback`
+- `GOOGLE_OAUTH_REDIRECT_URI=https://www.matths.kr/auth/google/callback`
 
 ## 흐름
 

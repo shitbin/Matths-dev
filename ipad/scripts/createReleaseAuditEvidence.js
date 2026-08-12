@@ -7,6 +7,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { verifyCurriculumStoryBundle } = require("./verifyCurriculumStoryBundle");
 const repoRoot = path.resolve(__dirname, "..");
 
 function option(name, fallback = "") {
@@ -152,9 +153,11 @@ function main() {
     "trycloudflare.com", "ngrok", "loca.lt", "localhost", "127.0.0.1",
   ].filter((needle) => binaryStrings.includes(needle));
   if (forbidden.length) throw new Error(`Release 바이너리 금칙 문자열: ${forbidden.join(", ")}`);
-  if (!binaryStrings.includes("https://matths.kr")) throw new Error("운영 서버 주소가 Release 바이너리에 없습니다.");
+  if (!binaryStrings.includes("https://www.matths.kr")) throw new Error("운영 서버 주소가 Release 바이너리에 없습니다.");
+  if (binaryStrings.includes("https://matths.kr")) throw new Error("구 apex 운영 주소가 Release 바이너리에 남아 있습니다.");
 
   const bundledFiles = walk(app);
+  const curriculumStories = verifyCurriculumStoryBundle(app);
   const kice = bundledFiles.filter((filename) =>
     /(?:mopyeong|suneung).*\.pdf$|kice-index\.json$/i.test(path.basename(filename)));
   if (kice.length) throw new Error(`KICE 내부 자료가 Release 번들에 있습니다: ${kice.join(", ")}`);
@@ -186,11 +189,12 @@ function main() {
     bundle: {
       identifier: info.CFBundleIdentifier,
       callbackSchemes: schemes,
-      apiBaseURL: "https://matths.kr",
+      apiBaseURL: "https://www.matths.kr",
       kiceResourceCount: 0,
       privacyManifestSha256: sha256(privacyFile),
       executableSha256: sha256(binary),
       fileCount: bundledFiles.length,
+      curriculumStories,
     },
     buildLog: { file: path.basename(buildLog), sha256: sha256(buildLog) },
   };

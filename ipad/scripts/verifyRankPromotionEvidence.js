@@ -11,6 +11,39 @@ const expectedTiers = [
   "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER",
 ];
 
+if (report.schemaVersion === "MATTHS_RANK_PROMOTION_PIPELINE_PREWARM_V1") {
+  if (report.result !== "PASS") throw new Error("pipeline prewarm 결과가 PASS가 아닙니다.");
+  if (!Array.isArray(report.renderedTiers)
+      || report.renderedTiers.join(",") !== expectedTiers.join(",")
+      || new Set(report.renderedTiers).size !== expectedTiers.length) {
+    throw new Error("pipeline prewarm 티어 순서·고유성이 다릅니다.");
+  }
+  if (report.audioPlaybackSuppressed !== true
+      || report.accessibilityHidden !== true
+      || report.hitTestingDisabled !== true) {
+    throw new Error("pipeline prewarm 격리 증거가 없습니다.");
+  }
+  const numericFields = [
+    "durationMs", "initialResidentBytes", "peakResidentBytes",
+    "finalResidentBytes", "peakResidentDeltaBytes",
+  ];
+  for (const field of numericFields) {
+    if (!Number.isFinite(report[field]) || report[field] < 0) {
+      throw new Error(`${field}: 유효한 음이 아닌 수가 아닙니다.`);
+    }
+  }
+  if (report.durationMs > 3_000) throw new Error("pipeline prewarm이 3초를 넘었습니다.");
+  if (report.peakResidentDeltaBytes > 128 * 1024 * 1024) {
+    throw new Error("pipeline prewarm resident memory 증가가 128MiB를 넘었습니다.");
+  }
+  const expectedDelta = Math.max(0, report.peakResidentBytes - report.initialResidentBytes);
+  if (report.peakResidentDeltaBytes !== expectedDelta) {
+    throw new Error("pipeline prewarm resident memory delta가 숫자와 다릅니다.");
+  }
+  console.log(`Rank promotion pipeline prewarm evidence PASS: ${filename}`);
+  process.exit(0);
+}
+
 if (report.schemaVersion !== "MATTHS_RANK_PROMOTION_PERFORMANCE_V1") {
   throw new Error("schemaVersion 불일치");
 }

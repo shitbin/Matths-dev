@@ -12,7 +12,7 @@ const environment = {
   PAYMENT_CHECKOUT_ENABLED: "true",
   TOSS_CLIENT_KEY: "test_ck_matths",
   TOSS_SECRET_KEY: "test_sk_matths",
-  PUBLIC_BASE_URL: "https://matths.kr",
+  PUBLIC_BASE_URL: "https://www.matths.kr",
 };
 
 const intent = {
@@ -54,8 +54,8 @@ async function main() {
     {
       orderId: intent.providerOrderId,
       amount: 29000,
-      successUrl: "https://matths.kr/payments/toss/success",
-      failUrl: "https://matths.kr/payments/toss/fail",
+      successUrl: "https://www.matths.kr/payments/toss/success",
+      failUrl: "https://www.matths.kr/payments/toss/fail",
     }
   );
 

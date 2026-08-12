@@ -48,7 +48,7 @@ function fetchFor({
   homepage = home,
   logoBody = logo,
   googleStatus = 302,
-  googleRedirectUri = "https://matths.kr/auth/google/callback",
+  googleRedirectUri = "https://www.matths.kr/auth/google/callback",
   googleHost = "accounts.google.com",
 } = {}) {
   return async (url) => {
@@ -56,9 +56,12 @@ function fetchFor({
       return response({ service: "Matths API", status: "ok", releaseFingerprint: fingerprint }, "json");
     }
     if (url.endsWith("/images/brand/matths-logo.svg")) return response(logoBody, "svg");
-    if (url.includes("/auth/google/app?code_challenge=")) {
+    if (url.includes("/auth/google/app?code_challenge=") ||
+        url.endsWith("/api/v1/auth/google/start")) {
       const start = new URL(url);
-      assert.match(start.searchParams.get("code_challenge") || "", /^[A-Za-z0-9_-]{43}$/);
+      if (url.includes("/auth/google/app?code_challenge=")) {
+        assert.match(start.searchParams.get("code_challenge") || "", /^[A-Za-z0-9_-]{43}$/);
+      }
       const authorization = new URL(`https://${googleHost}/o/oauth2/v2/auth`);
       authorization.searchParams.set("client_id", "public-client.apps.googleusercontent.com");
       authorization.searchParams.set("redirect_uri", googleRedirectUri);
@@ -71,15 +74,18 @@ function fetchFor({
 }
 
 async function main() {
-  assert.equal(normalizeBaseURL("https://matths.kr/"), "https://matths.kr");
-  assert.throws(() => normalizeBaseURL("http://matths.kr"), /HTTPS/);
+  assert.equal(normalizeBaseURL("https://www.matths.kr/"), "https://www.matths.kr");
+  assert.throws(() => normalizeBaseURL("http://www.matths.kr"), /HTTPS/);
+  assert.throws(() => normalizeBaseURL("https://matths.kr"), /운영 정본/);
 
-  const result = await verifyDeployment("https://matths.kr", fetchFor());
+  const result = await verifyDeployment("https://www.matths.kr", fetchFor());
   assert.equal(result.result, "PASS");
   assert.equal(result.releaseFingerprint, releaseFingerprint);
   assert.equal(result.googleMobile.authorizationHost, "accounts.google.com");
   assert.equal(result.googleMobile.appStartPath, "/auth/google/app");
+  assert.equal(result.googleMobile.legacyAppStartPath, "/api/v1/auth/google/start");
   assert.ok(result.checks.includes("ipad-google-start-public-redirect"));
+  assert.ok(result.checks.includes("legacy-ipad-google-start-public-redirect"));
   const receipt = createDeploymentReceipt(result, {
     commit: "a".repeat(40),
     provenance: "release-archive",
@@ -88,7 +94,7 @@ async function main() {
   assert.equal(receipt.result, "PASS");
   assert.equal(receipt.provider, "Cafe24");
   assert.equal(receipt.environment, "production");
-  assert.equal(receipt.baseURL, "https://matths.kr");
+  assert.equal(receipt.baseURL, "https://www.matths.kr");
   assert.equal(receipt.deployedCommit, "a".repeat(40));
   assert.equal(receipt.verification.releaseFingerprint, releaseFingerprint);
   assert.throws(
@@ -97,27 +103,27 @@ async function main() {
   );
 
   await assert.rejects(
-    () => verifyDeployment("https://matths.kr", fetchFor({ fingerprint: "old" })),
+    () => verifyDeployment("https://www.matths.kr", fetchFor({ fingerprint: "old" })),
     /fingerprint/,
   );
   await assert.rejects(
-    () => verifyDeployment("https://matths.kr", fetchFor({ homepage: "39개 개념" })),
+    () => verifyDeployment("https://www.matths.kr", fetchFor({ homepage: "39개 개념" })),
     /최신 표식|구버전/,
   );
   await assert.rejects(
-    () => verifyDeployment("https://matths.kr", fetchFor({ logoBody: Buffer.from("not-the-logo") })),
+    () => verifyDeployment("https://www.matths.kr", fetchFor({ logoBody: Buffer.from("not-the-logo") })),
     /공식 로고/,
   );
   await assert.rejects(
-    () => verifyDeployment("https://matths.kr", fetchFor({ googleStatus: 401 })),
+    () => verifyDeployment("https://www.matths.kr", fetchFor({ googleStatus: 401 })),
     /인증 없이 Google로 이동하지 않습니다/,
   );
   await assert.rejects(
-    () => verifyDeployment("https://matths.kr", fetchFor({ googleHost: "example.test" })),
+    () => verifyDeployment("https://www.matths.kr", fetchFor({ googleHost: "example.test" })),
     /Google 공식 인증 주소/,
   );
   await assert.rejects(
-    () => verifyDeployment("https://matths.kr", fetchFor({ googleRedirectUri: "https://old.example/callback" })),
+    () => verifyDeployment("https://www.matths.kr", fetchFor({ googleRedirectUri: "https://old.example/callback" })),
     /callback 주소/,
   );
 

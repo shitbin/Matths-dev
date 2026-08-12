@@ -617,7 +617,15 @@ exports.startGoogleWithdrawalReauthentication = async (req, res, next) => {
       req.apiUser._id,
       req.body?.codeChallenge,
     );
-    const origin = `${req.protocol}://${req.get("host")}`;
+    const origin = process.env.NODE_ENV === "production"
+      ? String(process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "")
+      : `${req.protocol}://${req.get("host")}`;
+    if (!origin) {
+      const error = new Error("운영 서비스 주소가 설정되지 않았습니다.");
+      error.status = 503;
+      error.code = "PUBLIC_BASE_URL_REQUIRED";
+      throw error;
+    }
     const authorizationUrl = new URL("/auth/google/withdrawal/app", origin);
     authorizationUrl.searchParams.set("request", request.token);
     return res.status(201).json({

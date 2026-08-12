@@ -63,13 +63,13 @@ report() { # 이름, 개수, 기대(0)
 }
 
 echo
-echo "[1/4] 비밀정보"
+echo "[1/5] 비밀정보"
 for s in "mongodb" "mongodb+srv" "API_TOKEN_SECRET" "EMAIL_API_KEY" "SECRET="; do
   report "$s" "$(count_fixed_bytes "$BIN" "$s")"
 done
 
 echo
-echo "[2/4] DEBUG 전용 통로"
+echo "[2/5] DEBUG 전용 통로"
 # "개발 서버 미리보기 코드": 비밀번호 재설정 코드를 화면에 그대로 보여주는 개발 편의 문구.
 # 출시판에 남으면 운영 서버가 메일 키를 잃는 순간 계정 탈취 통로가 된다 — #if DEBUG 회귀를 기계로 잡는다.
 for s in "서버 주소 (개발용)" "기록 보기 (디버그)" "채점 기록 · 디버그" \
@@ -79,24 +79,37 @@ for s in "서버 주소 (개발용)" "기록 보기 (디버그)" "채점 기록 
 done
 
 echo
-echo "[3/4] 서버 주소"
+echo "[3/5] 서버 주소"
 hosts=$(strings "$BIN" | grep -oE "https://[a-zA-Z0-9._/-]+" | grep -v "huggingface.co" | sort -u)
 if [ -z "$hosts" ]; then
   echo "  ✗ API 주소가 하나도 없다 — 빌드가 잘못됐다"; fail=$((fail+1))
 else
   while IFS= read -r h; do
     case "$h" in
-      *trycloudflare.com*|*ngrok*|*loca.lt*|*localhost*|*127.0.0.1*)
-        echo "  ✗ 임시/로컬 주소로 출시하려 한다: $h"
-        echo "     → ServerAPI.defaultURL 을 정식 도메인으로 바꾼 뒤 다시 돌려라 (백로그 L-3)."
+      https://www.matths.kr|https://www.matths.kr/*)
+        echo "  ✓ $h" ;;
+      *)
+        echo "  ✗ 운영 정본이 아닌 API 주소다: $h"
+        echo "     → ServerAPI.defaultURL 을 https://www.matths.kr 로 고정한 뒤 다시 돌려라."
         fail=$((fail+1)) ;;
-      *) echo "  ✓ $h" ;;
     esac
   done <<< "$hosts"
 fi
 
 echo
-echo "[4/4] 앱 아이콘"
+echo "[4/5] 커리큘럼 5분 해설 번들"
+curriculum_status=0
+curriculum_output="$("$HERE/scripts/verify-curriculum-story-bundle.sh" "$APP" 2>&1)" \
+  || curriculum_status=$?
+if [ "$curriculum_status" -eq 0 ]; then
+  echo "  ✓ $curriculum_output"
+else
+  echo "  ✗ 커리큘럼 5분 해설 번들 실패: $curriculum_output"
+  fail=$((fail+1))
+fi
+
+echo
+echo "[5/5] 앱 아이콘"
 # 앱스토어는 **알파 채널이 있는 1024 아이콘을 거부한다**
 # ("Invalid large app icon … can't be transparent or contain an alpha channel").
 # 실제로 이 저장소의 아이콘 두 장에 모서리 라운딩 때문에 투명 픽셀이 있었다

@@ -73,7 +73,15 @@ function createDeploymentReceipt(verification, source) {
 function normalizeBaseURL(value) {
   const parsed = new URL(value);
   if (parsed.protocol !== "https:") throw new Error("Cafe24 확인 주소는 HTTPS여야 합니다.");
-  return parsed.toString().replace(/\/$/, "");
+  if (
+    parsed.origin !== "https://www.matths.kr" ||
+    parsed.pathname !== "/" ||
+    parsed.search ||
+    parsed.hash
+  ) {
+    throw new Error("Cafe24 운영 정본은 https://www.matths.kr 이어야 합니다.");
+  }
+  return parsed.origin;
 }
 
 async function requireResponse(fetchImpl, url, accept) {
@@ -117,9 +125,9 @@ async function verifyMobileGoogleStart(fetchImpl, base) {
   }
   if (
     authorizationURL.searchParams.get("redirect_uri") !==
-    "https://matths.kr/auth/google/callback"
+    "https://www.matths.kr/auth/google/callback"
   ) {
-    throw new Error("Cafe24 Google OAuth 운영 callback 주소가 matths.kr 정본과 다릅니다.");
+    throw new Error("Cafe24 Google OAuth 운영 callback 주소가 www.matths.kr 정본과 다릅니다.");
   }
   if (
     !authorizationURL.searchParams.get("client_id") ||
@@ -128,10 +136,37 @@ async function verifyMobileGoogleStart(fetchImpl, base) {
   ) {
     throw new Error("Cafe24 Google OAuth 공개 client/state/response_type 계약이 불완전합니다.");
   }
+  const legacyResponse = await fetchImpl(`${base}/api/v1/auth/google/start`, {
+    method: "GET",
+    redirect: "manual",
+    headers: { Accept: "text/html,application/xhtml+xml" },
+  });
+  if (![302, 303].includes(Number(legacyResponse.status))) {
+    throw new Error(
+      `Cafe24 구버전 iPad Google 시작 별칭이 Bearer 인증 없이 Google로 이동하지 않습니다. status=${legacyResponse.status}`,
+    );
+  }
+  const legacyLocation = String(legacyResponse.headers?.get?.("location") || "").trim();
+  let legacyAuthorizationURL;
+  try {
+    legacyAuthorizationURL = new URL(legacyLocation);
+  } catch {
+    throw new Error("Cafe24 구버전 Google 시작 별칭의 Location이 올바르지 않습니다.");
+  }
+  if (
+    legacyAuthorizationURL.protocol !== "https:" ||
+    legacyAuthorizationURL.hostname !== "accounts.google.com" ||
+    legacyAuthorizationURL.pathname !== "/o/oauth2/v2/auth" ||
+    legacyAuthorizationURL.searchParams.get("redirect_uri") !==
+      "https://www.matths.kr/auth/google/callback"
+  ) {
+    throw new Error("Cafe24 구버전 Google 시작 별칭이 운영 Google 정본으로 이동하지 않습니다.");
+  }
   return {
     authorizationHost: authorizationURL.hostname,
     redirectUri: authorizationURL.searchParams.get("redirect_uri"),
     appStartPath: "/auth/google/app",
+    legacyAppStartPath: "/api/v1/auth/google/start",
   };
 }
 
@@ -188,6 +223,7 @@ async function verifyDeployment(baseURL, fetchImpl = fetch) {
       "home-current-markers",
       "official-logo-sha256",
       "ipad-google-start-public-redirect",
+      "legacy-ipad-google-start-public-redirect",
     ],
   };
 }
@@ -197,7 +233,7 @@ function argument(name) {
 }
 
 async function main() {
-  const baseURL = argument("--base-url") || "https://matths.kr";
+  const baseURL = argument("--base-url") || "https://www.matths.kr";
   const output = argument("--output");
   const receiptOutput = argument("--receipt-output");
   const result = await verifyDeployment(baseURL);

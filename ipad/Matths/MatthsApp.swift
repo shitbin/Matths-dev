@@ -78,10 +78,9 @@ struct MatthsApp: App {
                 // overlay로 렌더해 전환 비용을 줄이고, 앱 전환 privacy cover도 이
                 // 장식 위를 확실히 덮게 한다.
                 .overlay {
-                    if let presentation = store.rankPromotionPresentation {
-                        RankPromotionOverlay(tierCode: presentation.tierCode)
-                            .environmentObject(store)
-                    }
+                    RankPromotionOverlay(
+                        tierCode: store.rankPromotionPresentation?.tierCode)
+                        .environmentObject(store)
                 }
                 // 공통 보호 레이어는 루트와 fullScreenCover가 같은 구현을 쓴다.
                 // 모달은 루트 overlay보다 위에 뜨므로 각 presentation 최상단에도

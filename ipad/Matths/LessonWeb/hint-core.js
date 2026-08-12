@@ -1,7 +1,7 @@
 /*
  * hint-core.js — 시각 힌트 SVG 작도 코어 (자립형 추출본)
  *
- * 출처: /Users/soobin/Desktop/matths-sprint/webrepo-applied/public/js/wrong-note-review.js (2,780줄)
+ * 출처: web/public/js/wrong-note-review.js (2,780줄)
  * 추출 범위(원본 행 번호):
  *   - 상수: 408~419행 (SVG_NS, GRAPH_WIDTH/HEIGHT, PLOT 등)
  *   - 유틸: 436~502행 (finiteNumber, sampleRange, sampleDiscontinuousRange)

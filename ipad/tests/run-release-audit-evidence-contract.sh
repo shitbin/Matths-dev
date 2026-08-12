@@ -14,7 +14,13 @@ git -C "$source_root" add README.md
 git -C "$source_root" commit -qm candidate
 app="$work/Matths.app"
 mkdir -p "$app"
-printf '%s\n' 'release binary https://matths.kr' > "$app/Matths"
+cp "$root/Matths/curriculum-story-policy.json" "$app/"
+cp "$root/Matths/curriculum-stories-index.json" "$app/"
+cp "$root/Matths/curriculum-v2.json" "$app/"
+for shard in "$root"/Matths/curriculum-stories/*.json; do
+  cp "$shard" "$app/"
+done
+printf '%s\n' 'release binary https://www.matths.kr' > "$app/Matths"
 cat > "$app/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -39,6 +45,9 @@ grep -Fq '"appStoreEligible": false' "$work/audit.json"
 grep -Eq '"commit": "[0-9a-f]{40}"' "$work/audit.json"
 grep -Eq '"tree": "[0-9a-f]{40}"' "$work/audit.json"
 grep -Fq '"trackedWorkingTreeClean": true' "$work/audit.json"
+grep -Fq '"publishedStoryCount": 220' "$work/audit.json"
+grep -Fq '"shardCount": 13' "$work/audit.json"
+grep -Fq '"sha256Verified": true' "$work/audit.json"
 
 printf '%s\n' '** ARCHIVE SUCCEEDED **' > "$work/archive.log"
 MATTHS_LIPO="$work/lipo" node "$root/scripts/createReleaseAuditEvidence.js" \
@@ -110,6 +119,16 @@ if MATTHS_LIPO="$work/lipo" MATTHS_CODESIGN="$work/codesign" \
   echo 'IPA 없는 App Store 배포 감사가 통과했습니다.' >&2
   exit 1
 fi
+
+cp "$app/common-math-1.json" "$work/common-math-1.json"
+printf '\n' >> "$app/common-math-1.json"
+if MATTHS_LIPO="$work/lipo" node "$root/scripts/createReleaseAuditEvidence.js" \
+  --app "$app" --build-log "$work/build.log" --output "$work/tampered-curriculum.json" \
+  --assets excluded --signing unsigned --source-root "$source_root" >/dev/null 2>&1; then
+  echo '변조된 커리큘럼 shard가 Release 감사 증거를 통과했습니다.' >&2
+  exit 1
+fi
+cp "$work/common-math-1.json" "$app/common-math-1.json"
 
 printf '%s\n' 'trycloudflare.com' >> "$app/Matths"
 if MATTHS_LIPO="$work/lipo" node "$root/scripts/createReleaseAuditEvidence.js" \

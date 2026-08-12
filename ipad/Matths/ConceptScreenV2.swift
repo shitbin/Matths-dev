@@ -178,6 +178,17 @@ struct ConceptScreenV2: View {
             }
             .entrance(0)
 
+            // 번호 카드 대신 질문·직관·오개념·풀이 리듬·회상을 잇는 기억선.
+            // published story가 없는 개념은 자동 원고로 채우지 않고 이 섹션만 닫는다.
+            CurriculumStoryTimeline(
+                resolution: CurriculumStoryCatalog.resolve(
+                    courseID: course.id,
+                    unitID: unit.id,
+                    conceptID: concept.id
+                )
+            )
+            .entrance(1)
+
             // STEP 01 — 개념 이해 (레슨 시드가 있으면 요약·핵심·스텝 카드)
             if let lesson = concept.lesson {
                 VStack(alignment: .leading, spacing: Tokens.Space.s3) {
@@ -195,14 +206,14 @@ struct ConceptScreenV2: View {
                         LessonStepRow(step: step)
                     }
                 }
-                .entrance(1)
+                .entrance(2)
             } else if let text = concept.legacy?.lessonText {
                 VStack(alignment: .leading, spacing: Tokens.Space.s3) {
                     SectionRule(title: "01 개념 이해")
                     Text(text).font(.mBody).foregroundStyle(Tokens.ink).lineSpacing(6)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .entrance(1)
+                .entrance(2)
             }
 
             // 주제 체크리스트 — 진도의 30% (웹 topic 단위 진도)
@@ -213,7 +224,7 @@ struct ConceptScreenV2: View {
                         TopicCheckRow(index: i, title: topic, concept: concept)
                     }
                 }
-                .entrance(2)
+                .entrance(3)
             }
 
             // STEP 02·03 — 시각 강의·플레이그라운드
@@ -227,22 +238,22 @@ struct ConceptScreenV2: View {
                                   height: $lessonHeight, quizPassed: $quizPassed)
                         .frame(height: lessonHeight)
                 }
-                .entrance(3)
+                .entrance(4)
             } else {
                 // 전문 시각 모듈이 아직 없는 개념도 01 설명에서 바로 문제풀이로
                 // 건너뛰지 않는다. 220개념에 모두 들어 있는 visualizationIdeas를
                 // 실제 탐색 단계로 렌더해 학습 구조와 표현 방법을 한 번 더 확인한다.
                 GenericConceptExplorer(concept: concept)
-                    .entrance(3)
+                    .entrance(4)
             }
 
             // STEP 04 — 문제풀이 · 유형 다양성 게이트 (진도의 60%)
             practiceSection(concept: concept)
-                .entrance(4)
+                .entrance(5)
 
             // 완료 — 게이트 해금 후에만 (웹 masteryGate 규칙)
             completeSection(concept: concept)
-                .entrance(5)
+                .entrance(6)
         }
     }
 

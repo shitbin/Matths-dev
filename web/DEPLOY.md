@@ -1,6 +1,6 @@
 # Matths · Cafe24 운영 반영 가이드
 
-현재 운영 기준 주소는 `https://matths.kr`이다. 이 문서는 코드·환경변수·DB 변경을 분리해,
+현재 운영 기준 주소는 `https://www.matths.kr`이다. 이 문서는 코드·환경변수·DB 변경을 분리해,
 한 단계가 실패해도 이전 버전으로 돌아갈 수 있게 만든 절차다. GitHub push는 디자인 승인 전까지
 하지 않으며, Cafe24 반영도 승인된 로컬 커밋/아카이브만 사용한다.
 
@@ -43,7 +43,7 @@ node scripts/buildCafe24Release.js --rollback-ref=<직전 배포 커밋>
 
 ```text
 NODE_ENV=production
-PUBLIC_BASE_URL=https://matths.kr
+PUBLIC_BASE_URL=https://www.matths.kr
 DB=<Atlas 운영 URI>
 SECRET=<새 세션 키, 32바이트 이상>
 API_TOKEN_SECRET=<SECRET과 다른 새 키, 32바이트 이상>
@@ -53,7 +53,7 @@ ARENA_DEFENDER_ASSIGNMENT_SEED_SECRET=<32바이트 이상>
 
 GOOGLE_OAUTH_CLIENT_ID=<웹 OAuth 클라이언트 ID>
 GOOGLE_OAUTH_CLIENT_SECRET=<서버 전용 비밀키>
-GOOGLE_OAUTH_REDIRECT_URI=https://matths.kr/auth/google/callback
+GOOGLE_OAUTH_REDIRECT_URI=https://www.matths.kr/auth/google/callback
 
 GMAIL_USER=<발송 Gmail 계정>
 GMAIL_APP_PASSWORD=<공백 제외 16자리 앱 비밀번호>
@@ -66,16 +66,24 @@ TOSS_CLIENT_KEY=<결제를 열 때만>
 TOSS_SECRET_KEY=<결제를 열 때만>
 ```
 
+과거 `APP_BASE_URL`은 설정하지 않는다. 운영 공개 주소의 단일 정본은
+`PUBLIC_BASE_URL`이며 production preflight가 이중 설정을 거부한다.
+
 Google 비밀키·Toss secret·DB URI는 웹 브라우저나 iPad 앱에 넣지 않는다. iPad는
-`https://matths.kr`의 서버 시작 경로만 호출하고, Google 인증 결과는 5분짜리 단일 사용 코드로
+`https://www.matths.kr`의 서버 시작 경로만 호출하고, Google 인증 결과는 5분짜리 단일 사용 코드로
 앱에 돌아온다.
 
 ## 3. 외부 콘솔 등록값
 
-- Google 승인 콜백: `https://matths.kr/auth/google/callback`
-- Toss 성공: `https://matths.kr/payments/toss/success`
-- Toss 실패: `https://matths.kr/payments/toss/fail`
-- Toss 웹훅: `https://matths.kr/webhooks/toss-payments`
+- Google 승인 콜백: `https://www.matths.kr/auth/google/callback`
+- Toss 성공: `https://www.matths.kr/payments/toss/success`
+- Toss 실패: `https://www.matths.kr/payments/toss/fail`
+- Toss 웹훅: `https://www.matths.kr/webhooks/toss-payments`
+
+이 절은 코드 커밋으로 완료되지 않는 외부 작업이다. Cafe24에서 `www.matths.kr` 인증서와
+가상 호스트를 연결하고 apex `matths.kr`은 유효한 TLS 인증서를 갖춘 뒤
+`https://www.matths.kr`로 영구 리디렉션한다. Google Cloud Console에는 위 callback을
+웹 애플리케이션의 승인 URI로 등록한다. 앱이나 저장소에 client secret을 복사하지 않는다.
 
 처음에는 `PAYMENT_CHECKOUT_ENABLED=0`으로 배포한다. Google 신규/기존 로그인, 이메일 인증,
 비밀번호 재설정, iPad OAuth 복귀를 확인한 뒤 Toss 테스트 키로 승인·실패·새로고침·웹훅 재전송을
