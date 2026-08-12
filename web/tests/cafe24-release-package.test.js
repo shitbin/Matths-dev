@@ -29,14 +29,27 @@ assert.match(source, /crossWorkspaceTestsVerifiedBeforePackaging/);
 assert.match(source, /function runPrePackagingTests\(\)/);
 assert.match(source, /\[path\.join\(root, "scripts", "run-tests\.js"\)\]/);
 assert.match(source, /const prePackagingTests = runPrePackagingTests\(\)/);
+assert.match(source, /function runCurriculumReleaseGate\(\)/);
+assert.match(source, /buildCurriculumStoryIndex\.js"\), "--check"/);
+assert.match(source, /auditCurriculumStories\.js"\), "--require-complete"/);
+assert.match(source, /syncIpadCurriculumStories\.js"\), "--check"/);
+assert.match(source, /buildCurriculumVoiceStudioManifest\.js"\)/);
+assert.match(source, /requiredPublishedStories: 220/);
+assert.match(source, /const curriculumReleaseGate = runCurriculumReleaseGate\(\)/);
 assert.ok(
   source.indexOf("const prePackagingTests = runPrePackagingTests()") <
     source.indexOf('createArchive("release"'),
   "전체 테스트는 archive 생성 전에 실제 실행되어야 합니다.",
 );
+assert.ok(
+  source.indexOf("const curriculumReleaseGate = runCurriculumReleaseGate()") <
+    source.indexOf('createArchive("release"'),
+  "220개 원고와 음성 export 검사는 archive 생성 전에 실제 실행되어야 합니다.",
+);
 assert.doesNotMatch(source, /\b(?:scp|rsync|ftp|sftp|curl)\b/);
 const expectedCrossWorkspaceTests = [
   "tests/arena-ipad-visualization-contract.test.js",
+  "tests/curriculum-story-ipad-parity.test.js",
   "tests/final-release-readiness.test.js",
   "tests/goat-arena-main-native.test.js",
   "tests/goat-arena-production-adapter.test.js",

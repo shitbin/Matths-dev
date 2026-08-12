@@ -492,6 +492,33 @@ struct ResultScreen: View {
             }
         }
         .background(Tokens.paper)
+        // 오답 직후 비전 검토가 끝날 때까지, 방금 쓴 풀이를 결과 위에 보존한다.
+        // 완료 판정이나 채점에는 관여하지 않고 pending 기록이 끝나면 자동으로 사라진다.
+        .overlay {
+            GeometryReader { proxy in
+                if grading.overall != .correct,
+                   let problem = store.currentProblem,
+                   let review = store.latestCheatingReview(
+                        problemID: problem.id,
+                        source: .practiceDrawing),
+                   review.state == .pending,
+                   review.imageFile != nil {
+                    StudentSolutionAnalysisFloatingCard(record: review)
+                        .frame(width: min(300, max(220, proxy.size.width - 32)))
+                        .padding(.top, 68)
+                        .padding(.trailing, 16)
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .topTrailing)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                        .zIndex(20)
+                }
+            }
+        }
+        .animation(
+            store.anim(.easeOut(duration: 0.24), reduceMotion),
+            value: store.cheatingReviews)
     }
 
     // 성적표 머리 — 색 상자도, 색 테두리 바도 없다.

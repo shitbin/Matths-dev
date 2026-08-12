@@ -80,6 +80,9 @@ const {
   "../services/problemGenerators/curriculumConceptCheck"
 );
 const {
+  resolveStudentCurriculumStory,
+} = require("../services/curriculumStoryService");
+const {
   canonicalProgressView,
 } = require("../services/progressTypeIdService");
 const {
@@ -4924,6 +4927,14 @@ exports.unitLearning = async (
 
     const renderedLesson =
       formatAlgebraLesson(effectiveLesson);
+    // 5분 narration은 기존 220개 lesson 요약에서 즉석 생성하지 않는다.
+    // 별도 편집 정본에서 검수·published 된 concept만 학생 화면에 연다.
+    const curriculumStory =
+      resolveStudentCurriculumStory({
+        courseId: unitView.course.id,
+        unitId: unitView.unit.id,
+        conceptId,
+      });
     const conceptTypeGuides =
       getConceptTypeGuides({
         courseId: unitView.course.id,
@@ -4960,6 +4971,12 @@ exports.unitLearning = async (
       reviewContext,
       subunitAssessment,
       conceptTypeGuides,
+      curriculumStory,
+      curriculumNarrationScope: crypto
+        .createHash("sha256")
+        .update(`curriculum-narration:${String(req.session.user.id || "")}`, "utf8")
+        .digest("hex")
+        .slice(0, 16),
       user: req.session.user,
     });
   } catch (error) {

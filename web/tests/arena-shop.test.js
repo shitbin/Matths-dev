@@ -106,6 +106,8 @@ async function main() {
     const settledMatchId = objectId();
     await ArenaMatch.collection.insertOne({
       _id: settledMatchId,
+      matchKey: "arena-shop:settled-analysis-target",
+      seasonKey: "2026-W32",
       division: "SUB",
       matchType: "REVENGE",
       status: "SETTLED",
@@ -118,6 +120,8 @@ async function main() {
     const defenseMatchId = objectId();
     await ArenaMatch.collection.insertOne({
       _id: defenseMatchId,
+      matchKey: "arena-shop:ready-defense-target",
+      seasonKey: "2026-W32",
       division: "MAIN",
       matchType: "NORMAL",
       matchOrigin: "MAIN_UPWARD_AUTO_MATCH",

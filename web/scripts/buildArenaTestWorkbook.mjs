@@ -1,12 +1,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  SpreadsheetFile,
-  Workbook,
-} from "/Users/sangyoonlee/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/@oai/artifact-tool/dist/artifact_tool.mjs";
+import { loadArtifactTool } from "./loadArtifactTool.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const { SpreadsheetFile, Workbook } = await loadArtifactTool({ projectRoot: root });
+
+if (process.argv.includes("--check-runtime")) {
+  console.log("artifact-tool runtime ready");
+  process.exit(0);
+}
+
 const outputDir = path.join(root, "outputs", "019fb1e7-d977-7813-80d6-e222909a9a87");
 const sourcePath = path.join(outputDir, "arena-test-users-200.json");
 const outputPath = path.join(outputDir, "Matths_GOAT_Arena_테스트계정_200명.xlsx");

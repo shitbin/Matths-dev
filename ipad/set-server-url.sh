@@ -1,7 +1,7 @@
 #!/bin/bash
 # 앱이 바라보는 서버 주소를 바꾼다 (백로그 L-3 의 앱 쪽 절반).
 #
-#   ./set-server-url.sh https://matths-api.onrender.com
+#   ./set-server-url.sh https://www.matths.kr
 #
 # 왜 스크립트인가: 이 값을 바꾸는 일은 "Swift 파일을 열어 한 줄 고치기" 였는데,
 # 그 한 줄을 잘못 고치면(끝에 / 를 붙이거나 http 로 적거나) 앱 전체가 서버에
@@ -16,13 +16,17 @@ NEW="${1:-}"
 if [ -z "$NEW" ]; then
   CUR=$(grep -o 'static let defaultURL = "[^"]*"' "$FILE" | sed 's/.*"\(.*\)"/\1/')
   echo "지금 주소: $CUR"
-  echo "사용법: $0 https://<서비스명>.onrender.com"
+  echo "사용법: $0 https://www.matths.kr"
   exit 0
 fi
 
 # ── 형식 검사 ────────────────────────────────────────────────────────────
 if [[ "$NEW" != https://* ]]; then
   echo "✗ https:// 로 시작해야 한다 (http 는 ATS 예외가 필요해 출시가 막힌다): $NEW" >&2
+  exit 1
+fi
+if [[ "$NEW" != "https://www.matths.kr" && "$NEW" != "https://www.matths.kr/" ]]; then
+  echo "✗ 운영 정본은 https://www.matths.kr 하나다: $NEW" >&2
   exit 1
 fi
 if [[ "$NEW" == */ ]]; then

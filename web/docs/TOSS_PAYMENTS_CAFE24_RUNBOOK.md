@@ -13,16 +13,16 @@
 PAYMENT_CHECKOUT_ENABLED=false
 TOSS_CLIENT_KEY=<Toss 운영 클라이언트 키>
 TOSS_SECRET_KEY=<Toss 운영 시크릿 키>
-PUBLIC_BASE_URL=https://matths.kr
+PUBLIC_BASE_URL=https://www.matths.kr
 ```
 
 처음 배포할 때는 반드시 `PAYMENT_CHECKOUT_ENABLED=false`로 둔다. Toss 개발자센터의 테스트 키로 운영 복제 환경에서 승인·취소·중복 웹훅을 검증한 뒤에만 운영 키를 넣고 `true`로 바꾼다.
 
 ## Toss 개발자센터 등록값
 
-- 성공 주소: `https://matths.kr/payments/toss/success`
-- 실패 주소: `https://matths.kr/payments/toss/fail`
-- 결제 상태 웹훅: `https://matths.kr/webhooks/toss-payments`
+- 성공 주소: `https://www.matths.kr/payments/toss/success`
+- 실패 주소: `https://www.matths.kr/payments/toss/fail`
+- 결제 상태 웹훅: `https://www.matths.kr/webhooks/toss-payments`
 - 웹훅 이벤트: `PAYMENT_STATUS_CHANGED`
 
 Toss 카드 결제 웹훅은 일반 서명 헤더에 의존하지 않는다. Matths는 웹훅의 `orderId`로 Toss 서버 API를 다시 조회하고, 서버가 보관한 주문 ID·금액·통화·`DONE` 상태·payment key가 모두 일치할 때만 이용권을 지급한다.
@@ -56,7 +56,7 @@ npm run payment:evidence -- \
   --output ../evidence/payment/payment-production-evidence.json
 ```
 
-운영 증거는 `https://matths.kr`과 Toss `live` 환경만 인정한다. 테스트 키 결과를 운영 거래로
+운영 증거는 `https://www.matths.kr`과 Toss `live` 환경만 인정한다. 테스트 키 결과를 운영 거래로
 표시하면 실패한다. 다음 11개가 모두 필요하다.
 
 1. 미성년 학생에게 법정대리인 고지가 먼저 표시됨

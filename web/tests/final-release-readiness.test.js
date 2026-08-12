@@ -165,7 +165,7 @@ const cafe24Receipt = write(evidenceRoot, "proof/cafe24-receipt.json", `${JSON.s
   result: "PASS",
   provider: "Cafe24",
   environment: "production",
-  baseURL: "https://matths.kr",
+  baseURL: "https://www.matths.kr",
   deployedCommit: commit,
 })}\n`);
 const atlasTargetFingerprint = "a".repeat(64);
@@ -250,7 +250,7 @@ const deviceProof = write(evidenceRoot, "proof/device.json", `${JSON.stringify({
 const paymentProof = write(evidenceRoot, "proof/payment.json", `${JSON.stringify({
   schemaVersion: "MATTHS_PAYMENT_PRODUCTION_EVIDENCE_V1",
   result: "PASS",
-  baseURL: "https://matths.kr",
+  baseURL: "https://www.matths.kr",
   provider: { name: "Toss Payments", environment: "live" },
   cases: [
     "student-minor-notice-required", "student-minor-consent-recorded",
@@ -480,7 +480,7 @@ const missingPaymentCase = structuredClone(manifest);
 const incompletePayment = write(evidenceRoot, "proof/payment-incomplete.json", `${JSON.stringify({
   schemaVersion: "MATTHS_PAYMENT_PRODUCTION_EVIDENCE_V1",
   result: "PASS",
-  baseURL: "https://matths.kr",
+  baseURL: "https://www.matths.kr",
   provider: { name: "Toss Payments", environment: "live" },
   cases: [{ id: "toss-success-exact-amount", result: "PASS" }],
 })}\n`);

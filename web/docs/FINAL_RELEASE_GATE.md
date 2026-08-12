@@ -46,7 +46,7 @@ Cafe24 반영 뒤에는 후보 소스 또는 추출한 release 아카이브에�
 
 ```sh
 npm run release:cafe24:verify -- \
-  --base-url=https://matths.kr \
+  --base-url=https://www.matths.kr \
   --output=../evidence/final/cafe24-verification.json \
   --receipt-output=../evidence/final/cafe24-deployment-receipt.json
 ```

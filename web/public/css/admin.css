@@ -2340,7 +2340,12 @@
   border-radius: 15px;
 }
 
-@media (min-width: 761px) and (max-width: 980px) {
+/*
+ * The global admin navigation wraps through 1050px. Keep the user filters on
+ * two dependable columns over the same interval so the fifth filter (account
+ * state) never gets squeezed into the implicit auto column.
+ */
+@media (min-width: 761px) and (max-width: 1050px) {
   .user-filter-bar {
     grid-template-columns: repeat(2, minmax(150px, 1fr));
   }

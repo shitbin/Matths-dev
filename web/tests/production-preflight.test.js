@@ -16,10 +16,10 @@ const baseEnvironment = {
   API_TOKEN_SECRET: "api-token-secret-that-is-different-5678",
   ARENA_QUESTION_PACK_SEED_SECRET: "question-pack-secret-at-least-32-bytes-long",
   ARENA_DEFENDER_ASSIGNMENT_SEED_SECRET: "defender-seed-secret-at-least-32-bytes-long",
-  PUBLIC_BASE_URL: "https://matths.kr",
+  PUBLIC_BASE_URL: "https://www.matths.kr",
   GOOGLE_OAUTH_CLIENT_ID: "client.apps.googleusercontent.com",
   GOOGLE_OAUTH_CLIENT_SECRET: "google-client-secret",
-  GOOGLE_OAUTH_REDIRECT_URI: "https://matths.kr/auth/google/callback",
+  GOOGLE_OAUTH_REDIRECT_URI: "https://www.matths.kr/auth/google/callback",
   GMAIL_USER: "mailer@matths.kr",
   GMAIL_APP_PASSWORD: "abcdefghijklmnop",
   PAYMENT_CHECKOUT_ENABLED: "0",
@@ -41,6 +41,17 @@ assert.match(result.stdout, /결제 화면은 준비 중 상태/);
 result = run({ GOOGLE_OAUTH_REDIRECT_URI: "https://wrong.example/callback" });
 assert.equal(result.status, 1);
 assert.match(result.stdout, /GOOGLE_OAUTH_REDIRECT_URI/);
+
+result = run({
+  PUBLIC_BASE_URL: "https://matths.kr",
+  GOOGLE_OAUTH_REDIRECT_URI: "https://matths.kr/auth/google/callback",
+});
+assert.equal(result.status, 1);
+assert.match(result.stdout, /PUBLIC_BASE_URL.*https:\/\/www\.matths\.kr/);
+
+result = run({ APP_BASE_URL: "https://old.example" });
+assert.equal(result.status, 1);
+assert.match(result.stdout, /APP_BASE_URL.*폐기/);
 
 result = run({ GMAIL_APP_PASSWORD: "short" });
 assert.equal(result.status, 1);

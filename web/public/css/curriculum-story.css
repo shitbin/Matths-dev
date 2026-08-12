@@ -1,0 +1,308 @@
+.curriculum-memory {
+  --memory-blue: #327ffa;
+  --memory-violet: #6f4ee8;
+  --memory-coral: #c54b45;
+  --memory-cyan: #087f8c;
+  margin-top: 28px;
+  padding: clamp(22px, 3vw, 34px);
+  color: #161a2b;
+  background: #f8f9fd;
+  border: 1px solid #dde2ee;
+  border-radius: 20px;
+}
+
+.curriculum-memory-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #dfe4ef;
+}
+
+.curriculum-memory-heading > div:first-child {
+  max-width: 640px;
+}
+
+.curriculum-memory-heading p,
+.curriculum-memory-beat article > p {
+  margin: 0;
+  color: var(--memory-blue);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.curriculum-memory-heading h3 {
+  margin: 7px 0 8px;
+  color: #111426;
+  font-size: clamp(22px, 2.3vw, 30px);
+  font-weight: 820;
+  letter-spacing: -0.045em;
+  line-height: 1.22;
+}
+
+.curriculum-memory-heading > div:first-child > span {
+  display: block;
+  color: #555f75;
+  font-size: 14px;
+  font-weight: 570;
+  line-height: 1.7;
+}
+
+.curriculum-narration-controls {
+  width: min(260px, 100%);
+  flex: 0 0 auto;
+}
+
+.curriculum-narration-toggle,
+.curriculum-narration-restart {
+  min-height: 46px;
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.curriculum-narration-toggle {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+  color: #fff;
+  background: #246fe7;
+  border: 1px solid #246fe7;
+  box-shadow: 0 8px 18px rgba(36, 111, 231, 0.18);
+}
+
+.curriculum-narration-toggle:hover {
+  background: #185fcf;
+  border-color: #185fcf;
+}
+
+.curriculum-narration-toggle:focus-visible,
+.curriculum-narration-restart:focus-visible,
+.curriculum-memory-beat summary:focus-visible {
+  outline: 3px solid rgba(50, 127, 250, 0.35);
+  outline-offset: 3px;
+}
+
+.curriculum-narration-toggle span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: #246fe7;
+  background: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+.curriculum-narration-toggle b {
+  font-size: 13px;
+  font-weight: 820;
+}
+
+.curriculum-narration-restart {
+  width: 100%;
+  margin-top: 8px;
+  color: #35405a;
+  background: #fff;
+  border: 1px solid #cfd6e5;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.curriculum-narration-status {
+  margin-top: 9px !important;
+  color: #667086 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.5;
+}
+
+.curriculum-memory-line {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.curriculum-memory-line::before {
+  position: absolute;
+  top: 17px;
+  bottom: 24px;
+  left: 17px;
+  width: 2px;
+  background: #cdd7ea;
+  content: "";
+}
+
+.curriculum-memory-beat {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 18px;
+  padding-bottom: 27px;
+}
+
+.curriculum-memory-beat:last-child {
+  padding-bottom: 0;
+}
+
+.curriculum-memory-node {
+  position: relative;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--memory-blue);
+  border: 4px solid #f8f9fd;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.curriculum-memory-beat[data-memory-kind="question"] .curriculum-memory-node {
+  background: var(--memory-violet);
+}
+
+.curriculum-memory-beat[data-memory-kind="misconception"] .curriculum-memory-node {
+  background: var(--memory-coral);
+}
+
+.curriculum-memory-beat[data-memory-kind="solution"] .curriculum-memory-node {
+  background: #365b9c;
+}
+
+.curriculum-memory-beat[data-memory-kind="recall"] .curriculum-memory-node {
+  background: var(--memory-cyan);
+}
+
+.curriculum-memory-beat article {
+  min-width: 0;
+  padding: 2px 0 0;
+}
+
+.curriculum-memory-beat[data-memory-kind="misconception"] article > p {
+  color: var(--memory-coral);
+}
+
+.curriculum-memory-beat[data-memory-kind="recall"] article > p {
+  color: var(--memory-cyan);
+}
+
+.curriculum-memory-beat h4 {
+  margin: 5px 0 5px;
+  color: #171b2d;
+  font-size: 17px;
+  font-weight: 790;
+  letter-spacing: -0.025em;
+}
+
+.curriculum-memory-beat strong {
+  display: block;
+  color: #4e5970;
+  font-size: 14px;
+  font-weight: 590;
+  line-height: 1.65;
+}
+
+.curriculum-memory-beat details {
+  margin-top: 10px;
+}
+
+.curriculum-memory-beat summary {
+  width: max-content;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: #3e4b65;
+  font-size: 12px;
+  font-weight: 740;
+  cursor: pointer;
+}
+
+.curriculum-memory-beat details p {
+  max-width: 760px;
+  margin: 2px 0 0;
+  padding: 14px 16px;
+  color: #3f485d;
+  background: #fff;
+  border-left: 3px solid #aabbe1;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.curriculum-memory-beat.is-speaking .curriculum-memory-node {
+  box-shadow: 0 0 0 6px rgba(50, 127, 250, 0.15);
+}
+
+.curriculum-memory-beat.is-speaking article {
+  color: #111426;
+}
+
+.curriculum-memory-unavailable {
+  min-height: 96px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 18px;
+  color: #4c566d;
+  background: #fff;
+  border: 1px solid #dfe4ef;
+  border-radius: 14px;
+}
+
+.curriculum-memory-unavailable > span {
+  color: #8490a8;
+  font-size: 22px;
+}
+
+.curriculum-memory-unavailable strong {
+  color: #22283a;
+  font-size: 14px;
+}
+
+.curriculum-memory-unavailable p {
+  margin: 6px 0 0;
+  color: #687187;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  .curriculum-memory-heading {
+    display: grid;
+  }
+
+  .curriculum-narration-controls {
+    width: 100%;
+  }
+
+  .curriculum-memory {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .curriculum-memory-beat {
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .curriculum-memory *,
+  .curriculum-memory *::before,
+  .curriculum-memory *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

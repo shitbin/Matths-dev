@@ -67,7 +67,7 @@ struct ServerAPIError: LocalizedError, Decodable {
 
 enum ServerAPI {
     /// Cafe24 운영 도메인. 학생에게 서버 주소 입력을 노출하지 않는다.
-    static let defaultURL = "https://matths.kr"
+    static let defaultURL = "https://www.matths.kr"
 
     static let baseURL: URL = {
         // 구버전에서 사용자가 입력했던 주소가 업그레이드 뒤 인증 경로를 가로막지 않게

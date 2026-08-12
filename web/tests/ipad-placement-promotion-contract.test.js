@@ -56,7 +56,7 @@ assert.match(
 );
 assert.match(
   appSource,
-  /\.overlay\s*\{[\s\S]*rankPromotionPresentation[\s\S]*RankPromotionOverlay/,
+  /\.overlay\s*\{[\s\S]*RankPromotionOverlay\s*\(\s*tierCode:\s*store\.rankPromotionPresentation\?\.tierCode\s*\)/,
   "배치 공개 이벤트는 앱 최상단 전체 화면 오버레이로 표시해야 합니다.",
 );
 assert.match(

@@ -74,7 +74,7 @@ async function main() {
     redirect: process.env.GOOGLE_OAUTH_REDIRECT_URI,
   };
   process.env.GOOGLE_OAUTH_CLIENT_ID = "test-client";
-  process.env.GOOGLE_OAUTH_REDIRECT_URI = "https://matths.kr/auth/google/callback";
+  process.env.GOOGLE_OAUTH_REDIRECT_URI = "https://www.matths.kr/auth/google/callback";
 
   delete process.env.GOOGLE_OAUTH_CLIENT_SECRET;
   assert.equal(publicProviderStatus()[0].configured, false);

@@ -43,10 +43,15 @@ const run = rows.slice(latestLaunchIndex);
 const launch = run.find((row) => row.event === "launch");
 const load = run.find((row) => row.event === "load-complete");
 const inference = run.find((row) => row.event === "reasoning-complete");
+const language = run.find((row) => row.event === "reasoning-language");
 const failure = run.find((row) => row.event === "load-failed" || row.event === "reasoning-failed");
 if (failure) throw new Error(`7B 추론이 실패했습니다: ${failure.tier || launch.tier || "tier 미상"}`);
 if (!load) throw new Error("load-complete 이벤트가 없습니다.");
 if (!inference) throw new Error("reasoning-complete 이벤트가 없습니다.");
+if (!language) throw new Error("reasoning-language 이벤트가 없습니다.");
+if (language.koreanOutputClean !== true) {
+  throw new Error("학생 화면에 노출할 한국어 출력 품질 검사가 실패했습니다.");
+}
 
 const tier = String(inference.tier || load.tier || launch.tier || "").trim();
 const model = String(inference.model || load.model || launch.model || "").trim();
@@ -78,6 +83,7 @@ const result = {
     tokensPerSecond: positive(inference, "tokensPerSecond"),
     reasoningMinimumAvailableBytes: positive(inference, "minimumAvailableBytes"),
     reasoningMaximumResidentBytes: positive(inference, "maximumResidentBytes"),
+    koreanOutputClean: true,
   },
   source: {
     file: path.basename(source),
@@ -89,4 +95,3 @@ const result = {
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${JSON.stringify(result, null, 2)}\n`, "utf8");
 console.log(`${tier} 실기 수학 추론 증거 검증 통과: ${output}`);
-

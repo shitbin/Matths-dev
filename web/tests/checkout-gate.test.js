@@ -26,7 +26,7 @@ assert.equal(
     PAYMENT_CHECKOUT_ENABLED: "true",
     TOSS_CLIENT_KEY: "test_ck_sample",
     TOSS_SECRET_KEY: "test_sk_sample",
-    PUBLIC_BASE_URL: "https://matths.kr",
+    PUBLIC_BASE_URL: "https://www.matths.kr",
   }),
   true
 );
@@ -35,7 +35,7 @@ assert.equal(
     PAYMENT_CHECKOUT_ENABLED: "1",
     TOSS_CLIENT_KEY: "test_ck_sample",
     TOSS_SECRET_KEY: "test_sk_sample",
-    PUBLIC_BASE_URL: "https://matths.kr",
+    PUBLIC_BASE_URL: "https://www.matths.kr",
   }),
   true
 );

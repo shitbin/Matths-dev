@@ -324,7 +324,7 @@ function validateExternalChecks(manifest, evidenceRoot, candidate) {
       }
       if (id === "cafe24-production-deploy") {
         if (structured.provider !== "Cafe24" || structured.environment !== "production" ||
-            structured.baseURL !== "https://matths.kr" || structured.deployedCommit !== candidate.webCommit) {
+            structured.baseURL !== "https://www.matths.kr" || structured.deployedCommit !== candidate.webCommit) {
           throw new Error(`${id}: Cafe24 운영 배포 대상과 최종 웹 커밋이 다릅니다.`);
         }
       }
@@ -397,7 +397,7 @@ function validateExternalChecks(manifest, evidenceRoot, candidate) {
     if (requiredPaymentCases) {
       const paymentReport = reports.find((document) =>
         document.schemaVersion === "MATTHS_PAYMENT_PRODUCTION_EVIDENCE_V1" &&
-        document.result === "PASS" && document.baseURL === "https://matths.kr" &&
+        document.result === "PASS" && document.baseURL === "https://www.matths.kr" &&
         document.provider?.name === "Toss Payments" && document.provider?.environment === "live");
       if (!paymentReport) {
         throw new Error(`${id}: Toss live 운영 결제 PASS 보고서가 없습니다.`);
@@ -645,7 +645,7 @@ function structuredEvidenceTemplates() {
       result: "PENDING",
       provider: "Cafe24",
       environment: "production",
-      baseURL: "https://matths.kr",
+      baseURL: "https://www.matths.kr",
       deployedCommit: "REPLACE_WITH_40_CHARACTER_GIT_COMMIT",
       deploymentId: "",
       observedAt: "",

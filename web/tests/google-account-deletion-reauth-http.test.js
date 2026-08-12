@@ -187,6 +187,23 @@ async function main() {
       }
     });
     app.get(
+      "/auth/google/app",
+      matthsController.socialOAuthAppStart,
+    );
+    // 구버전 별칭은 Bearer 경계보다 먼저 등록돼야 한다. 이 순서 자체를
+    // 실제 HTTP 302/401 대조로 검증한다.
+    app.get(
+      "/api/v1/auth/google/start",
+      matthsController.socialOAuthLegacyAppStart,
+    );
+    app.post(
+      "/api/v1/auth/google/exchange",
+      apiController.exchangeGoogleAuthCode,
+    );
+    app.get("/api/v1/auth/providers", apiController.socialAuthProviders);
+    app.use("/api/v1", requireApiAuth);
+    app.get("/api/v1/test/protected", (_req, res) => res.json({ ok: true }));
+    app.get(
       "/profile/withdraw/google",
       authMiddleware.isLoggedIn,
       matthsController.socialOAuthWithdrawalWebStart,
@@ -208,7 +225,6 @@ async function main() {
       authMiddleware.isLoggedIn,
       matthsController.withdrawOwnAccount,
     );
-    app.get("/api/v1/auth/providers", apiController.socialAuthProviders);
     app.post(
       "/api/v1/me/withdrawal/google/start",
       requireApiAuth,
@@ -225,6 +241,52 @@ async function main() {
     const appOrigin = `http://127.0.0.1:${appServer.address().port}`;
     process.env.GOOGLE_OAUTH_REDIRECT_URI = `${appOrigin}/auth/google/callback`;
 
+    const loginUser = await createStudent({
+      email: "google-login-user@example.test",
+      googleId: "google-login-user",
+    });
+    selectedSubject = "google-login-user";
+
+    // 신규 앱 경로는 PKCE를 유지해 fake Google authorize/token/userinfo와
+    // 실제 HTTP 왕복 후 앱 deeplink로 돌아오고, verifier가 있어야 교환된다.
+    const loginVerifier = base64urlRandom();
+    const loginChallenge = verifierChallenge(loginVerifier);
+    let terminal = await followBrowser(
+      `${appOrigin}/auth/google/app?code_challenge=${loginChallenge}`,
+      new CookieJar(),
+    );
+    assert.equal(terminal.protocol, "matths:");
+    assert.equal(terminal.host, "oauth");
+    assert.equal(terminal.pathname, "/google");
+    const loginCode = terminal.searchParams.get("code");
+    assert.ok(loginCode);
+    let response = await fetch(`${appOrigin}/api/v1/auth/google/exchange`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code: loginCode, codeVerifier: loginVerifier }),
+    });
+    assert.equal(response.status, 200);
+    assert.ok(String((await response.json()).accessToken || "").split(".").length === 3);
+
+    // 구 `/api/v1/auth/google/start`는 Bearer 토큰 없이도 Google 302를
+    // 유지한다. 바로 뒤의 일반 API는 같은 무인증 요청을 401로 막는다.
+    const legacyJar = new CookieJar();
+    response = await jarFetch(
+      legacyJar,
+      `${appOrigin}/api/v1/auth/google/start`,
+    );
+    assert.equal(response.status, 302);
+    assert.equal(new URL(response.headers.get("location")).origin, fakeOrigin);
+    terminal = await followBrowser(
+      response.headers.get("location"),
+      legacyJar,
+    );
+    assert.equal(terminal.toString().startsWith("matths://oauth/google?code="), true);
+    response = await fetch(`${appOrigin}/api/v1/test/protected`);
+    assert.equal(response.status, 401);
+
+    assert.equal(String(loginUser._id).length, 24);
+
     const appUser = await createStudent({
       email: "google-app-user@example.test",
       googleId: "google-app-user",
@@ -236,7 +298,7 @@ async function main() {
     const appToken = createAccessToken(appUser);
     const otherToken = createAccessToken(otherUser);
 
-    let response = await fetch(`${appOrigin}/api/v1/me/withdrawal/options`, {
+    response = await fetch(`${appOrigin}/api/v1/me/withdrawal/options`, {
       headers: { authorization: `Bearer ${appToken}` },
     });
     assert.equal(response.status, 200);
@@ -266,7 +328,7 @@ async function main() {
     // 연결되지 않은 다른 Google 계정으로 돌아오면 proof가 발급되지 않는다.
     selectedSubject = "attacker-google-user";
     let started = await startAppReauthentication();
-    let terminal = await followBrowser(started.authorizationUrl, new CookieJar());
+    terminal = await followBrowser(started.authorizationUrl, new CookieJar());
     assert.equal(terminal.pathname, "/google-reauth");
     assert.match(terminal.searchParams.get("error") || "", /현재 계정에 연결된 Google 계정/);
     assert.equal(await AccountReauthentication.countDocuments({
@@ -385,8 +447,9 @@ async function main() {
     }), null);
 
     console.log(
-      "Google account deletion reauthentication HTTP contract passed " +
-      "(fake upstream, isolated Mongo, web+iPad, PKCE, one-time proof)",
+      "Google OAuth HTTP contracts passed " +
+      "(fake upstream, isolated Mongo, PKCE app login, public legacy 302, " +
+      "web+iPad account deletion, one-time proof)",
     );
   } finally {
     process.env.GOOGLE_OAUTH_TEST_AUTHORIZE_URL = originalEnv.authorize;

@@ -14,7 +14,8 @@ xcrun swiftc \
   -o "$CASES_BIN"
 "$CASES_BIN"
 
-grep -q 'static let defaultURL = "https://matths.kr"' "$ROOT/Matths/ServerAPI.swift"
+grep -q 'static let defaultURL = "https://www.matths.kr"' "$ROOT/Matths/ServerAPI.swift"
+! grep -q 'static let defaultURL = "https://matths.kr"' "$ROOT/Matths/ServerAPI.swift"
 ! grep -q 'trycloudflare.com' "$ROOT/Matths/ServerAPI.swift"
 grep -q 'ASWebAuthenticationSession' "$ROOT/Matths/GoogleSignInCoordinator.swift"
 grep -q '/api/v1/auth/google/exchange' "$ROOT/Matths/ServerAPI.swift"

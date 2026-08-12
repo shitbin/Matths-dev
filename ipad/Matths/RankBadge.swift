@@ -10,6 +10,7 @@ import SwiftUI
 import UIKit
 import AVFoundation
 import ImageIO
+import Darwin
 
 enum RankTier: String, CaseIterable {
     case bronze = "BRONZE"
@@ -1823,39 +1824,53 @@ private struct StandardTierPromotionBadge: View {
 }
 
 /// 첫 실제 승급 때 SwiftUI/Metal 합성 파이프라인을 만들며 한 프레임을 170ms 이상
-/// 막지 않도록 앱 root 위의 비가시 표면에서 같은 크기 조립 그래프를 미리 만든다.
+/// 막지 않도록 앱 root 위의 비가시 표면에서 9개 표현 그래프를 순차로 붙인다.
 /// 모션·소리·서버 상태는 전혀 실행하지 않고, 접근성과 입력 계층에서도 제외된다.
 struct RankPromotionPipelinePrewarmView: View {
     private let playbackID = UUID()
     @State private var finished = false
+    @State private var tierIndex = 0
 
     var body: some View {
         if !finished {
             GeometryReader { proxy in
                 let badgeSize = min(proxy.size.width * 0.62, proxy.size.height * 0.56, 560)
+                let tier = RankTier.allCases[tierIndex]
                 ZStack {
                     LinearGradient(
                         colors: [Color(hex: 0x050A1A), Color(hex: 0x071A36), Color(hex: 0x02050E)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing)
-                    StandardTierPromotionUnderlay(
-                        tier: .bronze,
-                        playbackID: playbackID,
-                        motionActive: false)
-                    StandardTierPromotionBadge(
-                        tier: .bronze,
-                        size: badgeSize,
-                        motionActive: false,
-                        playbackID: playbackID,
-                        startDelay: 0)
+                    if tier == .challenger {
+                        ChallengerAscensionUnderlay(
+                            playbackID: playbackID,
+                            motionActive: false)
+                        ChallengerLayeredBadge(
+                            size: badgeSize,
+                            motionActive: false,
+                            playbackID: playbackID,
+                            startDelay: 0)
+                    } else {
+                        StandardTierPromotionUnderlay(
+                            tier: tier,
+                            playbackID: playbackID,
+                            motionActive: false)
+                        StandardTierPromotionBadge(
+                            tier: tier,
+                            size: badgeSize,
+                            motionActive: false,
+                            playbackID: playbackID,
+                            startDelay: 0)
+                    }
                     VStack {
                         Text("RANK ASCENDED")
                             .font(.custom("AkiraExpanded-Outline", size: 18))
-                        Text(RankTier.bronze.rawValue)
+                        Text(tier.rawValue)
                             .font(.custom("AkiraExpanded-Bold", size: 48))
                     }
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height)
+                .id("rank-pipeline-prewarm-\(tier.rawValue)")
             }
             // opacity 0은 Core Animation이 서브트리를 렌더하지 않는다. 실제 화면과
             // 같은 크기의 비영(非零) 표면을 한 번 합성한 뒤 즉시 제거해 상시 GPU·
@@ -1864,17 +1879,100 @@ struct RankPromotionPipelinePrewarmView: View {
             .allowsHitTesting(false)
             .accessibilityHidden(true)
             .task {
-                try? await Task.sleep(for: .milliseconds(750))
+                let started = CACurrentMediaTime()
+                let initialResident = Self.residentBytes()
+                var peakResident = initialResident
+                var rendered: [String] = []
+                for (index, tier) in RankTier.allCases.enumerated() {
+                    guard !Task.isCancelled else { return }
+                    await RankBadgeAssets.prewarmPromotionVisuals(tier: tier)
+                    tierIndex = index
+                    // 실제 window에 attach된 그래프가 최소 두 번의 120Hz frame commit을
+                    // 거치게 한다. Task.yield만 쓰면 한 run-loop 안에서 9개 상태가 합쳐져
+                    // 마지막 티어만 합성되는 최적화가 발생한다.
+                    try? await Task.sleep(for: .milliseconds(50))
+                    peakResident = max(peakResident, Self.residentBytes())
+                    rendered.append(tier.rawValue)
+                }
                 finished = true
+                let finalResident = Self.residentBytes()
+                RankPromotionPipelinePrewarmState.complete(
+                    durationMs: (CACurrentMediaTime() - started) * 1_000,
+                    initialResidentBytes: initialResident,
+                    peakResidentBytes: peakResident,
+                    finalResidentBytes: finalResident,
+                    renderedTiers: rendered)
             }
         }
+    }
+
+    private static func residentBytes() -> Int {
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(
+            MemoryLayout<mach_task_basic_info>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) { pointer in
+            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+        return result == KERN_SUCCESS ? Int(info.resident_size) : 0
+    }
+}
+
+/// 성능 자가진단이 startup prewarm과 겹쳐 첫 티어를 다시 컴파일하지 않게 하는 동기점.
+/// 제품 판정이나 Arena 상태를 보유하지 않으며, 진단 실행일 때만 비식별 JSON을 쓴다.
+@MainActor
+enum RankPromotionPipelinePrewarmState {
+    private(set) static var isReady = false
+
+    static func waitUntilReady(timeoutSeconds: Double = 12) async -> Bool {
+        let deadline = CACurrentMediaTime() + timeoutSeconds
+        while !isReady, CACurrentMediaTime() < deadline {
+            try? await Task.sleep(for: .milliseconds(25))
+        }
+        return isReady
+    }
+
+    static func complete(
+        durationMs: Double,
+        initialResidentBytes: Int,
+        peakResidentBytes: Int,
+        finalResidentBytes: Int,
+        renderedTiers: [String]
+    ) {
+        isReady = renderedTiers == RankTier.allCases.map(\.rawValue)
+        #if DEBUG
+        guard ProcessInfo.processInfo.arguments.contains("-rankPromotionPerformanceSelfTest") else {
+            return
+        }
+        let report: [String: Any] = [
+            "schemaVersion": "MATTHS_RANK_PROMOTION_PIPELINE_PREWARM_V1",
+            "result": isReady ? "PASS" : "FAIL",
+            "durationMs": durationMs,
+            "initialResidentBytes": initialResidentBytes,
+            "peakResidentBytes": peakResidentBytes,
+            "finalResidentBytes": finalResidentBytes,
+            "peakResidentDeltaBytes": max(0, peakResidentBytes - initialResidentBytes),
+            "renderedTiers": renderedTiers,
+            "audioPlaybackSuppressed": true,
+            "accessibilityHidden": true,
+            "hitTestingDisabled": true,
+        ]
+        guard JSONSerialization.isValidJSONObject(report),
+              let data = try? JSONSerialization.data(
+                withJSONObject: report,
+                options: [.prettyPrinted, .sortedKeys]) else { return }
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("rank-promotion-pipeline-prewarm.json")
+        try? data.write(to: url, options: .atomic)
+        #endif
     }
 }
 
 /// 실제 승급 이벤트와 디버그 미리보기에서 함께 쓰는 전체 화면 장식이다.
 /// 서버 판정을 만들지 않고, 이미 결정된 티어를 받아 재생만 한다.
 struct RankPromotionOverlay: View {
-    let tierCode: String
+    let tierCode: String?
 
     @EnvironmentObject private var store: AppStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -1885,14 +1983,22 @@ struct RankPromotionOverlay: View {
     @State private var audioPlayer: AVAudioPlayer?
     @State private var assetsReady = false
     @State private var assetLoadID = UUID()
+    @State private var videoFailed = false
 
-    init(tierCode: String) {
+    init(tierCode: String?) {
         self.tierCode = tierCode
-        _displayedTierCode = State(initialValue: tierCode)
+        _displayedTierCode = State(initialValue: tierCode ?? RankTier.bronze.rawValue)
     }
 
     private var tier: RankTier { RankTier(serverCode: displayedTierCode) ?? .challenger }
-    private var motionActive: Bool { store.motionOn && !reduceMotion }
+    private var isPresented: Bool { tierCode != nil }
+    private var motionActive: Bool { isPresented && store.motionOn && !reduceMotion }
+    private var videoURL: URL? { RankPromotionVideoAssets.url(for: tier) }
+    private var forceSwiftUIFallback: Bool {
+        ProcessInfo.processInfo.arguments.contains("-rankPromotionSwiftUIFallback")
+    }
+    private var useVideo: Bool { isPresented && !forceSwiftUIFallback && !videoFailed && videoURL != nil }
+    private var useSwiftUIFallback: Bool { isPresented && !useVideo }
 
     var body: some View {
         GeometryReader { proxy in
@@ -1905,84 +2011,108 @@ struct RankPromotionOverlay: View {
                     endPoint: .bottomTrailing)
                     .ignoresSafeArea()
 
-                if assetsReady {
-                    if tier == .challenger {
-                        ChallengerAscensionUnderlay(
-                            playbackID: playbackID,
-                            motionActive: motionActive)
-                    } else {
-                        StandardTierPromotionUnderlay(
-                            tier: tier,
-                            playbackID: playbackID,
-                            motionActive: motionActive)
-                    }
+                if useVideo, let videoURL {
+                    RankPromotionVideoPlayer(
+                        url: videoURL,
+                        playbackID: playbackID,
+                        motionActive: motionActive,
+                        onComplete: close,
+                        onFailure: activateSwiftUIFallback)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
                 }
 
-                RadialGradient(
-                    colors: [tier.accentColor.opacity(0.2), .clear],
-                    center: .center,
-                    startRadius: 4,
-                    endRadius: badgeSize * 0.9)
-                    .frame(width: badgeSize * 1.8, height: badgeSize * 1.8)
-                    .blendMode(.screen)
-
-                VStack(spacing: 0) {
-                    Spacer(minLength: 56)
-
-                    Group {
+                if useSwiftUIFallback {
+                    ZStack {
                         if assetsReady {
                             if tier == .challenger {
-                                ChallengerLayeredBadge(
-                                    size: badgeSize,
-                                    motionActive: motionActive,
+                                ChallengerAscensionUnderlay(
                                     playbackID: playbackID,
-                                    startDelay: motionActive ? 1.4 : 0)
+                                    motionActive: motionActive)
                             } else {
-                                StandardTierPromotionBadge(
+                                StandardTierPromotionUnderlay(
                                     tier: tier,
-                                    size: badgeSize,
-                                    motionActive: motionActive,
                                     playbackID: playbackID,
-                                    startDelay: motionActive ? 1.4 : 0)
+                                    motionActive: motionActive)
                             }
                         }
                     }
-                    .frame(width: badgeSize * 1.42, height: badgeSize * 1.42)
+                    .accessibilityHidden(true)
+                    .allowsHitTesting(false)
 
-                    VStack(spacing: 10) {
-                        Text("RANK ASCENDED")
-                            .font(.custom("AkiraExpanded-Outline", size: 18))
-                            .tracking(3.2)
-                            .foregroundStyle(tier.accentColor)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
+                    RadialGradient(
+                        colors: [tier.accentColor.opacity(0.2), .clear],
+                        center: .center,
+                        startRadius: 4,
+                        endRadius: badgeSize * 0.9)
+                        .frame(width: badgeSize * 1.8, height: badgeSize * 1.8)
+                        .blendMode(.screen)
 
-                        Text(tier.rawValue)
-                            .font(.custom("AkiraExpanded-Bold", size: min(48, badgeSize * 0.105)))
-                            .tracking(0.8)
-                            .foregroundStyle(.white)
-                            .shadow(color: tier.accentColor.opacity(0.6), radius: 14)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 56)
 
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.clear, tier.accentColor, .white, tier.accentColor, .clear],
-                                    startPoint: .leading,
-                                    endPoint: .trailing))
-                            .frame(width: min(280, badgeSize * 0.62), height: 2)
-                            .shadow(color: tier.accentColor, radius: 8)
+                        Group {
+                            if assetsReady {
+                                if tier == .challenger {
+                                    ChallengerLayeredBadge(
+                                        size: badgeSize,
+                                        motionActive: motionActive,
+                                        playbackID: playbackID,
+                                        startDelay: motionActive ? 1.4 : 0)
+                                } else {
+                                    StandardTierPromotionBadge(
+                                        tier: tier,
+                                        size: badgeSize,
+                                        motionActive: motionActive,
+                                        playbackID: playbackID,
+                                        startDelay: motionActive ? 1.4 : 0)
+                                }
+                            }
+                        }
+                        .frame(width: badgeSize * 1.42, height: badgeSize * 1.42)
+
+                        VStack(spacing: 10) {
+                            Text("RANK ASCENDED")
+                                .font(.custom("AkiraExpanded-Outline", size: 18))
+                                .tracking(3.2)
+                                .foregroundStyle(tier.accentColor)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+
+                            Text(tier.rawValue)
+                                .font(.custom("AkiraExpanded-Bold", size: min(48, badgeSize * 0.105)))
+                                .tracking(0.8)
+                                .foregroundStyle(.white)
+                                .shadow(color: tier.accentColor.opacity(0.6), radius: 14)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.clear, tier.accentColor, .white, tier.accentColor, .clear],
+                                        startPoint: .leading,
+                                        endPoint: .trailing))
+                                .frame(width: min(280, badgeSize * 0.62), height: 2)
+                                .shadow(color: tier.accentColor, radius: 8)
+                        }
+                        .opacity(!motionActive || copyShown ? 1 : 0)
+                        .offset(y: !motionActive || copyShown ? 0 : 18)
+
+                        Spacer(minLength: 74)
                     }
-                    .opacity(!motionActive || copyShown ? 1 : 0)
-                    .offset(y: !motionActive || copyShown ? 0 : 18)
-
-                    Spacer(minLength: 74)
                 }
 
                 VStack {
                     HStack {
                         Spacer()
+                        Button("건너뛰기") { close() }
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .frame(minHeight: 44)
+                            .background(.black.opacity(0.46), in: Capsule())
+                            .accessibilityLabel("승급 모션 건너뛰기")
                         Button { close() } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 17, weight: .bold))
@@ -2033,14 +2163,25 @@ struct RankPromotionOverlay: View {
                 .padding(26)
             }
         }
-        .onAppear { prepareTierAndPlay() }
+        // 실제 host를 scene에 한 번만 mount한다. 숨겨진 동안에는 두 graph type이
+        // 정적으로 붙어 있지만 재생 예약·소리·입력·접근성 노출은 모두 금지한다.
+        .opacity(isPresented ? 1 : 0.001)
+        .allowsHitTesting(isPresented)
+        .accessibilityHidden(!isPresented)
+        .onAppear {
+            if isPresented { prepareTierAndPlay() }
+        }
+        .onChange(of: tierCode) { _, code in
+            handlePresentationChange(code)
+        }
         .onDisappear { audioPlayer?.stop() }
         .accessibilityElement(children: .contain)
     }
 
     private func play() {
-        guard assetsReady else { return }
+        guard isPresented, assetsReady else { return }
         playbackID = UUID()
+        if useVideo { return }
         playTierSound()
         guard motionActive else {
             copyShown = true
@@ -2061,6 +2202,7 @@ struct RankPromotionOverlay: View {
 
     private func playTierSound() {
         audioPlayer?.stop()
+        guard isPresented else { return }
         guard let player = RankBadgeAssets.preparedSoundPlayer(for: tier) else {
             audioPlayer = nil
             return
@@ -2077,16 +2219,64 @@ struct RankPromotionOverlay: View {
     /// 끊긴다. 화면에는 배경만 먼저 올리고 현재 티어 자산을 백그라운드에서 강제
     /// 디코딩한 뒤 영상과 소리를 같은 시점에 시작한다.
     private func prepareTierAndPlay() {
+        guard isPresented else { return }
+        videoFailed = false
+        if !forceSwiftUIFallback, videoURL != nil {
+            assetsReady = true
+            copyShown = true
+            playbackID = UUID()
+            return
+        }
+        prepareSwiftUIFallbackAndPlay()
+    }
+
+    private func prepareSwiftUIFallbackAndPlay() {
+        guard isPresented else { return }
         let loadID = UUID()
         let requestedTier = tier
         assetLoadID = loadID
-        assetsReady = false
         copyShown = false
         audioPlayer?.stop()
+        // 승급을 띄우기 직전 호출부가 같은 티어의 PNG와 player를 모두 준비한 경우
+        // background queue를 한 번 더 왕복하지 않는다. 이 왕복의 callback에서 조건부
+        // 그래프가 170~200ms 뒤 붙으며 첫 조립 프레임을 막는 것이 실기에서 재현됐다.
+        // 소리까지 준비되지 않은 실제 cold path는 아래 기존 흐름을 그대로 사용한다.
+        if RankBadgeAssets.isPromotionPrepared(tier: requestedTier) {
+            assetsReady = true
+            play()
+            return
+        }
+        assetsReady = false
         RankBadgeAssets.prewarmPromotion(tier: requestedTier) {
             guard assetLoadID == loadID, tier == requestedTier else { return }
             assetsReady = true
             play()
+        }
+    }
+
+    private func activateSwiftUIFallback() {
+        guard isPresented else { return }
+        videoFailed = true
+        prepareSwiftUIFallbackAndPlay()
+    }
+
+    private func handlePresentationChange(_ code: String?) {
+        guard let code else {
+            assetLoadID = UUID()
+            assetsReady = false
+            audioPlayer?.stop()
+            audioPlayer = nil
+            copyShown = false
+            videoFailed = false
+            // 이미 예약된 하위 graph animation의 runID를 교체해 이후 예약을 무효화한다.
+            // motionActive=false 상태의 onChange이므로 새 animation은 예약하지 않는다.
+            playbackID = UUID()
+            return
+        }
+        displayedTierCode = code
+        DispatchQueue.main.async {
+            guard tierCode == code, displayedTierCode == code else { return }
+            prepareTierAndPlay()
         }
     }
 
@@ -2102,6 +2292,24 @@ struct RankPromotionOverlay: View {
 }
 
 enum RankBadgeAssets {
+    private final class PromotionVisualReadiness: @unchecked Sendable {
+        private let lock = NSLock()
+        private var tiers: Set<RankTier> = []
+
+        func markReady(_ tier: RankTier) {
+            lock.lock()
+            tiers.insert(tier)
+            lock.unlock()
+        }
+
+        func contains(_ tier: RankTier) -> Bool {
+            lock.lock()
+            let result = tiers.contains(tier)
+            lock.unlock()
+            return result
+        }
+    }
+
     private static let cache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
         cache.countLimit = 64
@@ -2116,6 +2324,7 @@ enum RankBadgeAssets {
     }()
     @MainActor private static var preparedPlayers: [RankTier: AVAudioPlayer] = [:]
     @MainActor private static var audioSessionWarmed = false
+    private static let promotionVisualReadiness = PromotionVisualReadiness()
 
     static func image(named name: String, subdirectory: String = "RankBadges") -> UIImage? {
         let cacheKey = "\(subdirectory)/\(name)" as NSString
@@ -2137,20 +2346,43 @@ enum RankBadgeAssets {
     }
 
     static func prewarmPromotion(tier: RankTier, completion: @escaping () -> Void) {
-        let code = tier.rawValue.lowercased()
-        let directory = "RankBadges/MechanicalV5/\(code)"
-        let names = ["back-frame", "armor-left", "armor-right", "crown", "lock-ring", "core"]
-            .map { "\(code)-\($0)" }
         DispatchQueue.global(qos: .userInitiated).async {
-            for name in names {
-                _ = image(named: name, subdirectory: directory)
-            }
+            loadPromotionVisuals(tier: tier)
             _ = soundData(for: tier)
             DispatchQueue.main.async {
                 _ = preparedSoundPlayer(for: tier)
                 completion()
             }
         }
+    }
+
+    /// 늦은 조건부 view 삽입을 건너뛸 수 있는 것은 PNG 디코딩과 오디오 player가
+    /// 모두 끝난 경우뿐이다. player 사전 생성 여부는 main actor에서만 읽는다.
+    @MainActor
+    static func isPromotionPrepared(tier: RankTier) -> Bool {
+        promotionVisualReadiness.contains(tier) && preparedPlayers[tier] != nil
+    }
+
+    /// 앱 기동 prewarm은 오디오 세션을 열거나 player를 재생하지 않는다. PNG 디코딩만
+    /// 백그라운드에서 끝낸 뒤 SwiftUI 그래프의 실제 attach를 main actor에 맡긴다.
+    static func prewarmPromotionVisuals(tier: RankTier) async {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                loadPromotionVisuals(tier: tier)
+                continuation.resume()
+            }
+        }
+    }
+
+    private static func loadPromotionVisuals(tier: RankTier) {
+        let code = tier.rawValue.lowercased()
+        let directory = "RankBadges/MechanicalV5/\(code)"
+        let names = ["back-frame", "armor-left", "armor-right", "crown", "lock-ring", "core"]
+            .map { "\(code)-\($0)" }
+        for name in names {
+            _ = image(named: name, subdirectory: directory)
+        }
+        promotionVisualReadiness.markReady(tier)
     }
 
     /// 첫 효과음의 AudioSession/decoder 초기화가 애니메이션 시작 뒤 150ms 이상

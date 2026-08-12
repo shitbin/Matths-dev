@@ -98,6 +98,8 @@ if (
 
 // ── 배포에서만 따지는 것 ────────────────────────────────────────────────
 if (isProd) {
+  const canonicalPublicBaseURL =
+    "https://www.matths.kr";
   if (fs.existsSync(envFile)) {
     // 운영 서버에 비밀이 **파일로** 올라가 있으면 안 된다.
     // 값은 호스팅 대시보드의 환경변수로만 들어가야 한다.
@@ -116,18 +118,26 @@ if (isProd) {
     if (
       parsed.protocol !==
         "https:" ||
-      !parsed.hostname ||
-      /localhost|127\.0\.0\.1|trycloudflare|ngrok/i.test(
-        parsed.hostname
-      )
+      parsed.origin !==
+        canonicalPublicBaseURL ||
+      parsed.pathname !== "/" ||
+      parsed.search ||
+      parsed.hash ||
+      publicBaseURL !==
+        canonicalPublicBaseURL
     ) {
       throw new Error(
-        "not a production HTTPS URL"
+        "not the canonical production URL"
       );
     }
   } catch {
     problems.push(
-      `PUBLIC_BASE_URL 이 실제 HTTPS 도메인이 아니다 (${publicBaseURL || "비어 있음"})`
+      `PUBLIC_BASE_URL 은 ${canonicalPublicBaseURL} 이어야 한다 (${publicBaseURL || "비어 있음"})`
+    );
+  }
+  if (String(process.env.APP_BASE_URL || "").trim()) {
+    problems.push(
+      "APP_BASE_URL 은 폐기됐다 — 운영 공개 주소는 PUBLIC_BASE_URL 하나만 사용한다"
     );
   }
   const expectedGoogleRedirect = publicBaseURL

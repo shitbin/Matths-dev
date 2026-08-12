@@ -55,7 +55,7 @@ const artifactByType = {
 function validSession() {
   return {
     schemaVersion: "MATTHS_PAYMENT_PRODUCTION_QA_SESSION_V1",
-    baseURL: "https://matths.kr",
+    baseURL: "https://www.matths.kr",
     observedAt: "2026-08-11T18:00:00+09:00",
     reviewer: "운영 검증자",
     webReleaseCommit: "a".repeat(40),

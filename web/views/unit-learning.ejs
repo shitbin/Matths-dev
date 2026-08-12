@@ -136,6 +136,10 @@
       rel="stylesheet"
       href="/css/concept-experience.css"
     />
+    <link
+      rel="stylesheet"
+      href="/css/curriculum-story.css"
+    />
 
     <!--
       정적 수식과 API로 불러오는 동적 수식을 같은 LaTeX 문법으로
@@ -166,6 +170,10 @@
     <!-- 기본 개념 페이지의 Step 미리보기와 topic 진도 저장 -->
     <script
       src="/js/unit-learning.js"
+      defer
+    ></script>
+    <script
+      src="/js/curriculum-narration.js"
       defer
     ></script>
 
@@ -532,6 +540,11 @@
                 </h3>
               </div>
             </section>
+
+            <%- include(
+              "partials/curriculum-story-timeline",
+              { curriculumStory, curriculumNarrationScope }
+            ) %>
 
             <% if (lessonData.playgroundKey) { %>
               <%- include(

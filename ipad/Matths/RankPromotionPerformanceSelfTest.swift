@@ -42,8 +42,13 @@ enum RankPromotionPerformanceSelfTest {
             return
         }
 
-        // 앱 root와 승급 overlay가 들어갈 scene 계층이 먼저 안정된 뒤 계측한다.
-        try? await Task.sleep(for: .seconds(1))
+        // 앱 root의 9티어 합성 prewarm이 끝난 뒤 계측한다. 고정 1초만 기다리면
+        // 느린 기기에서 prewarm과 첫 티어 재생이 겹쳐 둘 다의 수치를 오염시킨다.
+        guard await RankPromotionPipelinePrewarmState.waitUntilReady() else {
+            NSLog("RankPromotionPerformanceSelfTest pipeline prewarm timed out")
+            return
+        }
+        try? await Task.sleep(for: .milliseconds(250))
         let previousMotion = store.motionOn
         store.motionOn = true
         defer {

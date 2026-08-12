@@ -6,7 +6,7 @@ const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const expectedBaseURL = "https://matths.kr";
+const expectedBaseURL = "https://www.matths.kr";
 const expectedProvider = {
   environment: "live",
   successURL: `${expectedBaseURL}/payments/toss/success`,

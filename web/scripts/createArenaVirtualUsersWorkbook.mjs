@@ -1,6 +1,15 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { SpreadsheetFile, Workbook } from "@oai/artifact-tool";
+import { fileURLToPath } from "node:url";
+import { loadArtifactTool } from "./loadArtifactTool.mjs";
+
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const { SpreadsheetFile, Workbook } = await loadArtifactTool({ projectRoot });
+
+if (process.argv.includes("--check-runtime")) {
+  console.log("artifact-tool runtime ready");
+  process.exit(0);
+}
 
 const [manifestPath, outputPath] = process.argv.slice(2);
 
