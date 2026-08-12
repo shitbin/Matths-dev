@@ -18,7 +18,16 @@ function collectEJSFiles(directory) {
 const allViewFiles = collectEJSFiles(path.join(repoRoot, "views"));
 
 const landingView = fs.readFileSync(path.join(repoRoot, "views/index.ejs"), "utf8");
-assert.match(landingView, /같은 문제, 같은 시간/);
+assert.match(
+  landingView,
+  /<h1 id="arena-hero-title"><span>고등수학<\/span> <strong>1 vs 1 랭크전<\/strong><\/h1>/,
+  "랜딩 히어로는 한 줄의 구체적인 제품 문장과 Regular/Bold 구조를 사용해야 합니다.",
+);
+assert.doesNotMatch(
+  landingView,
+  /같은 문제, 같은 시간|실력으로 올라가세요|두 학생이 검산된 주관식 5문항/,
+  "랜딩 히어로에 긴 홍보 문구를 다시 추가하면 안 됩니다.",
+);
 assert.match(landingView, /주관식 5개/);
 assert.match(landingView, /문항당 10분/);
 assert.match(landingView, /220개념/);
@@ -26,6 +35,23 @@ assert.doesNotMatch(
   landingView,
   /등급을 빼앗아라|짧은 수학 승부|39개/,
   "랜딩은 실제 경기·커리큘럼 범위와 충돌하거나 손실 추격을 자극하는 문구를 사용하면 안 됩니다.",
+);
+
+const landingStylesheet = fs.readFileSync(path.join(repoRoot, "public/css/index.css"), "utf8");
+assert.match(
+  landingStylesheet,
+  /\.arena-hero h1\s*\{[\s\S]*?font-weight:\s*480;/,
+  "랜딩 제목의 기본 어조는 Regular/Medium 웨이트여야 합니다.",
+);
+assert.match(
+  landingStylesheet,
+  /\.arena-hero h1 strong\s*\{[\s\S]*?font-weight:\s*880;/,
+  "랜딩 제목의 핵심 구절만 Bold 웨이트로 강조해야 합니다.",
+);
+assert.match(
+  landingStylesheet,
+  /\.learning-proof \.hero-copy h2\s*\{[\s\S]*?font-weight:\s*480;/,
+  "학습 섹션 제목도 Regular와 Bold의 대비를 유지해야 합니다.",
 );
 
 const studyHallView = fs.readFileSync(path.join(repoRoot, "views/store.ejs"), "utf8");
