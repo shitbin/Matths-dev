@@ -317,22 +317,31 @@ struct ArenaShopScreen: View {
     @ViewBuilder
     private func targetControl(_ item: ServerAPI.ArenaShop.Item, shop: ServerAPI.ArenaShop) -> some View {
         if item.targetType == "MATCH" {
-            TextField("", text: Binding(
-                get: { matchTargets[item.itemCode, default: ""] },
-                set: { matchTargets[item.itemCode] = $0 }
-            ), prompt: Text("정산 완료 경기 ID").foregroundStyle(Tokens.text3))
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .font(.mCallout)
-            .foregroundStyle(Tokens.ink)
-            .padding(.horizontal, Tokens.Space.s3)
-            .frame(minHeight: 44)
-            .background(Tokens.paper2, in: RoundedRectangle(cornerRadius: Tokens.Radius.sm))
-            .overlay(
-                RoundedRectangle(cornerRadius: Tokens.Radius.sm)
-                    .strokeBorder(Tokens.lineStrong, lineWidth: 1)
-            )
-            .accessibilityLabel("\(ArenaDisplayTerms.apply(item.displayName)) 적용 경기 ID")
+            let targets = item.itemCode == "DEFENSE_SCHEDULE_PROTECTION"
+                ? (shop.defenseProtectionTargets ?? [])
+                : (shop.analysisTargets ?? [])
+            if targets.isEmpty {
+                Text(item.itemCode == "DEFENSE_SCHEDULE_PROTECTION"
+                     ? "지금 보호권을 적용할 수 있는 경기가 없습니다."
+                     : "분석할 수 있는 정산 완료 경기가 없습니다.")
+                    .font(.mCaption)
+                    .foregroundStyle(Tokens.text3)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Picker(item.itemCode == "DEFENSE_SCHEDULE_PROTECTION" ? "보호할 경기" : "분석할 경기", selection: Binding(
+                    get: { matchTargets[item.itemCode, default: ""] },
+                    set: { matchTargets[item.itemCode] = $0 }
+                )) {
+                    Text("경기를 선택해주세요").tag("")
+                    ForEach(targets) { target in
+                        Text(matchTargetLabel(target))
+                            .tag(target.id)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(minHeight: 44)
+                .accessibilityLabel(item.itemCode == "DEFENSE_SCHEDULE_PROTECTION" ? "보호할 경기 선택" : "분석할 경기 선택")
+            }
         } else if item.targetType == "INVITATION" {
             Picker("가속할 초대", selection: Binding(
                 get: { invitationTargets[item.itemCode, default: ""] },
@@ -351,8 +360,12 @@ struct ArenaShopScreen: View {
     private func canPurchase(_ item: ServerAPI.ArenaShop.Item, shop: ServerAPI.ArenaShop) -> Bool {
         guard item.purchasePreview.purchaseEligible, !shop.policy.sundayLocked else { return false }
         if item.targetType == "MATCH" {
-            return !(matchTargets[item.itemCode] ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let selected = (matchTargets[item.itemCode] ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let targets = item.itemCode == "DEFENSE_SCHEDULE_PROTECTION"
+                ? (shop.defenseProtectionTargets ?? [])
+                : (shop.analysisTargets ?? [])
+            return targets.contains(where: { $0.id == selected })
         }
         if item.targetType == "INVITATION" {
             return !(invitationTargets[item.itemCode] ?? "").isEmpty
@@ -523,6 +536,12 @@ struct ArenaShopScreen: View {
         case "LOW": return "주의 · 구매 뒤 3일 이하"
         default: return "보통"
         }
+    }
+
+    private func matchTargetLabel(_ target: ServerAPI.ArenaShop.MatchTarget) -> String {
+        let context = "\(ArenaDisplayTerms.apply(target.divisionLabel)) · \(ArenaDisplayTerms.apply(target.matchTypeLabel))"
+        guard target.occurredAt != nil else { return context }
+        return "\(context) · \(formatDateTime(target.occurredAt))"
     }
 
     private func formatDate(_ value: String) -> String {
@@ -1114,6 +1133,14 @@ private enum ArenaShopFixture {
                     relatedMatchId: "match-fixture-2026-08-10",
                     relatedInvitationId: nil)
             ] : [],
+            analysisTargets: [
+                .init(
+                    id: "match-fixture-2026-08-10",
+                    divisionLabel: "Ranked",
+                    matchTypeLabel: "공식 경기",
+                    occurredAt: "2026-08-10T08:30:00.000Z")
+            ],
+            defenseProtectionTargets: [],
             invitations: [
                 .init(
                     id: "invitation-fixture-01",

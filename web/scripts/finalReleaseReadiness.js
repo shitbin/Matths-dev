@@ -7,6 +7,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { validateAndCreate: validateAtlasEvidence } = require("./createAtlasMigrationEvidence");
+const { resolveIpadRoot } = require("./resolveIpadWorkspace");
 
 const repoRoot = path.resolve(__dirname, "..");
 const requiredExternalChecks = [
@@ -200,6 +201,48 @@ function validateArtifact(artifact, evidenceRoot, label) {
   return { file: artifact.file, type: artifact.type, sha256: actual };
 }
 
+function validateResponsiveScreenshotManifest(artifact, evidenceRoot, candidate) {
+  const filename = resolveEvidenceFile(evidenceRoot, artifact.file);
+  const document = JSON.parse(fs.readFileSync(filename, "utf8"));
+  if (document.schema !== "MATTHS_RESPONSIVE_EVIDENCE_V2") {
+    throw new Error("web-five-width: MATTHS_RESPONSIVE_EVIDENCE_V2 manifest가 아닙니다.");
+  }
+  if (document.sourceCommit !== candidate.webCommit || document.trackedWorkingTreeClean !== true) {
+    throw new Error("web-five-width: 캡처 소스가 최종 웹 커밋의 깨끗한 작업본이 아닙니다.");
+  }
+  if (document.captureDriver !== "cdp") {
+    throw new Error("web-five-width: 승인 캡처는 CDP driver여야 합니다.");
+  }
+  const expectedCount = Number(document.pageCount) * (Array.isArray(document.widths)
+    ? document.widths.length
+    : 0);
+  if (!(expectedCount > 0) || document.captureCount !== expectedCount ||
+      document.failureCount !== 0 || !Array.isArray(document.captures) ||
+      document.captures.length !== expectedCount) {
+    throw new Error("web-five-width: 캡처 수 또는 실패 수가 manifest와 맞지 않습니다.");
+  }
+  const invalid = document.captures.find((capture) =>
+    capture.ok !== true || capture.driver !== "cdp" || capture.viewportVerified !== true ||
+    capture.documentStatusOk !== true || capture.horizontalOverflow === true ||
+    capture.intrinsicOverflow === true || capture.authenticationFailure === true ||
+    capture.pageFailure === true || !String(capture.fullPageFile || "").trim());
+  if (invalid) {
+    throw new Error(`web-five-width: 승인 불가 캡처가 있습니다: ${invalid.slug || "unknown"}`);
+  }
+  const manifestDirectory = path.dirname(filename);
+  for (const capture of document.captures) {
+    for (const key of ["file", "fullPageFile"]) {
+      const relative = String(capture[key] || "");
+      const resolved = path.resolve(manifestDirectory, relative);
+      if (!relative || !resolved.startsWith(`${manifestDirectory}${path.sep}`) ||
+          !fs.existsSync(resolved) || !fs.statSync(resolved).isFile() ||
+          fs.statSync(resolved).size === 0) {
+        throw new Error(`web-five-width: ${capture.slug || "unknown"}의 ${key} 증거가 없습니다.`);
+      }
+    }
+  }
+}
+
 function validateExternalChecks(manifest, evidenceRoot, candidate) {
   const rows = Array.isArray(manifest.externalChecks) ? manifest.externalChecks : [];
   const byId = new Map();
@@ -224,6 +267,10 @@ function validateExternalChecks(manifest, evidenceRoot, candidate) {
     const artifactTypes = new Set(artifacts.map((artifact) => artifact.type));
     for (const type of requiredArtifactTypes.get(id) || []) {
       if (!artifactTypes.has(type)) throw new Error(`${id}: ${type} 증거가 없습니다.`);
+    }
+    if (id === "web-five-width") {
+      const screenshotManifest = artifacts.find((artifact) => artifact.type === "screenshot-manifest");
+      validateResponsiveScreenshotManifest(screenshotManifest, evidenceRoot, candidate);
     }
     const requiredSchema = requiredReportSchemas.get(id);
     if (requiredSchema) {
@@ -435,18 +482,55 @@ function validateVisionEvidence(manifest, evidenceRoot) {
   return output;
 }
 
-function validateIpadCandidate(manifest, root = path.resolve(repoRoot, "../ipad-app")) {
-  if (!fs.existsSync(path.join(root, ".git"))) {
-    throw new Error(`iPad 로컬 Git 작업본이 없습니다: ${root}`);
+function candidateSourceState(root, sourceKey) {
+  // macOS exposes /var through /private/var. Git reports the canonical path,
+  // so compare real paths or a standalone workspace looks like a monorepo.
+  const resolvedRoot = fs.realpathSync(path.resolve(root));
+  const workspaceRoot = fs.realpathSync(
+    path.resolve(git(["rev-parse", "--show-toplevel"], resolvedRoot)),
+  );
+  const workspaceCommit = git(["rev-parse", "HEAD"], workspaceRoot);
+
+  if (workspaceRoot === resolvedRoot) {
+    return { commit: workspaceCommit, workspaceRoot, workspaceCommit };
   }
-  const head = git(["rev-parse", "HEAD"], root);
+
+  const snapshotFile = path.join(workspaceRoot, "SOURCE-SNAPSHOT.json");
+  if (!fs.existsSync(snapshotFile)) {
+    throw new Error(
+      `${sourceKey} 통합 작업본의 SOURCE-SNAPSHOT.json이 없습니다: ${snapshotFile}`,
+    );
+  }
+  const snapshot = JSON.parse(fs.readFileSync(snapshotFile, "utf8"));
+  const source = snapshot?.[sourceKey];
+  if (
+    snapshot.schemaVersion !== "MATTHS_DEV_SOURCE_SNAPSHOT_V1"
+    || !source?.sourceCommit
+    || fs.realpathSync(path.resolve(workspaceRoot, String(source.path || ""))) !== resolvedRoot
+  ) {
+    throw new Error(`${sourceKey} 통합 작업본 provenance가 SOURCE-SNAPSHOT.json과 다릅니다.`);
+  }
+  return {
+    commit: source.sourceCommit,
+    workspaceRoot,
+    workspaceCommit,
+    provenance: "SOURCE-SNAPSHOT.json",
+  };
+}
+
+function validateIpadCandidate(manifest, root = resolveIpadRoot(repoRoot)) {
+  const state = candidateSourceState(root, "ipad");
+  const head = state.commit;
   if (manifest.candidate?.ipadCommit !== head) {
     throw new Error(`iPad HEAD(${head})와 최종 후보 커밋이 다릅니다.`);
   }
-  if (git(["status", "--porcelain"], root)) {
+  if (git(["status", "--porcelain"], state.workspaceRoot)) {
     throw new Error("최종 게이트는 깨끗한 iPad 로컬 커밋에서만 실행할 수 있습니다.");
   }
-  return { commit: head };
+  return { commit: head, ...(state.provenance ? {
+    provenance: state.provenance,
+    workspaceCommit: state.workspaceCommit,
+  } : {}) };
 }
 
 function validatePilotGate(manifest, evidenceRoot) {
@@ -470,25 +554,34 @@ function validateCafe24Release(manifest, evidenceRoot, root = repoRoot) {
   if (release.schemaVersion !== "MATTHS_CAFE24_RELEASE_V1") {
     throw new Error("Cafe24 배포 manifest 스키마가 올바르지 않습니다.");
   }
-  const head = git(["rev-parse", "HEAD"], root);
+  const state = candidateSourceState(root, "web");
+  const head = state.commit;
   if (manifest.candidate.webCommit !== head || release.release?.commit !== head) {
     throw new Error(`웹 HEAD(${head})와 최종 후보/배포본 커밋이 다릅니다.`);
   }
-  if (git(["status", "--porcelain"], root)) {
+  if (git(["status", "--porcelain"], state.workspaceRoot)) {
     throw new Error("최종 게이트는 깨끗한 로컬 커밋에서만 실행할 수 있습니다.");
   }
   const archive = resolveEvidenceFile(evidenceRoot, manifest.candidate.cafe24ReleaseArchive);
   if (path.basename(archive) !== release.release.file || sha256(archive) !== release.release.sha256) {
     throw new Error("Cafe24 배포 archive가 RELEASE-MANIFEST.json과 다릅니다.");
   }
-  return { commit: head, archive: manifest.candidate.cafe24ReleaseArchive, sha256: release.release.sha256 };
+  return {
+    commit: head,
+    archive: manifest.candidate.cafe24ReleaseArchive,
+    sha256: release.release.sha256,
+    ...(state.provenance ? {
+      provenance: state.provenance,
+      workspaceCommit: state.workspaceCommit,
+    } : {}),
+  };
 }
 
 function evaluate(
   manifest,
   evidenceRoot,
   root = repoRoot,
-  ipadRoot = path.resolve(root, "../ipad-app"),
+  ipadRoot = resolveIpadRoot(root),
 ) {
   if (manifest.schemaVersion !== "MATTHS_FINAL_RELEASE_EVIDENCE_V1") {
     throw new Error(`지원하지 않는 최종 증거 스키마입니다: ${manifest.schemaVersion}`);
@@ -636,6 +729,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  _testing: { candidateSourceState },
   allowedArtifactTypes,
   evaluate,
   requiredExternalChecks,

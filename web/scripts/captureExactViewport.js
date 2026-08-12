@@ -148,6 +148,8 @@ async function run() {
   const height = positiveInteger("--height", 1024);
   const waitMs = positiveInteger("--wait-ms", 800);
   const output = path.resolve(option("--output"));
+  const fullOutputValue = option("--full-output", "");
+  const fullOutput = fullOutputValue ? path.resolve(fullOutputValue) : null;
   const chrome = findChrome(option("--chrome"));
   const suppliedProfile = option("--profile");
   const temporaryProfile = suppliedProfile
@@ -156,6 +158,7 @@ async function run() {
   const profile = path.resolve(suppliedProfile || temporaryProfile);
   fs.mkdirSync(profile, { recursive: true });
   fs.mkdirSync(path.dirname(output), { recursive: true });
+  if (fullOutput) fs.mkdirSync(path.dirname(fullOutput), { recursive: true });
 
   const child = spawn(
     chrome,
@@ -328,6 +331,14 @@ async function run() {
       captureBeyondViewport: false,
     });
     fs.writeFileSync(output, Buffer.from(screenshot.data, "base64"));
+    if (fullOutput) {
+      const fullScreenshot = await connection.send("Page.captureScreenshot", {
+        format: "png",
+        fromSurface: true,
+        captureBeyondViewport: true,
+      });
+      fs.writeFileSync(fullOutput, Buffer.from(fullScreenshot.data, "base64"));
+    }
     process.stdout.write(`${JSON.stringify({
       requestedWidth: width,
       requestedHeight: height,
@@ -341,6 +352,7 @@ async function run() {
       scrollWidth: metrics.scrollWidth,
       overflowingElements: metrics.overflowingElements,
       intrinsicOverflowElements: metrics.intrinsicOverflowElements,
+      fullPageCaptured: Boolean(fullOutput),
       viewportVerified: true,
       html: metrics.html,
     })}\n`);

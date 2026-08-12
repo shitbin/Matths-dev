@@ -570,6 +570,40 @@ body :where(button, a, input, select, textarea):focus-visible {
   letter-spacing: -0.045em;
 }
 
+/* 라이트 표면으로 전환된 히어로 안에 남은 다크 테마 전경색을 함께 전환한다. */
+.archive-intro > strong {
+  color: var(--product-ink);
+  background: var(--product-surface-subtle);
+  border-color: var(--product-line);
+}
+
+.archive-intro div > span,
+.archive-intro > strong small,
+.notification-hero dt,
+.suggestion-hero > div > span,
+.suggestion-hero ul {
+  color: var(--product-muted);
+}
+
+.notification-hero > div > p,
+.notification-hero h2 strong,
+.suggestion-hero > div > p {
+  color: var(--product-action);
+}
+
+.notification-hero dl div,
+.suggestion-hero aside {
+  color: var(--product-ink);
+  background: var(--product-surface-subtle);
+  border-color: var(--product-line);
+  backdrop-filter: none;
+}
+
+.notification-hero dd,
+.suggestion-hero aside strong {
+  color: var(--product-ink);
+}
+
 .notification-main :where(p, span, small, time, a, button),
 .community-post-main :where(p, span, small, time, label, input, textarea, a, button),
 .community-compose-main :where(p, span, small, label, input, select, textarea, a, button),

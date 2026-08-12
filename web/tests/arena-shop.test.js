@@ -16,6 +16,8 @@ const {
   MainShopEffect,
   MainShopPolicyVersion,
   MainShopPurchase,
+  ArenaMatch,
+  ArenaMatchAttempt,
 } = require("../models/goatArenaModel");
 const {
   defaultPolicyItems,
@@ -101,8 +103,53 @@ async function main() {
     });
 
     const { user, cycle } = await seedRankedUser();
+    const settledMatchId = objectId();
+    await ArenaMatch.collection.insertOne({
+      _id: settledMatchId,
+      division: "SUB",
+      matchType: "REVENGE",
+      status: "SETTLED",
+      challenger: { userId: user._id },
+      defender: { userId: objectId() },
+      settledAt: NOW,
+      createdAt: new Date(NOW.getTime() - DAY_MS),
+      updatedAt: NOW,
+    });
+    const defenseMatchId = objectId();
+    await ArenaMatch.collection.insertOne({
+      _id: defenseMatchId,
+      division: "MAIN",
+      matchType: "NORMAL",
+      matchOrigin: "MAIN_UPWARD_AUTO_MATCH",
+      status: "READY",
+      challenger: { userId: objectId() },
+      defender: { userId: user._id },
+      readyAt: NOW,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await ArenaMatchAttempt.collection.insertMany([
+      { _id: objectId(), matchId: defenseMatchId, status: "READY", startedAt: null },
+      { _id: objectId(), matchId: defenseMatchId, status: "READY", startedAt: null },
+    ]);
     const initial = await getMainShopApiData({ userId: user._id, now: NOW });
     assert.equal(initial.wallet.availableLearningDays, 12);
+    assert.deepEqual(initial.analysisTargets, [
+      {
+        id: String(settledMatchId),
+        divisionLabel: "Unranked",
+        matchTypeLabel: "재대결",
+        occurredAt: NOW.toISOString(),
+      },
+    ]);
+    assert.deepEqual(initial.defenseProtectionTargets, [
+      {
+        id: String(defenseMatchId),
+        divisionLabel: "Ranked",
+        matchTypeLabel: "공식 경기",
+        occurredAt: NOW.toISOString(),
+      },
+    ]);
     assert.deepEqual(
       initial.items.map((item) => [
         item.itemCode,

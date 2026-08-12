@@ -39,8 +39,28 @@ body.admin-page,
   color: var(--matths-muted);
 }
 
+/* matths-theme.css also serves the legacy dark admin header. The v2 header is
+   light, so its dark-surface foreground values must not win by specificity. */
+.admin-page .admin-topbar .admin-main-nav > a,
+.admin-page .admin-topbar .admin-main-nav > .admin-nav-group > button {
+  color: var(--matths-muted);
+}
+
+.admin-page .admin-topbar .admin-account-user > .admin-account-identity {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--matths-ink);
+}
+
+.admin-account-compact {
+  display: none;
+}
+
 .admin-main-nav a.active,
-.admin-main-nav .admin-nav-group.active > button {
+.admin-main-nav .admin-nav-group.active > button,
+.admin-page .admin-topbar .admin-main-nav > a.active,
+.admin-page .admin-topbar .admin-main-nav > .admin-nav-group.active > button {
   color: var(--matths-progress-blue);
   background: var(--matths-primary-soft);
 }
@@ -272,17 +292,24 @@ body.admin-page,
 }
 
 .danger-form,
-.admin-form.danger-form,
-.admin-matchmaking-form button.danger {
+.admin-form.danger-form {
   border-color: var(--matths-danger);
 }
 
 .danger-form button,
-.admin-form.danger-form button,
-.admin-matchmaking-form button.danger {
+.admin-form.danger-form button {
   color: var(--matths-on-brand);
   background: var(--matths-danger);
   background-image: none;
+}
+
+.admin-matchmaking-form button.danger {
+  width: fit-content;
+  color: var(--matths-danger);
+  background: var(--matths-surface);
+  background-image: none;
+  border: 1px solid var(--matths-danger);
+  box-shadow: none;
 }
 
 .admin-guide-hero dl div,
@@ -316,6 +343,27 @@ body.admin-page,
 .admin-guide-jump a:hover {
   color: var(--matths-progress-blue);
   background: var(--matths-primary-soft);
+}
+
+@media (max-width: 1050px) {
+  .admin-page .admin-topbar .admin-account-user > .admin-account-identity {
+    display: inline-flex;
+  }
+
+  .admin-account-full {
+    display: none;
+  }
+
+  .admin-account-compact {
+    width: 32px;
+    height: 32px;
+    display: inline-grid;
+    place-items: center;
+    color: var(--matths-on-brand);
+    background: var(--matths-violet);
+    border-radius: 50%;
+    font-weight: 850;
+  }
 }
 
 .admin-table-wrap,

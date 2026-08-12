@@ -149,7 +149,7 @@
   background: #eef2ff;
   border-radius: 16px;
   font-size: 14px;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .admin-guide-section > header p {
@@ -2338,6 +2338,21 @@
   background: #fff;
   border: 1px solid var(--admin-line);
   border-radius: 15px;
+}
+
+@media (min-width: 761px) and (max-width: 980px) {
+  .user-filter-bar {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  .user-filter-bar label.wide {
+    grid-column: 1 / -1;
+  }
+
+  .user-filter-bar button {
+    justify-self: start;
+    min-width: 110px;
+  }
 }
 
 .admin-filter-bar label {
@@ -6295,7 +6310,7 @@
 .admin-test-counts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 0; }
 .admin-test-counts div { padding: 20px; background: #f6f8fd; border-radius: 16px; }
 .admin-test-counts dt { color: #76809b; font-size: 12px; }
-.admin-test-counts dd { margin: 8px 0 0; color: #171d39; font-size: 28px; font-weight: 950; }
+.admin-test-counts dd { margin: 8px 0 0; color: #171d39; font-size: 28px; font-weight: 900; }
 
 @media (max-width: 760px) {
   .admin-test-control-shell { width: min(100% - 24px, 1180px); margin-top: 20px; }
@@ -6734,7 +6749,11 @@
 }
 
 .admin-matchmaking-form button.danger {
-  background: linear-gradient(135deg, #d83454, #9a2541);
+  width: fit-content;
+  color: #a82e43;
+  background: #fff;
+  border: 1px solid #d96a7c;
+  box-shadow: none;
 }
 
 .admin-pdf-forensics {
@@ -6869,6 +6888,15 @@
 }
 
 @media (max-width: 800px) {
+  .admin-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-panel-heading > span {
+    max-width: 100%;
+  }
+
   .admin-matchmaking-state,
   .forensic-result-card > header {
     align-items: flex-start;
@@ -6884,6 +6912,12 @@
   .forensic-guide > div:nth-of-type(2),
   .forensic-result-card dl {
     grid-template-columns: 1fr;
+  }
+
+  .admin-matchmaking-form button.danger {
+    justify-self: start;
+    width: auto;
+    max-width: 100%;
   }
 
   .forensic-result-card dl div.wide {

@@ -98,11 +98,37 @@ function assertSafeTrackedTree(commit) {
   return files.length;
 }
 
+function runPrePackagingTests() {
+  const startedAt = new Date().toISOString();
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, "scripts", "run-tests.js")],
+    {
+      cwd: root,
+      stdio: "inherit",
+      env: { ...process.env, MATTHS_RELEASE_PACKAGING: "1" },
+    },
+  );
+  if (result.status !== 0) {
+    throw new Error(
+      `Cafe24 패키징 전 전체 테스트가 실패했습니다 (exit ${result.status ?? "signal"}).`,
+    );
+  }
+  return {
+    command: "node scripts/run-tests.js",
+    result: "PASS",
+    startedAt,
+    completedAt: new Date().toISOString(),
+  };
+}
+
 function main() {
   const dirty = git(["status", "--porcelain"]);
   if (dirty) {
     throw new Error("웹 작업 트리가 깨끗하지 않습니다. 차수 커밋 뒤에만 배포본을 만드세요.");
   }
+
+  const prePackagingTests = runPrePackagingTests();
 
   const releaseCommit = safeRef("HEAD");
   const rollbackCommit = safeRef(rollbackRef);
@@ -140,6 +166,7 @@ function main() {
       "npm run ui:verify",
       "NODE_ENV=production npm run preflight",
     ],
+    prePackagingTests,
     crossWorkspaceTestsVerifiedBeforePackaging: [
       "tests/arena-ipad-visualization-contract.test.js",
       "tests/final-release-readiness.test.js",

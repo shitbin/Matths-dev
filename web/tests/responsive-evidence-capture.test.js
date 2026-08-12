@@ -40,6 +40,12 @@ assert.match(source, /documentStatusOk/);
 assert.match(source, /documentStatus >= 200/);
 assert.match(source, /documentStatus < 400/);
 assert.match(source, /--only-extra/);
+assert.match(source, /expectedText/);
+assert.match(source, /missingExpectedText/);
+assert.match(source, /contentVerified/);
+assert.match(source, /expectedErrorStatus/);
+assert.match(source, /extraPlan/);
+assert.match(source, /sha256/);
 assert.match(source, /MATTHS_RESPONSIVE_EVIDENCE_V2/);
 assert.match(source, /sourceCommit/);
 assert.match(source, /sourceTree/);
@@ -52,6 +58,10 @@ assert.match(source, /MATTHS_CAPTURE_DRIVER \|\| "cdp"/);
 assert.match(source, /captureExactViewport\.js/);
 assert.match(source, /viewportVerified/);
 assert.match(source, /horizontalOverflow/);
+assert.match(source, /intrinsicOverflowElements/);
+assert.match(source, /intrinsicOverflow/);
+assert.match(source, /fullPageFile/);
+assert.match(source, /--full-output/);
 assert.match(source, /scrollWidth/);
 assert.match(source, /failureCount/);
 assert.match(source, /process\.exit\(1\)/);
@@ -113,7 +123,14 @@ assert.ok(
 
 const extraPlan = path.join(temporary, "extra-plan.json");
 fs.writeFileSync(extraPlan, JSON.stringify([
-  { slug: "extra-only", route: "/preview", role: "public" },
+  {
+    slug: "extra-only",
+    route: "/preview",
+    role: "public",
+    authProfile: "public",
+    evidenceState: "EXTRA_OK",
+    expectedText: ["ok"],
+  },
 ]));
 const extraOutput = path.join(temporary, "extra-evidence");
 const extraRun = spawnSync(
@@ -134,6 +151,69 @@ assert.equal(extraRun.status, 0, extraRun.stderr || extraRun.stdout);
 const extraManifest = JSON.parse(fs.readFileSync(path.join(extraOutput, "manifest.json"), "utf8"));
 assert.equal(extraManifest.pageCount, 1);
 assert.equal(extraManifest.captureCount, 5);
+assert.equal(extraManifest.extraPlan.pageCount, 1);
+assert.match(extraManifest.extraPlan.sha256, /^[0-9a-f]{64}$/);
+assert.equal(extraManifest.captures.every((row) => row.contentVerified === true), true);
+assert.equal(extraManifest.captures.every((row) => row.evidenceState === "EXTRA_OK"), true);
+
+const missingTextPlan = path.join(temporary, "missing-text-plan.json");
+fs.writeFileSync(missingTextPlan, JSON.stringify([{
+  slug: "missing-text",
+  route: "/preview",
+  role: "public",
+  authProfile: "public",
+  expectedText: ["must-not-exist"],
+}]));
+const missingTextOutput = path.join(temporary, "missing-text-evidence");
+const missingTextRun = spawnSync(
+  process.execPath,
+  [
+    path.join(root, "scripts/captureResponsiveEvidence.js"),
+    "--roles", "public",
+    "--chrome", fakeChrome,
+    "--driver", "cli",
+    "--output", missingTextOutput,
+    "--base-url", "http://example.invalid",
+    "--extra-plan", missingTextPlan,
+    "--only-extra",
+  ],
+  { cwd: root, encoding: "utf8" },
+);
+assert.notEqual(missingTextRun.status, 0, "missing expected fixture copy must fail capture");
+const missingTextManifest = JSON.parse(
+  fs.readFileSync(path.join(missingTextOutput, "manifest.json"), "utf8"),
+);
+assert.equal(missingTextManifest.failureCount, 5);
+assert.equal(missingTextManifest.captures.every((row) => row.contentVerified === false), true);
+assert.equal(
+  missingTextManifest.captures.every((row) => row.missingExpectedText.includes("must-not-exist")),
+  true,
+);
+
+const unsafeErrorPlan = path.join(temporary, "unsafe-error-plan.json");
+fs.writeFileSync(unsafeErrorPlan, JSON.stringify([{
+  slug: "unsafe-error",
+  route: "/missing",
+  role: "public",
+  expectedErrorStatus: 404,
+  expectedText: ["unrelated"],
+}]));
+const unsafeErrorRun = spawnSync(
+  process.execPath,
+  [
+    path.join(root, "scripts/captureResponsiveEvidence.js"),
+    "--roles", "public",
+    "--chrome", fakeChrome,
+    "--driver", "cli",
+    "--output", path.join(temporary, "unsafe-error-evidence"),
+    "--base-url", "http://example.invalid",
+    "--extra-plan", unsafeErrorPlan,
+    "--only-extra",
+  ],
+  { cwd: root, encoding: "utf8" },
+);
+assert.notEqual(unsafeErrorRun.status, 0);
+assert.match(unsafeErrorRun.stderr, /같은 HTTP evidenceState·expectedText/);
 
 const studentProfile = path.join(temporary, "student-profile");
 fs.mkdirSync(studentProfile);
@@ -176,5 +256,7 @@ assert.match(exactSource, /overflowingElements/);
 assert.match(exactSource, /getBoundingClientRect/);
 assert.match(exactSource, /Page\.captureScreenshot/);
 assert.match(exactSource, /captureBeyondViewport: false/);
+assert.match(exactSource, /captureBeyondViewport: true/);
+assert.match(exactSource, /fullPageCaptured/);
 
 console.log("Responsive evidence capture contracts passed");

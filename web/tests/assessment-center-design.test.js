@@ -8,6 +8,7 @@ const ejs = require("ejs");
 const root = path.resolve(__dirname, "..");
 const templatePath = path.join(root, "views/assessment-center.ejs");
 const stylesheetPath = path.join(root, "public/css/assessment-center-v2.css");
+const assessmentAttemptStylesheetPath = path.join(root, "public/css/assessment.css");
 
 function state(overrides = {}) {
   return {
@@ -72,6 +73,7 @@ async function run() {
     },
   });
   const stylesheet = fs.readFileSync(stylesheetPath, "utf8");
+  const attemptStylesheet = fs.readFileSync(assessmentAttemptStylesheetPath, "utf8");
 
   assert.match(html, /class="assessment-command-center"/);
   assert.match(html, /통과 기준[\s\S]*80[\s\S]*열린 평가[\s\S]*2[\s\S]*열린 과목[\s\S]*1/);
@@ -93,6 +95,12 @@ async function run() {
     /\.subassessment-card button,[\s\S]*min-height:\s*44px/,
     "평가 CTA는 최소 44px이어야 합니다.",
   );
+  assert.match(
+    attemptStylesheet,
+    /--assessment-muted:\s*var\(--matths-muted\)/,
+    "평가 화면 보조 텍스트는 밝은 표면에서 AA 대비를 갖춘 공통 muted 토큰을 사용해야 합니다.",
+  );
+  assert.doesNotMatch(attemptStylesheet, /#788199/i);
   assert.match(
     stylesheet,
     /@media\s*\(max-width:\s*620px\)[\s\S]*\.assessment-command-metrics\s*\{[\s\S]*grid-template-columns:\s*1fr/,

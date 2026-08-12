@@ -223,6 +223,70 @@ function compareAcceleratedInvitationRequests(left, right) {
   );
 }
 
+function arenaShopMatchTypeLabel(matchType) {
+  switch (String(matchType || "NORMAL").toUpperCase()) {
+    case "FRIENDLY":
+      return "친선 경기";
+    case "INVITATION":
+      return "초대 경기";
+    case "REVENGE":
+      return "재대결";
+    default:
+      return "공식 경기";
+  }
+}
+
+function apiMatchTarget(match) {
+  return {
+    id: String(match._id),
+    divisionLabel: match.division === "MAIN" ? "Ranked" : "Unranked",
+    matchTypeLabel: arenaShopMatchTypeLabel(match.matchType),
+    occurredAt: isoString(
+      match.settledAt || match.readyAt || match.updatedAt || match.createdAt
+    ),
+  };
+}
+
+async function listDefenseProtectionTargets({ userId, now = new Date() }) {
+  const cutoff = new Date(new Date(now).getTime() - 3 * 60 * 60 * 1000);
+  const matches = await ArenaMatch.find({
+    division: "MAIN",
+    matchType: "NORMAL",
+    matchOrigin: "MAIN_UPWARD_AUTO_MATCH",
+    status: "READY",
+    "defender.userId": userId,
+    $or: [
+      { readyAt: { $gte: cutoff } },
+      { readyAt: null, createdAt: { $gte: cutoff } },
+    ],
+  })
+    .sort({ readyAt: -1, createdAt: -1 })
+    .limit(12)
+    .lean();
+  if (!matches.length) return [];
+
+  const attempts = await ArenaMatchAttempt.find({
+    matchId: { $in: matches.map((match) => match._id) },
+  }).lean();
+  const attemptsByMatch = new Map();
+  for (const attempt of attempts) {
+    const key = String(attempt.matchId);
+    const rows = attemptsByMatch.get(key) || [];
+    rows.push(attempt);
+    attemptsByMatch.set(key, rows);
+  }
+
+  return matches
+    .filter((match) => {
+      const rows = attemptsByMatch.get(String(match._id)) || [];
+      return (
+        rows.length === 2 &&
+        rows.every((attempt) => attempt.status === "READY" && !attempt.startedAt)
+      );
+    })
+    .map(apiMatchTarget);
+}
+
 function isDefenseConvenienceCooldownActive({
   lastDefenseRestUsedAt = null,
   lastScheduleProtectionUsedAt = null,
@@ -1352,9 +1416,10 @@ async function getMainShopPageData({ userId, now = new Date() }) {
  */
 async function getMainShopApiData({ userId, now = new Date() }) {
   const observedAt = new Date(now);
-  const [policy, page] = await Promise.all([
+  const [policy, page, defenseProtectionTargets] = await Promise.all([
     getActiveMainShopPolicy(observedAt),
     getMainShopPageData({ userId, now: observedAt }),
+    listDefenseProtectionTargets({ userId, now: observedAt }),
   ]);
   const availableLearningDays = Number(page.availableLearningDays || 0);
   const items = policy.items.map((item) => {
@@ -1431,6 +1496,15 @@ async function getMainShopApiData({ userId, now = new Date() }) {
     items,
     effects: page.effects.map(apiEffect),
     purchases: page.purchases.map(apiPurchase),
+    analysisTargets: page.analysisTargets.map((match) =>
+      apiMatchTarget({
+        _id: match.id,
+        division: match.division,
+        matchType: match.matchType,
+        settledAt: match.settledAt,
+      })
+    ),
+    defenseProtectionTargets,
     invitations: page.invitations.map((invitation) => ({
       id: String(invitation._id || invitation.invitationId || ""),
       targetTier: String(invitation.targetTier || ""),

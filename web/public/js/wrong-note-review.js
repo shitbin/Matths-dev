@@ -8,6 +8,13 @@
   if (!configElement) return;
 
   const config = JSON.parse(configElement.textContent);
+  const toUserErrorMessage = (
+    error,
+    fallback
+  ) =>
+    window.MatthsFetchErrorMessage
+      ?.toUserMessage(error, fallback) ||
+    fallback;
   const loading = document.getElementById("retry-loading");
   const problemPanel = document.getElementById("retry-problem");
   const errorPanel = document.getElementById("retry-error");
@@ -124,13 +131,7 @@
       ...options,
     });
 
-    let result = {};
-
-    try {
-      result = await response.json();
-    } catch (error) {
-      result = {};
-    }
+    const result = await response.json();
 
     if (!response.ok) {
       throw new Error(
@@ -357,7 +358,11 @@
     loading.hidden = true;
     problemPanel.hidden = true;
     errorPanel.hidden = false;
-    errorMessage.textContent = error.message;
+    errorMessage.textContent =
+      toUserErrorMessage(
+        error,
+        "재도전 문제를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+      );
   }
 
   async function loadProblem() {
@@ -480,7 +485,11 @@
       submitButton.disabled = false;
       feedback.hidden = false;
       feedback.className = "retry-feedback wrong";
-      feedback.textContent = error.message;
+      feedback.textContent =
+        toUserErrorMessage(
+          error,
+          "답안을 제출하지 못했습니다. 잠시 후 다시 시도해주세요."
+        );
     }
   }
 

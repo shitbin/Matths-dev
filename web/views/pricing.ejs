@@ -31,13 +31,15 @@
         <span>개념 학습은 무료로 시작하고, 필요한 시점에 모의고사 또는 GOAT Arena까지 확장할 수 있습니다.</span>
       </header>
 
-      <aside class="pricing-payment-status" aria-labelledby="payment-status-title">
-        <div>
-          <p>결제 전 확인</p>
-          <h2 id="payment-status-title">유료 이용권 결제를 준비하고 있습니다.</h2>
-        </div>
-        <p>결제 기능이 열리기 전까지 별도 과금이나 유료 이용권 지급은 발생하지 않습니다. 개념 학습과 유형 연습은 무료로 계속 이용할 수 있습니다.</p>
-      </aside>
+      <% if (!paymentsOpen) { %>
+        <aside class="pricing-payment-status" aria-labelledby="payment-status-title">
+          <div>
+            <p>결제 전 확인</p>
+            <h2 id="payment-status-title">유료 이용권 결제를 준비하고 있습니다.</h2>
+          </div>
+          <p>결제 기능이 열리기 전까지 별도 과금이나 유료 이용권 지급은 발생하지 않습니다. 개념 학습과 유형 연습은 무료로 계속 이용할 수 있습니다.</p>
+        </aside>
+      <% } %>
 
       <section class="pricing-grid" aria-label="Matths 이용권 비교">
         <article class="pricing-card pricing-card--free">

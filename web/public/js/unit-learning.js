@@ -1,6 +1,14 @@
 (function () {
   "use strict";
 
+  const toUserErrorMessage = (
+    error,
+    fallback
+  ) =>
+    window.MatthsFetchErrorMessage
+      ?.toUserMessage(error, fallback) ||
+    fallback;
+
   function setText(element, value) {
     if (element) element.textContent = value;
   }
@@ -36,7 +44,9 @@
     }
 
     if (!body) {
-      throw new Error("서버 응답 형식이 올바르지 않습니다.");
+      throw new SyntaxError(
+        "서버 응답 형식이 올바르지 않습니다."
+      );
     }
 
     return body;
@@ -199,7 +209,10 @@
           syncTaskLabel(checkbox);
           setText(
             feedback,
-            `${error.message} 표시를 이전 상태로 되돌렸습니다. 인터넷 연결을 확인한 뒤 다시 선택해주세요.`
+            `${toUserErrorMessage(
+              error,
+              "학습 진도를 저장하지 못했습니다. 잠시 후 다시 시도해주세요."
+            )} 표시를 이전 상태로 되돌렸습니다.`
           );
         } finally {
           setSaving(false, checkbox);

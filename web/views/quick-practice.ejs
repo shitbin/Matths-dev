@@ -31,12 +31,10 @@
           displayMath: [["\\[", "\\]"]],
         },
         svg: { fontCache: "global" },
-      };
+    };
     </script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"
-      defer
-    ></script>
+    <%- include("partials/mathjax-runtime") %>
+    <script src="/js/fetch-error-message.js" defer></script>
     <script src="/js/main.js" defer></script>
     <script src="/js/quick-practice.js" defer></script>
   </head>

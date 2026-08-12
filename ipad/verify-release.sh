@@ -23,6 +23,23 @@ DD="${DD:-/tmp/matths-rel}"
 APP="$DD/Build/Products/Release-iphoneos/Matths.app"
 BIN="$APP/Matths"
 
+# macOS `strings` 는 기본 설정에서 UTF-8 한글을 출력하지 않을 수 있다.
+# 출시 바이너리 원문을 C locale 의 고정 바이트열로 직접 검색해 한글 DEBUG 문구도 잡는다.
+count_fixed_bytes() { # 바이너리, 검색할 고정 문자열
+  LC_ALL=C grep -aF -o -- "$2" "$1" 2>/dev/null | wc -l | tr -d '[:space:]'
+}
+
+binary_scanner_self_test() {
+  local fixture marker detected
+  marker="개발 서버 미리보기 코드"
+  fixture="$(mktemp "${TMPDIR:-/tmp}/matths-release-scanner.XXXXXX")" || return 1
+  # 실제 Mach-O 처럼 NUL 바이트 사이에 UTF-8 문자열이 있어도 탐지해야 한다.
+  printf '\000release-prefix\000%s\000release-suffix\000' "$marker" > "$fixture"
+  detected="$(count_fixed_bytes "$fixture" "$marker")"
+  rm -f -- "$fixture"
+  [ "$detected" -eq 1 ]
+}
+
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "▶ Release 빌드…"
   xcodebuild -project "$HERE/Matths.xcodeproj" -scheme Matths -configuration Release \
@@ -31,6 +48,13 @@ if [ "${SKIP_BUILD:-0}" != "1" ]; then
 fi
 
 [ -f "$BIN" ] || { echo "✗ Release 바이너리가 없다: $BIN"; exit 2; }
+
+if binary_scanner_self_test; then
+  echo "✓ Release 바이너리 스캐너 양성 대조 통과"
+else
+  echo "✗ Release 바이너리 스캐너가 UTF-8 양성 대조를 탐지하지 못했다"
+  exit 3
+fi
 
 fail=0
 report() { # 이름, 개수, 기대(0)
@@ -41,7 +65,7 @@ report() { # 이름, 개수, 기대(0)
 echo
 echo "[1/4] 비밀정보"
 for s in "mongodb" "mongodb+srv" "API_TOKEN_SECRET" "EMAIL_API_KEY" "SECRET="; do
-  report "$s" "$(strings "$BIN" | grep -c -- "$s")"
+  report "$s" "$(count_fixed_bytes "$BIN" "$s")"
 done
 
 echo
@@ -51,7 +75,7 @@ echo "[2/4] DEBUG 전용 통로"
 for s in "서버 주소 (개발용)" "기록 보기 (디버그)" "채점 기록 · 디버그" \
          "개발 서버 미리보기 코드" \
          "-fakeAnalysis" "-fakeTrace" "-proReport"; do
-  report "$s" "$(strings "$BIN" | grep -c -- "$s")"
+  report "$s" "$(count_fixed_bytes "$BIN" "$s")"
 done
 
 echo

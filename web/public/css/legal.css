@@ -352,7 +352,12 @@ a {
   color: #c4cae0;
 }
 
-@media (max-width: 960px) {
+/*
+ * 사이드 내비가 남아 있는 1024px 전후에서는 본문 열이 표의 640px
+ * 최소 폭보다 좁다. 법적 고지의 마지막 열을 잘라 보이지 않게 두지
+ * 않고, 그 구간부터 명시적인 카드 레이아웃으로 전환한다.
+ */
+@media (max-width: 1100px) {
   .legal-layout {
     grid-template-columns: 1fr;
   }

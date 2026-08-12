@@ -1,4 +1,14 @@
 (() => {
+  const toUserErrorMessage = (
+    error,
+    fallback
+  ) =>
+    window.MatthsFetchErrorMessage
+      ?.toUserMessage(
+        error,
+        fallback
+      ) || fallback;
+
   const selectionForm =
     document.querySelector(
       "[data-private-mock-selection]"
@@ -87,7 +97,10 @@
           }
         } catch (error) {
           status.textContent =
-            error.message;
+            toUserErrorMessage(
+              error,
+              "대표 성적을 저장하지 못했습니다. 잠시 후 다시 시도해주세요."
+            );
         } finally {
           buttons.forEach(
             (button) => {

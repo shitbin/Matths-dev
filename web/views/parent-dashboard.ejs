@@ -1,7 +1,9 @@
 <%
   const stats = dashboard.stats || {};
+  const accuracySample = Math.max(0, Number(stats.weeklySolvedProblems) || 0);
+  const hasAccuracySample = accuracySample > 0;
   const accuracy = Math.max(0, Math.min(100, Number(stats.correctRate) || 0));
-  const wrongRate = Math.round((100 - accuracy) * 10) / 10;
+  const wrongRate = hasAccuracySample ? Math.round((100 - accuracy) * 10) / 10 : null;
   const gradeLabels = { 10:'고등학교 1학년',11:'고등학교 2학년',12:'고등학교 3학년',13:'N수생',14:'대학생',15:'직장인' };
   const affiliationLabel = Number(child.schoolGrade) === 14 ? (child.university?.name || '대학교 미설정') : Number(child.schoolGrade) === 15 ? '직장인' : Number(child.schoolGrade) === 13 ? 'N수생' : (child.school?.name || '고등학교 미설정');
   const divisionLabel = (value) => String(value || '').toUpperCase() === 'MAIN' ? 'RANKED' : 'UNRANKED';
@@ -34,7 +36,7 @@
       <section class="parent-summary-grid" aria-label="주요 학습 지표">
         <article><small>이번 주 학습 시간</small><strong><%= formatMinutes(stats.weeklyStudyMinutes) %></strong><span>오늘 <%= formatMinutes(stats.todayStudyMinutes) %></span></article>
         <article><small>오늘 풀이</small><strong><%= Number(stats.todaySolvedProblems) || 0 %><em>문제</em></strong><span>KST 기준 · 이번 주 <%= Number(stats.weeklySolvedProblems) || 0 %>문제</span></article>
-        <article><small>정답률</small><strong><%= accuracy %><em>%</em></strong><span>오답률 <%= wrongRate %>%</span></article>
+        <article><small>정답률</small><strong><%= hasAccuracySample ? accuracy : "—" %><% if (hasAccuracySample) { %><em>%</em><% } %></strong><span><%= hasAccuracySample ? `오답률 ${wrongRate}%` : "아직 풀이 기록이 없습니다." %></span></article>
         <article><small>연속 학습</small><strong><%= Number(child.currentStreak) || 0 %><em>일</em></strong><span>누적 학습 <%= formatMinutes((child.totalStudySeconds || 0) / 60) %></span></article>
       </section>
       <section class="parent-ranking-section">

@@ -8,6 +8,13 @@
   if (!configElement) return;
 
   const config = JSON.parse(configElement.textContent);
+  const toUserErrorMessage = (
+    error,
+    fallback
+  ) =>
+    window.MatthsFetchErrorMessage
+      ?.toUserMessage(error, fallback) ||
+    fallback;
 
   function typesetMath(elements) {
     const targets = (
@@ -2935,7 +2942,11 @@
 
         submitButton.disabled = false;
       } catch (error) {
-        prompt.textContent = error.message;
+        prompt.textContent =
+          toUserErrorMessage(
+            error,
+            "문제를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+          );
       }
     }
 
@@ -3027,7 +3038,11 @@
         feedback.hidden = false;
         feedback.className =
           "problem-feedback wrong";
-        feedback.textContent = error.message;
+        feedback.textContent =
+          toUserErrorMessage(
+            error,
+            "답안을 제출하지 못했습니다. 잠시 후 다시 시도해주세요."
+          );
         submitButton.disabled = false;
       }
     });
@@ -3056,7 +3071,11 @@
         renderMastery(result.mastery);
       } catch (error) {
         checkbox.checked = previousValue;
-        completionMessage.textContent = error.message;
+        completionMessage.textContent =
+          toUserErrorMessage(
+            error,
+            "학습 완료 상태를 저장하지 못했습니다. 잠시 후 다시 시도해주세요."
+          );
         checkbox.disabled = false;
       }
     });

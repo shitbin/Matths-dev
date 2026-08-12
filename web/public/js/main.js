@@ -1,6 +1,14 @@
 (function () {
   "use strict";
 
+  const toUserErrorMessage = (
+    error,
+    fallback
+  ) =>
+    window.MatthsFetchErrorMessage
+      ?.toUserMessage(error, fallback) ||
+    fallback;
+
   const statusRegion = document.getElementById("dashboard-status");
 
   function announce(message) {
@@ -22,13 +30,7 @@
       ...options,
     });
 
-    let result = {};
-
-    try {
-      result = await response.json();
-    } catch (error) {
-      result = {};
-    }
+    const result = await response.json();
 
     if (!response.ok) {
       throw new Error(result.message || "요청을 처리하지 못했습니다.");
@@ -169,7 +171,12 @@
         } catch (error) {
           button.disabled =
             false;
-          announce(error.message);
+          announce(
+            toUserErrorMessage(
+              error,
+              "공지를 닫지 못했습니다. 잠시 후 다시 시도해주세요."
+            )
+          );
         }
       }
     );

@@ -90,6 +90,13 @@ async function main() {
     );
   }
 
+  const pricingView = read("views/pricing.ejs");
+  assert.match(
+    pricingView,
+    /if \(!paymentsOpen\)[\s\S]*?pricing-payment-status[\s\S]*?유료 이용권 결제를 준비하고 있습니다/,
+    "결제가 열린 뒤에도 준비 중·과금 없음 안내가 상시 노출되면 안 됩니다."
+  );
+
   const checkoutService =
     read("services/checkoutService.js");
   assert.match(

@@ -5,11 +5,12 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const assert = require("node:assert/strict");
+const { resolveIpadSourceRoot } = require("./resolveIpadWorkspace");
 
 const repoRoot = path.resolve(__dirname, "..");
-const defaultCatalogPath = path.resolve(
-  repoRoot,
-  "../ipad-app/Matths/assessment-catalog.json",
+const defaultCatalogPath = path.join(
+  resolveIpadSourceRoot(repoRoot),
+  "assessment-catalog.json",
 );
 
 function buildIpadAssessmentCatalog(existingCatalog) {

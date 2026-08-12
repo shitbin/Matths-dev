@@ -1,4 +1,14 @@
 (() => {
+  const toUserErrorMessage = (
+    error,
+    fallback
+  ) =>
+    window.MatthsFetchErrorMessage
+      ?.toUserMessage(
+        error,
+        fallback
+      ) || fallback;
+
   const selectionForm =
     document.querySelector(
       "[data-private-mock-selection]"
@@ -91,7 +101,10 @@
           }
         } catch (error) {
           status.textContent =
-            error.message;
+            toUserErrorMessage(
+              error,
+              "대표 성적을 저장하지 못했습니다. 잠시 후 다시 시도해주세요."
+            );
         } finally {
           buttons.forEach(
             (button) => {
@@ -222,6 +235,10 @@
       root.querySelector(
         "[data-private-mock-start]"
       );
+    const startError =
+      root.querySelector(
+        "[data-private-mock-start-error]"
+      );
     const countdown =
       root.querySelector(
         "[data-private-mock-lobby-countdown]"
@@ -239,6 +256,10 @@
         ? serverNow -
           Date.now()
         : 0;
+    let startRequestPending =
+      false;
+    const readyButtonMarkup =
+      '시험 시작 <span aria-hidden="true">→</span>';
     const tools =
       root.querySelector(
         "[data-private-mock-lobby-tools]"
@@ -310,7 +331,8 @@
 
         if (
           remaining <= 0 &&
-          startButton
+          startButton &&
+          !startRequestPending
         ) {
           startButton.classList.remove(
             "disabled"
@@ -323,7 +345,7 @@
             "tabindex"
           );
           startButton.innerHTML =
-            "시험 시작 <span aria-hidden=\"true\">→</span>";
+            readyButtonMarkup;
         }
       };
 
@@ -383,8 +405,16 @@
         }
         startButton.disabled =
           true;
+        startRequestPending =
+          true;
         startButton.textContent =
           "타이머 시작 중…";
+        if (startError) {
+          startError.hidden =
+            true;
+          startError.textContent =
+            "";
+        }
 
         try {
           const response =
@@ -415,10 +445,21 @@
 
           window.location.reload();
         } catch (error) {
+          startRequestPending =
+            false;
           startButton.disabled =
             false;
-          startButton.textContent =
-            error.message;
+          startButton.innerHTML =
+            readyButtonMarkup;
+          if (startError) {
+            startError.textContent =
+              toUserErrorMessage(
+                error,
+                "시험을 시작하지 못했습니다. 잠시 후 다시 시도해주세요."
+              );
+            startError.hidden =
+              false;
+          }
         }
       }
     );
@@ -572,7 +613,12 @@
       saveState.textContent =
         "저장 실패";
       if (!keepalive) {
-        showError(error.message);
+        showError(
+          toUserErrorMessage(
+            error,
+            "답안을 저장하지 못했습니다. 입력한 답은 화면에 남아 있습니다. 다시 입력하면 저장을 재시도합니다."
+          )
+        );
       }
     } finally {
       saving = false;
@@ -637,7 +683,12 @@
         false;
       submitButton.textContent =
         "답안 최종 제출";
-      showError(error.message);
+      showError(
+        toUserErrorMessage(
+          error,
+          "답안을 제출하지 못했습니다. 입력한 답은 화면에 남아 있습니다. 잠시 후 다시 시도해주세요."
+        )
+      );
     }
   };
 

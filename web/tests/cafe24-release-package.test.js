@@ -26,6 +26,14 @@ assert.match(source, /verificationCommands/);
 assert.match(source, /node scripts\/run-tests\.js --check/);
 assert.match(source, /npm run test:deployment/);
 assert.match(source, /crossWorkspaceTestsVerifiedBeforePackaging/);
+assert.match(source, /function runPrePackagingTests\(\)/);
+assert.match(source, /\[path\.join\(root, "scripts", "run-tests\.js"\)\]/);
+assert.match(source, /const prePackagingTests = runPrePackagingTests\(\)/);
+assert.ok(
+  source.indexOf("const prePackagingTests = runPrePackagingTests()") <
+    source.indexOf('createArchive("release"'),
+  "전체 테스트는 archive 생성 전에 실제 실행되어야 합니다.",
+);
 assert.doesNotMatch(source, /\b(?:scp|rsync|ftp|sftp|curl)\b/);
 const expectedCrossWorkspaceTests = [
   "tests/arena-ipad-visualization-contract.test.js",
@@ -43,7 +51,7 @@ for (const crossWorkspaceTest of expectedCrossWorkspaceTests) {
 }
 const discoveredCrossWorkspaceTests = fs.readdirSync(path.join(root, "tests"))
   .filter((file) => file.endsWith(".test.js"))
-  .filter((file) => /ipad-app(?:\/|["'])/.test(
+  .filter((file) => /require\(["']\.\.\/scripts\/resolveIpadWorkspace["']\)/.test(
     fs.readFileSync(path.join(root, "tests", file), "utf8"),
   ))
   .map((file) => `tests/${file}`)

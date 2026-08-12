@@ -9,11 +9,16 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const {
+  _testing: { candidateSourceState },
   evaluate,
   requiredExternalChecks,
   structuredEvidenceTemplates,
   template,
 } = require("../scripts/finalReleaseReadiness");
+const {
+  resolveIpadRoot,
+  resolveIpadSourceRoot,
+} = require("../scripts/resolveIpadWorkspace");
 
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8" });
@@ -48,10 +53,56 @@ fs.mkdirSync(ipadRoot);
 run("git", ["init"], ipadRoot);
 run("git", ["config", "user.email", "gate@example.invalid"], ipadRoot);
 run("git", ["config", "user.name", "Matths Gate"], ipadRoot);
+fs.mkdirSync(path.join(ipadRoot, "Matths"));
 fs.writeFileSync(path.join(ipadRoot, "README.md"), "ipad candidate\n");
-run("git", ["add", "README.md"], ipadRoot);
+fs.writeFileSync(path.join(ipadRoot, "Matths", "MatthsApp.swift"), "// candidate\n");
+run("git", ["add", "README.md", "Matths/MatthsApp.swift"], ipadRoot);
 run("git", ["commit", "-m", "ipad candidate"], ipadRoot);
 const ipadCommit = run("git", ["rev-parse", "HEAD"], ipadRoot);
+
+assert.equal(resolveIpadRoot(root), ipadRoot, "기존 ../ipad-app 작업본을 먼저 찾아야 합니다.");
+assert.equal(resolveIpadSourceRoot(root), path.join(ipadRoot, "Matths"));
+
+const packagedRoot = path.join(temporary, "packaged");
+const packagedWebRoot = path.join(packagedRoot, "web");
+const packagedIpadRoot = path.join(packagedRoot, "ipad");
+fs.mkdirSync(packagedWebRoot, { recursive: true });
+fs.mkdirSync(path.join(packagedIpadRoot, "Matths"), { recursive: true });
+assert.equal(
+  resolveIpadRoot(packagedWebRoot, ""),
+  packagedIpadRoot,
+  "통합 저장소의 ../ipad 폴백을 찾아야 합니다.",
+);
+const packagedWebCommit = "a".repeat(40);
+const packagedIpadCommit = "b".repeat(40);
+fs.writeFileSync(path.join(packagedWebRoot, "README.md"), "web source\n");
+fs.writeFileSync(path.join(packagedIpadRoot, "Matths", "MatthsApp.swift"), "// packaged\n");
+fs.writeFileSync(path.join(packagedRoot, "SOURCE-SNAPSHOT.json"), `${JSON.stringify({
+  schemaVersion: "MATTHS_DEV_SOURCE_SNAPSHOT_V1",
+  web: { sourceCommit: packagedWebCommit, path: "web" },
+  ipad: { sourceCommit: packagedIpadCommit, path: "ipad" },
+})}\n`);
+run("git", ["init"], packagedRoot);
+run("git", ["config", "user.email", "gate@example.invalid"], packagedRoot);
+run("git", ["config", "user.name", "Matths Gate"], packagedRoot);
+run("git", ["add", "."], packagedRoot);
+run("git", ["commit", "-m", "integrated candidate"], packagedRoot);
+assert.equal(candidateSourceState(packagedWebRoot, "web").commit, packagedWebCommit);
+assert.equal(candidateSourceState(packagedIpadRoot, "ipad").commit, packagedIpadCommit);
+
+const configuredRoot = path.join(temporary, "configured-ipad");
+fs.mkdirSync(path.join(configuredRoot, "Matths"), { recursive: true });
+fs.writeFileSync(path.join(configuredRoot, "Matths", "MatthsApp.swift"), "// configured\n");
+assert.equal(
+  resolveIpadRoot(packagedWebRoot, path.join(configuredRoot, "Matths")),
+  configuredRoot,
+  "MATTHS_IPAD_ROOT는 workspace 또는 Matths source 경로를 받을 수 있어야 합니다.",
+);
+assert.throws(
+  () => resolveIpadRoot(packagedWebRoot, path.join(temporary, "missing-ipad")),
+  /MATTHS_IPAD_ROOT가 올바른 iPad 작업본이 아닙니다/,
+  "명시한 iPad 경로가 틀렸을 때 다른 작업본으로 조용히 폴백하면 안 됩니다.",
+);
 
 const releaseArchive = write(evidenceRoot, "cafe24/release.tar.gz", Buffer.from("release"));
 const releaseManifestBody = `${JSON.stringify({
@@ -61,6 +112,32 @@ const releaseManifestBody = `${JSON.stringify({
 write(evidenceRoot, "cafe24/RELEASE-MANIFEST.json", releaseManifestBody);
 
 const proof = write(evidenceRoot, "proof/check.json", Buffer.from('{"result":"PASS"}\n'));
+write(evidenceRoot, "proof/public/landing-320.png", Buffer.from("png viewport"));
+write(evidenceRoot, "proof/public/landing-320-full.png", Buffer.from("png full page"));
+const responsiveProof = write(evidenceRoot, "proof/responsive.json", `${JSON.stringify({
+  schema: "MATTHS_RESPONSIVE_EVIDENCE_V2",
+  sourceCommit: commit,
+  trackedWorkingTreeClean: true,
+  captureDriver: "cdp",
+  widths: [320],
+  pageCount: 1,
+  captureCount: 1,
+  failureCount: 0,
+  captures: [{
+    slug: "landing",
+    ok: true,
+    driver: "cdp",
+    viewportVerified: true,
+    documentStatusOk: true,
+    horizontalOverflow: false,
+    intrinsicOverflow: false,
+    intrinsicOverflowElements: [],
+    authenticationFailure: false,
+    pageFailure: false,
+    file: "public/landing-320.png",
+    fullPageFile: "public/landing-320-full.png",
+  }],
+})}\n`);
 const videoProof = write(evidenceRoot, "proof/check.mp4", Buffer.concat([
   Buffer.alloc(4), Buffer.from("ftypisom"), Buffer.from("video proof"),
 ]));
@@ -227,6 +304,7 @@ const externalChecks = requiredExternalChecks.map((id) => ({
   reviewer: "test reviewer",
   artifacts: (typeRequirements[id] || ["test-report"]).map((type) => {
     let artifact = proof;
+    if (type === "screenshot-manifest" && id === "web-five-width") artifact = responsiveProof;
     if (type === "video") artifact = videoProof;
     if (type === "legal-document") artifact = legalProof;
     if (type === "signed-archive") artifact = signedProof;
@@ -286,6 +364,53 @@ assert.equal(result.result, "PASS");
 assert.equal(result.ipad.commit, ipadCommit);
 assert.equal(result.externalChecks.length, requiredExternalChecks.length);
 assert.deepEqual(result.visionEvidence.map((row) => row.tier).sort(), ["deepseek7B", "vision3B"]);
+
+function withResponsiveMutation(name, mutate) {
+  const document = JSON.parse(
+    fs.readFileSync(path.join(evidenceRoot, responsiveProof.file), "utf8"),
+  );
+  mutate(document);
+  const artifact = write(
+    evidenceRoot,
+    `proof/responsive-${name}.json`,
+    `${JSON.stringify(document)}\n`,
+  );
+  const candidate = structuredClone(manifest);
+  const row = candidate.externalChecks.find((item) => item.id === "web-five-width");
+  row.artifacts = [{ type: "screenshot-manifest", ...artifact }];
+  return candidate;
+}
+
+assert.throws(
+  () => evaluate(withResponsiveMutation("failure", (document) => {
+    document.failureCount = 1;
+  }), evidenceRoot, root),
+  /캡처 수 또는 실패 수/,
+);
+assert.throws(
+  () => evaluate(withResponsiveMutation("cli", (document) => {
+    document.captureDriver = "cli";
+  }), evidenceRoot, root),
+  /CDP driver/,
+);
+assert.throws(
+  () => evaluate(withResponsiveMutation("commit", (document) => {
+    document.sourceCommit = "0".repeat(40);
+  }), evidenceRoot, root),
+  /최종 웹 커밋/,
+);
+assert.throws(
+  () => evaluate(withResponsiveMutation("intrinsic", (document) => {
+    document.captures[0].intrinsicOverflow = true;
+  }), evidenceRoot, root),
+  /승인 불가 캡처/,
+);
+assert.throws(
+  () => evaluate(withResponsiveMutation("missing-full-page", (document) => {
+    document.captures[0].fullPageFile = "public/missing-full.png";
+  }), evidenceRoot, root),
+  /fullPageFile 증거가 없습니다/,
+);
 
 const missing = structuredClone(manifest);
 missing.externalChecks = missing.externalChecks.filter((row) => row.id !== "ipad-physical-install");

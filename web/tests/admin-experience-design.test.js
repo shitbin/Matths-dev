@@ -74,11 +74,28 @@ async function run() {
   assert.match(html, /처리할 관리자 알림 2개/);
   assert.match(html, /aria-current="page"/);
   assert.match(html, /href="\/css\/admin-v2\.css"/);
+  assert.match(html, /class="admin-account-identity"/);
+  assert.match(html, /class="admin-account-compact"/);
 
   assert.doesNotMatch(stylesheet, /(?:linear|radial|conic)-gradient\s*\(/);
   assert.match(stylesheet, /\.admin-heading,[\s\S]*background:\s*var\(--matths-surface\)/);
   assert.match(stylesheet, /\.admin-form input,[\s\S]*min-height:\s*44px/);
   assert.match(stylesheet, /\.danger-form button,[\s\S]*background:\s*var\(--matths-danger\)/);
+  assert.match(
+    stylesheet,
+    /\.admin-page \.admin-topbar \.admin-main-nav > a,[\s\S]*color:\s*var\(--matths-muted\)/,
+    "라이트 관리자 헤더 내비는 AA 전경 토큰을 명시해야 합니다.",
+  );
+  assert.match(
+    stylesheet,
+    /\.admin-page \.admin-topbar \.admin-account-user > \.admin-account-identity\s*\{[\s\S]*color:\s*var\(--matths-ink\)/,
+    "관리자 로그인 주체는 라이트 헤더에서 잉크색으로 보여야 합니다.",
+  );
+  assert.match(
+    stylesheet,
+    /@media \(max-width: 1050px\)[\s\S]*\.admin-account-compact\s*\{[\s\S]*display:\s*inline-grid/,
+    "좁은 관리자 헤더에서도 계정 식별 배지를 유지해야 합니다.",
+  );
   assert.match(stylesheet, /\.admin-table-wrap,[\s\S]*overflow-x:\s*auto/);
   assert.match(
     stylesheet,

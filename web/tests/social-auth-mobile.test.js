@@ -14,6 +14,7 @@ const {
   _testing: { verifierChallenge },
 } = require("../services/mobileSocialAuthGrantService");
 const authMiddleware = require("../middleware/authMiddleware");
+const { resolveIpadSourceRoot } = require("../scripts/resolveIpadWorkspace");
 
 async function main() {
   const repoRoot = path.resolve(__dirname, "..");
@@ -26,8 +27,9 @@ async function main() {
     path.join(repoRoot, "routes/api-routes.js"),
     "utf8",
   );
+  const ipadSourceRoot = resolveIpadSourceRoot(repoRoot);
   const coordinator = fs.readFileSync(
-    path.join(repoRoot, "../ipad-app/Matths/GoogleSignInCoordinator.swift"),
+    path.join(ipadSourceRoot, "GoogleSignInCoordinator.swift"),
     "utf8",
   );
   const googleMark = fs.readFileSync(
@@ -37,8 +39,9 @@ async function main() {
   assert.equal((loginView.match(/href="\/auth\/google"/g) || []).length, 1);
   assert.ok(loginView.indexOf('href="/auth/google"') < loginView.indexOf('action="/login"'));
   assert.match(loginView, /googleAuthReady/);
-  assert.match(loginView, /Google 로그인 설정 중/);
-  assert.match(loginView, /social-auth-button is-google is-unavailable/);
+  assert.doesNotMatch(loginView, /Google 로그인 설정 중/);
+  assert.doesNotMatch(loginView, /social-auth-button is-google is-unavailable/);
+  assert.doesNotMatch(loginView, /지금은 Google 로그인을 이용할 수 없습니다/);
   assert.match(loginView, /include\("partials\/google-g-mark"\)/);
   assert.doesNotMatch(loginView, /social-auth-mark[^>]*>\s*G\s*</);
   for (const color of ["#4285F4", "#34A853", "#FBBC05", "#EA4335"]) {

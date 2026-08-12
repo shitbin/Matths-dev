@@ -7,9 +7,10 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { resolveIpadRoot } = require("./resolveIpadWorkspace");
 
 const webRoot = path.resolve(__dirname, "..");
-const ipadRoot = path.resolve(webRoot, "../ipad-app");
+const ipadRoot = resolveIpadRoot(webRoot);
 const evidenceRoot = path.resolve(webRoot, "../evidence");
 const currentIpadEvidenceRoot = path.resolve(evidenceRoot, "ipad-current-208-simulator");
 
