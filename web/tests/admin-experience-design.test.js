@@ -89,6 +89,16 @@ async function run() {
     /\.admin-policy-card\s*\{[\s\S]*?min-width:\s*0;[\s\S]*?max-width:\s*100%;[\s\S]*?box-sizing:\s*border-box;/,
     "관리자 정책 카드는 320px에서 고정 min-content 폭으로 화면 밖에 나가면 안 됩니다.",
   );
+  assert.match(
+    legacyAdminStylesheet,
+    /@media \(max-width: 760px\)[\s\S]*?\.admin-alert-dock\s*\{[\s\S]*?position:\s*relative;[\s\S]*?top:\s*auto;[\s\S]*?width:\s*min\(100% - 24px,\s*1440px\);[\s\S]*?min-height:\s*44px;[\s\S]*?margin:\s*12px auto 0;/,
+    "모바일 관리 알림은 가변 높이 헤더 아래의 독립 행으로 노출되어야 합니다.",
+  );
+  assert.match(
+    legacyAdminStylesheet,
+    /@media \(max-width: 760px\)[\s\S]*?\.admin-alert-menu > button\s*\{[\s\S]*?height:\s*44px;/,
+    "모바일 관리 알림 버튼은 최소 터치 높이를 유지해야 합니다.",
+  );
 
   console.log("admin 24-view operation hierarchy and density contract passed");
 }
