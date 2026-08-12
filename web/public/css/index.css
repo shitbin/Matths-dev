@@ -1025,6 +1025,7 @@ summary:focus-visible {
   font-weight: 480;
   line-height: 1.02;
   letter-spacing: -4.2px;
+  white-space: nowrap;
 }
 
 .arena-hero h1 span {
@@ -1394,6 +1395,17 @@ summary:focus-visible {
   .arena-hero h1 {
     font-size: 42px;
     letter-spacing: -2.6px;
+    white-space: normal;
+  }
+
+  .arena-hero h1 span,
+  .arena-hero h1 strong {
+    display: block;
+  }
+
+  .arena-hero h1 strong {
+    margin-inline-start: 0;
+    white-space: nowrap;
   }
 
   .arena-hero-actions {

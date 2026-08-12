@@ -456,7 +456,7 @@ private struct WeeklyMockAttemptScreen: View {
     @State private var starting = false
     @State private var saving = false
     @State private var submitting = false
-    @State private var saveRevision = 0
+    @State private var draftSyncState: WeeklyMockDraftSyncState
     @State private var telemetry: [ServerAPI.WeeklyMockTelemetryEvent] = []
     @State private var errorText: String?
     @State private var confirmSubmit = false
@@ -464,6 +464,23 @@ private struct WeeklyMockAttemptScreen: View {
 
     private enum Pane: String, CaseIterable { case paper = "문제지", omr = "답안지" }
     private let clock = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    init(examId: String, accountSlot: String, onClose: @escaping () -> Void) {
+        self.examId = examId
+        self.accountSlot = accountSlot
+        self.onClose = onClose
+        let draftKey = DataScope.defaultsKey(
+            "matths.weeklyMock.draft.\(examId)",
+            for: accountSlot)
+        let dirtyKey = DataScope.defaultsKey(
+            "matths.weeklyMock.draftDirty.\(examId)",
+            for: accountSlot)
+        let persistedDraft = WeeklyMockPersistedDraft.decode(
+            UserDefaults.standard.data(forKey: draftKey),
+            legacyDirty: UserDefaults.standard.bool(forKey: dirtyKey))
+        _draftSyncState = State(initialValue: WeeklyMockDraftSyncState(
+            persistedDirty: persistedDraft?.dirty == true))
+    }
 
     private var questionCount: Int { attempt?.exam.questionCount ?? answers.count }
     private var answeredCount: Int { answers.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count }
@@ -497,11 +514,13 @@ private struct WeeklyMockAttemptScreen: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .task { await load() }
-        .task(id: saveRevision) {
-            guard saveRevision > 0 else { return }
+        .task(id: draftSyncState.editRevision) {
+            guard draftSyncState.editRevision > 0 else { return }
             try? await Task.sleep(for: .milliseconds(650))
             guard !Task.isCancelled else { return }
-            await save(reportError: false)
+            // editRevision 변경은 debounce task를 취소한다. 실제 PATCH까지 구조화
+            // task에 묶으면 in-flight 요청도 취소되므로 독립 task로 직렬 저장한다.
+            Task { @MainActor in await save(reportError: false) }
         }
         .onReceive(clock) { value in
             now = value
@@ -683,26 +702,51 @@ private struct WeeklyMockAttemptScreen: View {
                     clientAt: Date(),
                     visibility: "visible",
                     answerLength: answers[index].count))
-                if telemetry.count > 200 { telemetry.removeFirst(telemetry.count - 200) }
-                persistDraft()
-                saveRevision += 1
+                // in-flight snapshot의 prefix는 ACK 뒤 제거해야 하므로 저장 중에는
+                // 잘라내지 않는다. 그렇지 않으면 새 ANSWER_CHANGED까지 함께 지워진다.
+                if telemetry.count > 200, !saving {
+                    telemetry.removeFirst(telemetry.count - 200)
+                }
+                draftSyncState.recordEdit()
+                persistDraftSyncState()
             })
     }
 
     @MainActor private func load(silent: Bool = false) async {
         guard accountSlot == DataScope.slot else { return }
+        let loadRequest = draftSyncState.beginLoad()
         if !silent { loading = true }
-        defer { loading = false }
         do {
             let value = try await ServerAPI.weeklyMockAttempt(examId: examId)
-            guard accountSlot == DataScope.slot else { return }
-            apply(value)
+            finishLoading(loadRequest)
+            guard accountSlot == DataScope.slot,
+                  draftSyncState.shouldApplyMetadata(loadRequest) else { return }
+            apply(
+                value,
+                preservingLocalDraft: draftSyncState.shouldPreserveLocalDraft(loadRequest))
             errorText = nil
-            if value.state == "in-progress" && paperURL == nil { await downloadPaper() }
+            if value.state == "in-progress" {
+                if draftSyncState.hasUnsavedChanges {
+                    await save(reportError: false)
+                }
+                if paperURL == nil { await downloadPaper() }
+            }
         } catch {
-            guard accountSlot == DataScope.slot else { return }
+            finishLoading(loadRequest)
+            guard accountSlot == DataScope.slot,
+                  draftSyncState.shouldApplyMetadata(loadRequest) else { return }
             if !silent { attempt = nil }
             errorText = WeeklyMockFormat.message(error)
+        }
+    }
+
+    @MainActor private func finishLoading(
+        _ request: WeeklyMockDraftSyncState.LoadRequest
+    ) {
+        // 최신 요청이 편집 때문에 폐기되는 경우에도 spinner는 끝낸다. 다만 이전
+        // 세대 응답은 아직 진행 중인 최신 요청의 loading 상태를 건드리지 않는다.
+        if accountSlot != DataScope.slot || draftSyncState.isLatest(request) {
+            loading = false
         }
     }
 
@@ -738,16 +782,39 @@ private struct WeeklyMockAttemptScreen: View {
     @MainActor private func save(reportError: Bool) async {
         guard accountSlot == DataScope.slot, taking, !saving else { return }
         saving = true
-        let eventSnapshot = telemetry
         defer { saving = false }
-        do {
-            let draft = try await ServerAPI.saveWeeklyMockDraft(examId: examId, answers: answers, telemetry: eventSnapshot)
-            guard accountSlot == DataScope.slot else { return }
-            if draft.submitted, let value = draft.attempt { apply(value) }
-            if telemetry.count >= eventSnapshot.count { telemetry.removeFirst(eventSnapshot.count) }
-        } catch {
-            guard accountSlot == DataScope.slot else { return }
-            if reportError { errorText = WeeklyMockFormat.message(error) }
+
+        while accountSlot == DataScope.slot, taking {
+            let saveRequest = draftSyncState.beginSave()
+            let answerSnapshot = answers
+            let eventSnapshot = telemetry
+            do {
+                let draft = try await ServerAPI.saveWeeklyMockDraft(
+                    examId: examId,
+                    answers: answerSnapshot,
+                    telemetry: eventSnapshot)
+                guard accountSlot == DataScope.slot else { return }
+                draftSyncState.markSaveSucceeded(saveRequest)
+                persistDraftSyncState()
+                if draftSyncState.canApplySaveResponse(saveRequest),
+                   draft.submitted,
+                   let value = draft.attempt {
+                    apply(value)
+                }
+                if telemetry.count >= eventSnapshot.count { telemetry.removeFirst(eventSnapshot.count) }
+                if telemetry.count > 200 { telemetry.removeFirst(telemetry.count - 200) }
+            } catch {
+                guard accountSlot == DataScope.slot else { return }
+                if reportError { errorText = WeeklyMockFormat.message(error) }
+                // 실패 중 새 답이 생겼다면 최신 snapshot을 한 번 즉시 시도한다.
+                // 최신 요청 자체가 실패한 경우에는 로컬 draft를 dirty로 보존한다.
+                guard draftSyncState.hasEdits(after: saveRequest) else { return }
+                continue
+            }
+
+            // PATCH가 await 중일 때 생긴 편집은 첫 ACK로 clean 처리하지 않는다.
+            // debounce task를 기다리지 않고 최신 전체 snapshot을 곧바로 저장한다.
+            guard draftSyncState.hasEdits(after: saveRequest) else { return }
         }
     }
 
@@ -785,32 +852,66 @@ private struct WeeklyMockAttemptScreen: View {
         }
     }
 
-    @MainActor private func apply(_ value: ServerAPI.WeeklyMockAttempt) {
+    @MainActor private func apply(
+        _ value: ServerAPI.WeeklyMockAttempt,
+        preservingLocalDraft: Bool = false
+    ) {
         guard accountSlot == DataScope.slot else { return }
         attempt = value
         didRequestExpiry = false
-        guard value.state == "in-progress" else { return }
-        let count = value.exam.questionCount ?? value.attempt?.answers.count ?? 30
-        var server = Array((value.attempt?.answers ?? []).prefix(count))
-        if server.count < count { server += Array(repeating: "", count: count - server.count) }
-        if let local = restoredDraft(), local.count == count {
-            for index in 0..<count where server[index].isEmpty && !local[index].isEmpty { server[index] = local[index] }
+        guard value.state == "in-progress" else {
+            answers.removeAll()
+            draftSyncState.markTerminal()
+            clearDraft()
+            return
         }
-        answers = server
+        let count = value.exam.questionCount ?? value.attempt?.answers.count ?? 30
+        let preserveLocal = preservingLocalDraft || restoredDraftIsDirty()
+        answers = WeeklyMockDraftRecovery.answers(
+            server: value.attempt?.answers ?? [],
+            local: restoredDraft(),
+            current: answers,
+            count: count,
+            preserveLocal: preserveLocal)
+        if !preserveLocal {
+            draftSyncState.markServerSnapshotApplied()
+        }
         persistDraft()
+        persistDraftSyncState()
     }
 
     private var draftKey: String {
         DataScope.defaultsKey("matths.weeklyMock.draft.\(examId)", for: accountSlot)
     }
+    private var draftDirtyKey: String {
+        DataScope.defaultsKey("matths.weeklyMock.draftDirty.\(examId)", for: accountSlot)
+    }
     private func persistDraft() {
-        if let data = try? JSONEncoder().encode(answers) { UserDefaults.standard.set(data, forKey: draftKey) }
+        let value = WeeklyMockPersistedDraft(
+            answers: answers,
+            dirty: draftSyncState.hasUnsavedChanges)
+        if let data = try? JSONEncoder().encode(value) {
+            UserDefaults.standard.set(data, forKey: draftKey)
+        }
     }
     private func restoredDraft() -> [String]? {
-        guard let data = UserDefaults.standard.data(forKey: draftKey) else { return nil }
-        return try? JSONDecoder().decode([String].self, from: data)
+        WeeklyMockPersistedDraft.decode(
+            UserDefaults.standard.data(forKey: draftKey),
+            legacyDirty: UserDefaults.standard.bool(forKey: draftDirtyKey))?.answers
     }
-    private func clearDraft() { UserDefaults.standard.removeObject(forKey: draftKey) }
+    private func restoredDraftIsDirty() -> Bool {
+        WeeklyMockPersistedDraft.decode(
+            UserDefaults.standard.data(forKey: draftKey),
+            legacyDirty: UserDefaults.standard.bool(forKey: draftDirtyKey))?.dirty == true
+    }
+    private func persistDraftSyncState() {
+        persistDraft()
+        UserDefaults.standard.removeObject(forKey: draftDirtyKey)
+    }
+    private func clearDraft() {
+        UserDefaults.standard.removeObject(forKey: draftKey)
+        UserDefaults.standard.removeObject(forKey: draftDirtyKey)
+    }
 }
 
 private struct WeeklyMockAnswerRow: View {

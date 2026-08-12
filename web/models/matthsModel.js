@@ -1384,6 +1384,14 @@ const problemAttemptSchema = new Schema(
         default: false,
       },
 
+      // iPad 복습 큐의 멱등 키. bulk 오답 업로드보다 복습 결과가 늦게 또는
+      // 중복 도착해도 같은 사용자 행동을 두 번 적용하지 않는다.
+      lastClientEventId: {
+        type: String,
+        maxlength: 120,
+        default: null,
+      },
+
     },
 
     submittedAt: {

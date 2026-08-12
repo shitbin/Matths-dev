@@ -20,6 +20,8 @@ enum ScreenProtectionSelfTest {
         let serverSyncSuppressed: Bool
         let baseProtectionEnabled: Bool
         let screenshotOverlayShown: Bool
+        let repeatedScreenshotRecorded: Bool
+        let accountWatermarkPseudonymous: Bool
         let captureCoverShown: Bool
         let captureCoverCleared: Bool
         let backgroundCoverShown: Bool
@@ -51,7 +53,16 @@ enum ScreenProtectionSelfTest {
 
         guardModel.simulateScreenshotForDeviceQA()
         let screenshotOverlayShown = guardModel.isShowing
+        // 경고창이 떠 있는 사이에 다시 촬영해도 두 번째 시스템 알림을 버리지 않는다.
+        guardModel.simulateScreenshotForDeviceQA()
+        let repeatedScreenshotRecorded = events.filter {
+            $0.type == "protected-screen-screenshot"
+        }.count == 2
         guardModel.isShowing = false
+
+        let accountCode = guardModel.accountWatermarkCode
+        let accountWatermarkPseudonymous = accountCode == "GUEST"
+            || (accountCode.count == 8 && !DataScope.slot.localizedCaseInsensitiveContains(accountCode))
 
         guardModel.simulateCaptureStateForDeviceQA(true)
         let captureCoverShown = guardModel.isCaptureActive
@@ -65,6 +76,7 @@ enum ScreenProtectionSelfTest {
 
         let expectedEvents = [
             "protected-screen-screenshot",
+            "protected-screen-screenshot",
             "protected-screen-capture-started",
             "protected-screen-capture-ended",
         ]
@@ -75,6 +87,8 @@ enum ScreenProtectionSelfTest {
         )
         let passed = baseProtectionEnabled
             && screenshotOverlayShown
+            && repeatedScreenshotRecorded
+            && accountWatermarkPseudonymous
             && captureCoverShown
             && captureCoverCleared
             && backgroundCoverShown
@@ -97,6 +111,8 @@ enum ScreenProtectionSelfTest {
             serverSyncSuppressed: true,
             baseProtectionEnabled: baseProtectionEnabled,
             screenshotOverlayShown: screenshotOverlayShown,
+            repeatedScreenshotRecorded: repeatedScreenshotRecorded,
+            accountWatermarkPseudonymous: accountWatermarkPseudonymous,
             captureCoverShown: captureCoverShown,
             captureCoverCleared: captureCoverCleared,
             backgroundCoverShown: backgroundCoverShown,

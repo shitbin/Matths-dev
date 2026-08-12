@@ -13,6 +13,7 @@
  */
 
 const { createHash } = require("node:crypto");
+const mongoose = require("mongoose");
 const {
   AssessmentAttempt,
   RankingProfile,
@@ -126,6 +127,72 @@ function incomingWrongCount(entry) {
   return Number.isInteger(entry.wrongCount) && entry.wrongCount > 0
     ? entry.wrongCount
     : 1;
+}
+
+function validReviewResultEventId(value) {
+  const eventId = String(value || "").trim();
+  return eventId && eventId.length <= IPAD_CLIENT_EVENT_ID_MAX_LENGTH
+    ? eventId
+    : null;
+}
+
+function validNextReviewAt(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * iPad가 첫 오답 bulk 응답(server attempt id)을 받기 전에 그 문제를 복습할 수
+ * 있다. 그때 앱은 UUID인 clientAttemptId밖에 모르므로 두 식별자를 모두 받는다.
+ * clientEventId를 review.lastClientEventId에 보관해 응답 유실 재시도도 한 번으로
+ * 수렴시킨다.
+ */
+async function applyIpadReviewResult(attempt, body = {}) {
+  const clientEventId = validReviewResultEventId(body.clientEventId);
+  if (body.clientEventId != null && !clientEventId) {
+    const error = new Error("복습 결과 요청 ID가 없습니다.");
+    error.status = 400;
+    error.code = "INVALID_REVIEW_RESULT_EVENT_ID";
+    throw error;
+  }
+
+  if (clientEventId && attempt.review?.lastClientEventId === clientEventId) {
+    return { duplicate: true };
+  }
+
+  if (typeof body.correct !== "boolean") {
+    const error = new Error("복습 정오 결과가 올바르지 않습니다.");
+    error.status = 400;
+    error.code = "INVALID_REVIEW_RESULT";
+    throw error;
+  }
+
+  const nextReviewAt = validNextReviewAt(body.nextReviewAt);
+  if (!body.correct && !nextReviewAt) {
+    const error = new Error("다음 복습 시각이 올바르지 않습니다.");
+    error.status = 400;
+    error.code = "INVALID_NEXT_REVIEW_AT";
+    throw error;
+  }
+  const incomingWrong = incomingWrongCount(body);
+  const currentWrong = Math.max(Number(attempt.review?.wrongCount) || 1, 1);
+  const srsStage = Number.isInteger(body.srsStage) && body.srsStage >= 0
+    ? body.srsStage
+    : attempt.review?.srsStage ?? 0;
+
+  if (!attempt.review) attempt.review = {};
+  attempt.review.status = body.correct ? "completed" : "scheduled";
+  attempt.review.scheduledAt = body.correct ? null : (nextReviewAt || new Date());
+  attempt.review.reviewedAt = body.correct ? new Date() : null;
+  attempt.review.correctedAfterReview = body.correct;
+  attempt.review.srsStage = Math.max(Number(attempt.review.srsStage) || 0, srsStage);
+  attempt.review.wrongCount = Math.max(currentWrong, incomingWrong);
+  if (clientEventId) {
+    attempt.review.lastClientEventId = clientEventId;
+  }
+  await attempt.save();
+  return { duplicate: false };
 }
 
 /**
@@ -1204,29 +1271,35 @@ exports.getWrongNotes = async (req, res, next) => {
  */
 exports.postReviewResult = async (req, res, next) => {
   try {
-    const attempt = await ProblemAttempt.findOne({
-      _id: req.params.attemptId,
-      userId: req.apiUser._id,
-    });
+    const attemptId = String(req.params.attemptId || "").trim();
+    let attempt = null;
+    if (mongoose.isValidObjectId(attemptId)) {
+      attempt = await ProblemAttempt.findOne({
+        _id: attemptId,
+        userId: req.apiUser._id,
+      });
+    }
+    // UUID가 보통이지만 clientAttemptId 형식 자체를 24-hex가 아니라고 가정하지
+    // 않는다. ObjectId처럼 생긴 클라이언트 키도 첫 조회 실패 뒤 안전하게 찾는다.
+    if (!attempt) {
+      attempt = await ProblemAttempt.findOne({
+        clientAttemptId: attemptId,
+        userId: req.apiUser._id,
+      });
+    }
     if (!attempt) {
       return res.status(404).json({ code: "NOT_FOUND", message: "해당 오답 기록이 없습니다." });
     }
-    const srsStage = Number.isInteger(req.body.srsStage) ? req.body.srsStage : attempt.review?.srsStage ?? 0;
-    const nextReviewAt = req.body.nextReviewAt ? new Date(req.body.nextReviewAt) : null;
-    attempt.review = {
-      ...(attempt.review || {}),
-      status: nextReviewAt ? "scheduled" : "completed",
-      scheduledAt: nextReviewAt,
-      srsStage,
-      wrongCount: attempt.review?.wrongCount ?? 1,
-    };
-    await attempt.save();
+    const result = await applyIpadReviewResult(attempt, req.body);
     return res.json({
       review: {
         attemptId: String(attempt._id),
-        srsStage,
-        nextReviewAt,
+        clientAttemptId: attempt.clientAttemptId || null,
+        srsStage: attempt.review.srsStage,
+        wrongCount: attempt.review.wrongCount,
+        nextReviewAt: attempt.review.scheduledAt || null,
         status: attempt.review.status,
+        duplicate: result.duplicate,
       },
     });
   } catch (error) {

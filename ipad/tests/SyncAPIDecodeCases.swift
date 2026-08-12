@@ -39,6 +39,22 @@ struct SyncAPIDecodeCases {
         require(wrong.entries.first?.reviewStatus == "completed", "wrong-note status contract")
         require(wrong.entries.first?.wrongCount == 2, "wrong-note counter contract")
 
+        let reviewBody = ServerAPI.reviewResultBody(
+            correct: false,
+            srsStage: 1,
+            wrongCount: 2,
+            nextReviewAt: "2026-08-05T15:00:00.000Z",
+            clientEventId: "review-op-1"
+        )
+        require(
+            reviewBody["clientEventId"] as? String == "review-op-1",
+            "review retry must carry its durable idempotency key"
+        )
+        require(
+            reviewBody["correct"] as? Bool == false,
+            "wrong review must not be hard-coded as correct"
+        )
+
         let dashboard = try decode(
             """
             {"dashboard":{"generatedAt":"2026-08-04T01:00:00.000Z","stats":{"weeklyStudyMinutes":12,"weeklyStudyDetail":"지난 기간보다 +2분","todayStudyMinutes":4,"activeStudyDays":3,"averageStudyMinutes":4,"weeklySolvedProblems":8,"weeklySolvedDetail":"지난 기간보다 +1문제","correctRate":75,"correctRateDetail":"지난 기간보다 +5%p"},"weeklyActivity":{"days":[{"dateKey":"2026-08-04","label":"오늘","minutes":4,"isToday":true}],"maxMinutes":10}}}
@@ -71,6 +87,6 @@ struct SyncAPIDecodeCases {
         )
 
         print("Sync API Swift decode cases passed")
-        print("- progress, wrong-note cursor/review, dashboard, and V1 rulebook JSON decode with production models")
+        print("- progress, wrong-note cursor/review, durable review payload, dashboard, and V1 rulebook decode")
     }
 }

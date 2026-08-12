@@ -87,12 +87,21 @@ struct MatthsApp: App {
                 .overlay {
                     if screenshotGuard.isCaptureActive || screenshotGuard.isPrivacyCoverActive {
                         CapturePrivacyCover()
-                    } else if screenshotGuard.isShowing {
-                        ScreenshotGuardOverlay(guardModel: screenshotGuard) { stuckPoint in
-                            store.recordStuckPoint(stuckPoint)
+                    } else {
+                        ZStack {
+                            if screenshotGuard.isShowing {
+                                ScreenshotGuardOverlay(guardModel: screenshotGuard) { stuckPoint in
+                                    store.recordStuckPoint(stuckPoint)
+                                }
+                            }
+                            // 경고창이 떠 있는 동안 다시 촬영해도 계정·세션 가명 코드가
+                            // 사라지지 않는다. 워터마크는 hit testing/접근성에서 제외된다.
+                            if screenshotGuard.protectionEnabled {
+                                ProtectedContentWatermark(
+                                    accountCode: screenshotGuard.accountWatermarkCode,
+                                    sessionCode: screenshotGuard.watermarkCode)
+                            }
                         }
-                    } else if screenshotGuard.protectionEnabled {
-                        ProtectedContentWatermark(code: screenshotGuard.watermarkCode)
                     }
                 }
                 .animation(.easeOut(duration: 0.2), value: screenshotGuard.isShowing)

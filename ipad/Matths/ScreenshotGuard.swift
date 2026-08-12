@@ -18,9 +18,10 @@ final class ScreenshotGuard: ObservableObject {
     @Published private(set) var isCaptureActive = false
     @Published private(set) var isPrivacyCoverActive = false
     @Published private(set) var protectionEnabled = false
+    @Published private(set) var accountWatermarkCode: String
 
-    /// 사용자 식별정보를 화면에 노출하지 않는 실행 단위 코드다. 유출된 캡처가 어느
-    /// 앱 실행에서 만들어졌는지 학생 본인과 검토자가 대조할 수 있고, 앱을 다시 열면 바뀐다.
+    /// 사용자 식별정보를 화면에 노출하지 않는 실행 단위 코드다. 계정 가명 코드는
+    /// accountWatermarkCode로 분리하고, 이 값은 앱을 다시 열면 바뀐다.
     let watermarkCode = String(UUID().uuidString.prefix(8)).uppercased()
 
     private var baseProtection = false
@@ -39,6 +40,7 @@ final class ScreenshotGuard: ObservableObject {
 
     init(integrityEventRecorder: IntegrityEventRecorder? = nil) {
         self.integrityEventRecorder = integrityEventRecorder
+        accountWatermarkCode = DataScope.screenProtectionAccountCode
         observers.append(NotificationCenter.default.addObserver(
             forName: UIApplication.userDidTakeScreenshotNotification,
             object: nil,
@@ -57,6 +59,32 @@ final class ScreenshotGuard: ObservableObject {
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.refreshCaptureState() }
         })
+        // SwiftUI scenePhase보다 먼저 오는 UIKit 수명주기 신호에서도 덮개를 켠다.
+        // 앱 전환기 스냅샷이 만들어질 때 문제 화면이 한 프레임 남지 않게 하는 이중 안전장치다.
+        observers.append(NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.setSceneActive(false) }
+        })
+        observers.append(NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.setSceneActive(true) }
+        })
+        observers.append(NotificationCenter.default.addObserver(
+            forName: DataScope.didSwitchNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            MainActor.assumeIsolated {
+                let slot = note.object as? String ?? DataScope.slot
+                self?.accountWatermarkCode = DataScope.screenProtectionAccountCode(for: slot)
+            }
+        })
         refreshCaptureState()
     }
 
@@ -66,7 +94,7 @@ final class ScreenshotGuard: ObservableObject {
     }
 
     func beginProtection(_ id: UUID, surface: String) {
-        protectionIDs[id] = surface
+        protectionIDs[id] = ScreenIntegrityEventContract.normalizedSurface(surface)
         refreshCaptureState()
     }
 
@@ -81,7 +109,14 @@ final class ScreenshotGuard: ObservableObject {
     }
 
     private func refreshCaptureState() {
-        applyCaptureState(UIScreen.main.isCaptured)
+        // iPad의 외부 디스플레이/다중 scene도 포함한다. scene이 아직 연결되기 전인
+        // 앱 초기화 구간만 UIScreen.main으로 폴백한다.
+        let sceneScreens = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.screen }
+        let captured = sceneScreens.isEmpty
+            ? UIScreen.main.isCaptured
+            : sceneScreens.contains { $0.isCaptured }
+        applyCaptureState(captured)
     }
 
     private func applyCaptureState(_ captured: Bool) {
@@ -97,20 +132,25 @@ final class ScreenshotGuard: ObservableObject {
     }
 
     private func recordIntegrityEvent(_ type: String) {
+        guard let eventType = ScreenIntegrityEventContract.normalizedEventType(type) else { return }
+        let surface = ScreenIntegrityEventContract.normalizedSurface(activeSurface)
         if let integrityEventRecorder {
-            integrityEventRecorder(type, watermarkCode, activeSurface)
+            integrityEventRecorder(eventType, watermarkCode, surface)
             return
         }
-        EventLog.append(type)
+        EventLog.append(eventType)
         SyncEngine.shared.enqueueIntegrityEvent(
-            type,
+            eventType,
             sessionCode: watermarkCode,
-            surface: activeSurface)
+            surface: surface)
     }
 
     private func handleScreenshotDetected() {
-        guard isProtected, !isShowing else { return }
+        guard isProtected else { return }
+        // 시스템 알림은 촬영 뒤에 오므로 캡처 자체를 취소할 수는 없다. 경고가 이미
+        // 떠 있어도 새 알림은 별도 무결성 신호이므로 매번 먼저 기록한다.
         recordIntegrityEvent("protected-screen-screenshot")
+        guard !isShowing else { return }
         isShowing = true
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
@@ -171,17 +211,20 @@ struct CapturePrivacyCover: View {
 /// 일반 SwiftUI 화면은 FairPlay 영상처럼 캡처 결과를 강제로 검게 만들 수 없다.
 /// 대신 보호 화면 전체에 낮은 대비의 실행 코드를 반복해 무단 공유 억제와 사후 대조를 돕는다.
 struct ProtectedContentWatermark: View {
-    let code: String
+    let accountCode: String
+    let sessionCode: String
 
     var body: some View {
         GeometryReader { proxy in
-            let columns = max(3, Int(proxy.size.width / 210))
+            // 계정+세션 코드가 320pt Split View에서 서로 겹치지 않게 셀 폭을
+            // 충분히 확보한다. 좁은 화면도 세로 반복(rows)으로 추적성은 유지한다.
+            let columns = max(1, Int(proxy.size.width / 240))
             let rows = max(5, Int(proxy.size.height / 150))
             ZStack {
                 ForEach(0..<(columns * rows), id: \.self) { index in
                     let column = index % columns
                     let row = index / columns
-                    Text("MATTHS · \(code)")
+                    Text("MATTHS · A \(accountCode) · S \(sessionCode)")
                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.primary.opacity(0.075))
                         .rotationEffect(.degrees(-22))

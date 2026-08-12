@@ -1721,16 +1721,26 @@ enum ServerAPI {
     }
 
     /// 복습 결과. `correct` 를 하드코딩하면 틀린 복습이 맞은 것으로 서버에 남는다.
-    static func postReviewResult(attemptId: String, correct: Bool,
-                                 srsStage: Int, wrongCount: Int,
-                                 nextReviewAt: String?) async throws {
-        struct Empty: Codable {}
+    static func reviewResultBody(correct: Bool, srsStage: Int, wrongCount: Int,
+                                 nextReviewAt: String?, clientEventId: String) -> [String: Any] {
         var body: [String: Any] = [
             "correct": correct,
             "srsStage": srsStage,
             "wrongCount": wrongCount,
+            "clientEventId": clientEventId,
         ]
-        if let n = nextReviewAt { body["nextReviewAt"] = n }
+        if let nextReviewAt { body["nextReviewAt"] = nextReviewAt }
+        return body
+    }
+
+    static func postReviewResult(attemptId: String, correct: Bool,
+                                 srsStage: Int, wrongCount: Int,
+                                 nextReviewAt: String?,
+                                 clientEventId: String) async throws {
+        struct Empty: Codable {}
+        let body = reviewResultBody(
+            correct: correct, srsStage: srsStage, wrongCount: wrongCount,
+            nextReviewAt: nextReviewAt, clientEventId: clientEventId)
         let _: Empty = try await request(
             "POST", "/api/v1/wrong-notes/\(attemptId)/review-result", body: body, authed: true)
     }

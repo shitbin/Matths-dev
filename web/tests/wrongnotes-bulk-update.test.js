@@ -40,7 +40,7 @@ function attemptConflicts(candidate, current = null) {
 
 function makeAttempt(init) {
   const doc = {
-    _id: init._id || `attempt-${nextAttemptId++}`,
+    _id: init._id || String(nextAttemptId++).padStart(24, "0"),
     attemptNumber: 1,
     submittedAnswer: "3",
     review: {
@@ -187,6 +187,24 @@ async function post(entries) {
   return response.body;
 }
 
+async function postReview(attemptId, body) {
+  const response = fakeRes();
+  let forwardedError = null;
+  await ctrl.postReviewResult(
+    {
+      apiUser: { _id: "u1" },
+      params: { attemptId },
+      body,
+    },
+    response,
+    (error) => {
+      forwardedError = error;
+    }
+  );
+  if (forwardedError) throw forwardedError;
+  return response.body;
+}
+
 const entry = (overrides = {}) => ({
   clientAttemptId: "c-1",
   typeKey: "quadratic-vertex",
@@ -315,6 +333,63 @@ const entry = (overrides = {}) => ({
   console.log("[7] 동시 중복 요청");
   ok(attempts.length === 1, "동시 삽입도 한 건으로 수렴", attempts.length);
   ok(response.synced[0].duplicate === true, "E11000을 멱등 성공으로 회수", response);
+
+  reset();
+  await post([entry({ clientAttemptId: "review-before-bulk-ack" })]);
+  response = await postReview("review-before-bulk-ack", {
+    clientEventId: "review-result-1",
+    correct: true,
+    srsStage: 1,
+    wrongCount: 1,
+  });
+  console.log("[8] bulk 응답 전 복습 결과");
+  ok(response.review.status === "completed", "clientAttemptId로 복습 완료", response);
+  ok(attempts[0].review.correctedAfterReview === true, "정답 복습 상태 보존", attempts[0].review);
+  ok(attempts[0].review.lastClientEventId === "review-result-1", "복습 멱등키 저장", attempts[0].review);
+
+  response = await postReview("review-before-bulk-ack", {
+    clientEventId: "review-result-1",
+    correct: true,
+    srsStage: 1,
+    wrongCount: 1,
+  });
+  ok(response.review.duplicate === true, "응답 유실 재시도 멱등 성공", response);
+
+  response = await postReview(String(attempts[0]._id), {
+    clientEventId: "review-result-2",
+    correct: false,
+    srsStage: 1,
+    wrongCount: 2,
+    nextReviewAt: "2026-08-14T15:00:00.000Z",
+  });
+  ok(response.review.status === "scheduled", "서버 ObjectId 경로도 계속 동작", response);
+  ok(response.review.wrongCount === 2, "재오답 횟수 단조 병합", response);
+
+  reset();
+  const objectIdShapedClientId = "aaaaaaaaaaaaaaaaaaaaaaaa";
+  await post([entry({ clientAttemptId: objectIdShapedClientId })]);
+  response = await postReview(objectIdShapedClientId, {
+    clientEventId: "review-result-object-shaped-client",
+    correct: true,
+    srsStage: 1,
+    wrongCount: 1,
+  });
+  ok(
+    response.review.clientAttemptId === objectIdShapedClientId,
+    "ObjectId 모양 clientAttemptId도 fallback 조회",
+    response
+  );
+
+  response = await postReview(objectIdShapedClientId, {
+    correct: true,
+    srsStage: 1,
+    wrongCount: 1,
+  });
+  ok(
+    response.review.status === "completed",
+    "구버전 앱의 멱등키 없는 복습 요청도 호환",
+    response
+  );
 
   console.log(failures.length ? `\n실패 ${failures.length}건` : "\n전부 통과");
   process.exit(failures.length ? 1 : 0);

@@ -68,6 +68,14 @@ struct WrongNoteEntry: Codable, Identifiable {
     }
 }
 
+/// 복습 결과 업로드 주소는 서버 ObjectId가 붙기 전에도 항상 존재해야 한다.
+/// 초기 bulk 응답 전에는 clientAttemptId인 로컬 id를 쓰고, 응답 뒤에는 서버 id를 쓴다.
+enum WrongNoteReviewSyncAddress {
+    static func attemptIdentifier(for entry: WrongNoteEntry) -> String {
+        entry.serverAttemptId ?? entry.id
+    }
+}
+
 /// 서버 행을 기존 로컬 오답에 적용하는 작은 순수 함수. 네트워크·디스크와 분리해
 /// 구 저장 파일 호환과 다기기 복습 상태 병합을 독립적으로 검증할 수 있게 한다.
 enum WrongNoteSyncMerge {

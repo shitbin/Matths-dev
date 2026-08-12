@@ -59,6 +59,20 @@ enum DataScope {
         return "acct-" + hex.prefix(12)
     }
 
+    /// 보호 화면에 표시할 계정 단위 가명 코드. 이메일 원문과 슬롯 해시를 그대로
+    /// 노출하지 않고 도메인을 분리해 한 번 더 해시한다. 같은 계정은 기기 사이에서
+    /// 같은 코드가 나오고, 실행마다 바뀌는 세션 코드와 함께 유출 화면을 대조할 수 있다.
+    static var screenProtectionAccountCode: String {
+        screenProtectionAccountCode(for: slot)
+    }
+
+    static func screenProtectionAccountCode(for slot: String) -> String {
+        guard slot != "guest" else { return "GUEST" }
+        let material = "matths-screen-watermark-v1|" + slot
+        let digest = SHA256.hash(data: Data(material.utf8))
+        return digest.prefix(4).map { String(format: "%02X", $0) }.joined()
+    }
+
     /// 슬롯 디렉터리 (없으면 만든다)
     static var directory: URL {
         directory(for: slot)

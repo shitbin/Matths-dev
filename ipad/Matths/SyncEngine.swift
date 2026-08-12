@@ -315,13 +315,17 @@ final class SyncEngine: ObservableObject {
 
     /// 보호 화면에서 발생한 캡처 신호를 일반 학습 KPI와 섞지 않고 같은 내구성 큐로
     /// 전송한다. 게스트는 로컬 EventLog에만 남고, 서버 계정은 오프라인이어도 계정별
-    /// 큐에 보존되어 재로그인·네트워크 복구 뒤 올라간다.
+    /// 큐에 보존되어 재로그인·네트워크 복구 뒤 올라간다. 화면 이름과 실행 코드는
+    /// 여기서도 다시 정제해 계정명·이메일·경기 ID가 payload에 섞이지 않게 한다.
     func enqueueIntegrityEvent(_ type: String, sessionCode: String, surface: String) {
+        guard let eventType = ScreenIntegrityEventContract.normalizedEventType(type) else { return }
         enqueue(.init(kind: .event, payload: [
-            "eventType": .s(type),
+            "eventType": .s(eventType),
             "clientEventId": .s(UUID().uuidString),
-            "integritySessionCode": .s(String(sessionCode.prefix(16))),
-            "protectedSurface": .s(String(surface.prefix(120))),
+            "integritySessionCode": .s(
+                ScreenIntegrityEventContract.normalizedSessionCode(sessionCode)),
+            "protectedSurface": .s(
+                ScreenIntegrityEventContract.normalizedSurface(surface)),
         ]))
     }
 
@@ -390,11 +394,13 @@ final class SyncEngine: ObservableObject {
     /// 복습 화면에서 맞힌 경우처럼 "정답으로 졸업/전진" 은 이 엔드포인트만 표현할 수 있다
     /// (bulk 는 오답 적재용이라 correct 를 받지 않는다).
     func enqueueReviewResult(_ note: WrongNoteEntry, correct: Bool) {
-        // 서버가 붙인 id 가 없으면 올릴 주소가 없다 — 아직 bulk 가 안 올라간 것이므로
-        // 조용히 건너뛴다(다음 오답 전송 때 id 가 생기고, 그다음 복습부터 올라간다).
-        guard let serverID = note.serverAttemptId else { return }
+        // 첫 bulk 응답을 받기 전에도 복습할 수 있다. 그 구간에는 서버 ObjectId가
+        // 없으므로 clientAttemptId(UUID)를 주소로 쓰고, 서버가 둘 다 해석한다.
+        // 예전 guard는 사용자에게 성공으로 보인 복습 결과를 조용히 버렸고,
+        // 새 기기에서 같은 오답이 '미복습'으로 되감겼다.
+        let attemptID = WrongNoteReviewSyncAddress.attemptIdentifier(for: note)
         var p: [String: SyncValue] = [
-            "attemptId": .s(serverID),
+            "attemptId": .s(attemptID),
             "correct": .b(correct),
             "srsStage": .i(note.srsStage),
             "wrongCount": .i(note.wrongCount),
@@ -592,7 +598,8 @@ final class SyncEngine: ObservableObject {
                                                  correct: correct,
                                                  srsStage: int(op, "srsStage"),
                                                  wrongCount: int(op, "wrongCount"),
-                                                 nextReviewAt: op.payload["nextReviewAt"].map { "\($0.any)" })
+                                                 nextReviewAt: op.payload["nextReviewAt"].map { "\($0.any)" },
+                                                 clientEventId: op.id)
         case .stuckPoint:
             try await ServerAPI.postStuckPoint(
                 id: str(op, "id"),

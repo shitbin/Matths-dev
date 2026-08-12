@@ -75,6 +75,19 @@ struct SyncContractCases {
             fixture(nextReviewAt: "2026-08-05T00:00:00Z")
         )
         require(local.serverUpdatedAt == nil, "legacy JSON must decode without revision")
+        require(
+            WrongNoteReviewSyncAddress.attemptIdentifier(for: local) ==
+                "66a000000000000000000001",
+            "server id must be preferred after bulk acknowledgement"
+        )
+
+        var beforeBulk = local
+        beforeBulk.serverAttemptId = nil
+        require(
+            WrongNoteReviewSyncAddress.attemptIdentifier(for: beforeBulk) ==
+                "client-attempt-1",
+            "client attempt id must keep pre-ack review result uploadable"
+        )
 
         var remoteObject = fixture(
             nextReviewAt: nil,
@@ -106,6 +119,7 @@ struct SyncContractCases {
 
         print("Sync contract Swift cases passed")
         print("- legacy wrong-note JSON remains decodable")
+        print("- review result has an address before and after bulk acknowledgement")
         print("- newer server review state merges once without replacing local snapshot")
     }
 }
