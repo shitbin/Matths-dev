@@ -136,37 +136,31 @@ async function verifyMobileGoogleStart(fetchImpl, base) {
   ) {
     throw new Error("Cafe24 Google OAuth 공개 client/state/response_type 계약이 불완전합니다.");
   }
-  const legacyResponse = await fetchImpl(`${base}/api/v1/auth/google/start`, {
-    method: "GET",
-    redirect: "manual",
-    headers: { Accept: "text/html,application/xhtml+xml" },
-  });
-  if (![302, 303].includes(Number(legacyResponse.status))) {
-    throw new Error(
-      `Cafe24 구버전 iPad Google 시작 별칭이 Bearer 인증 없이 Google로 이동하지 않습니다. status=${legacyResponse.status}`,
-    );
-  }
-  const legacyLocation = String(legacyResponse.headers?.get?.("location") || "").trim();
-  let legacyAuthorizationURL;
-  try {
-    legacyAuthorizationURL = new URL(legacyLocation);
-  } catch {
-    throw new Error("Cafe24 구버전 Google 시작 별칭의 Location이 올바르지 않습니다.");
-  }
-  if (
-    legacyAuthorizationURL.protocol !== "https:" ||
-    legacyAuthorizationURL.hostname !== "accounts.google.com" ||
-    legacyAuthorizationURL.pathname !== "/o/oauth2/v2/auth" ||
-    legacyAuthorizationURL.searchParams.get("redirect_uri") !==
-      "https://www.matths.kr/auth/google/callback"
-  ) {
-    throw new Error("Cafe24 구버전 Google 시작 별칭이 운영 Google 정본으로 이동하지 않습니다.");
-  }
   return {
     authorizationHost: authorizationURL.hostname,
     redirectUri: authorizationURL.searchParams.get("redirect_uri"),
     appStartPath: "/auth/google/app",
-    legacyAppStartPath: "/api/v1/auth/google/start",
+  };
+}
+
+async function verifyLegacyGoogleStartRemoved(fetchImpl, base) {
+  const response = await fetchImpl(`${base}/api/v1/auth/google/start`, {
+    method: "GET",
+    redirect: "manual",
+    headers: { Accept: "text/html,application/json" },
+  });
+  if (Number(response.status) < 400) {
+    throw new Error(
+      "Cafe24에 PKCE 이전 Google 시작 별칭이 공개 경로로 남아 있습니다.",
+    );
+  }
+  const location = String(response.headers?.get?.("location") || "").trim();
+  if (/accounts\.google\.com/i.test(location)) {
+    throw new Error("Cafe24 레거시 Google 시작 별칭이 아직 Google로 이동합니다.");
+  }
+  return {
+    path: "/api/v1/auth/google/start",
+    status: Number(response.status),
   };
 }
 
@@ -208,6 +202,7 @@ async function verifyDeployment(baseURL, fetchImpl = fetch) {
   }
 
   const googleMobile = await verifyMobileGoogleStart(fetchImpl, base);
+  const googleLegacy = await verifyLegacyGoogleStartRemoved(fetchImpl, base);
 
   return {
     schemaVersion: "MATTHS_CAFE24_DEPLOYMENT_VERIFICATION_V1",
@@ -217,13 +212,14 @@ async function verifyDeployment(baseURL, fetchImpl = fetch) {
     releaseFingerprint,
     logoSha256: remoteLogoSha256,
     googleMobile,
+    googleLegacy,
     checks: [
       "api-health",
       "release-fingerprint",
       "home-current-markers",
       "official-logo-sha256",
       "ipad-google-start-public-redirect",
-      "legacy-ipad-google-start-public-redirect",
+      "legacy-google-start-removed",
     ],
   };
 }
@@ -264,5 +260,6 @@ module.exports = {
   localSourceIdentity,
   normalizeBaseURL,
   verifyDeployment,
+  verifyLegacyGoogleStartRemoved,
   verifyMobileGoogleStart,
 };

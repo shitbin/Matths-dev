@@ -20,6 +20,7 @@ process.env.GOOGLE_OAUTH_CLIENT_SECRET = "fake-google-secret";
 
 const { User } = require("../models/matthsModel");
 const AccountReauthentication = require("../models/accountReauthenticationModel");
+const MobileAuthGrant = require("../models/mobileAuthGrantModel");
 const apiController = require("../controllers/apiController");
 const matthsController = require("../controllers/matthsController");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -32,6 +33,9 @@ const {
   issueAccountDeletionProof,
   _testing: { verifierChallenge },
 } = require("../services/accountReauthenticationService");
+const {
+  GRANT_REPLAY_WINDOW_MS,
+} = require("../services/mobileSocialAuthGrantService");
 
 const base64urlRandom = () => crypto.randomBytes(32).toString("base64url");
 
@@ -190,12 +194,6 @@ async function main() {
       "/auth/google/app",
       matthsController.socialOAuthAppStart,
     );
-    // 구버전 별칭은 Bearer 경계보다 먼저 등록돼야 한다. 이 순서 자체를
-    // 실제 HTTP 302/401 대조로 검증한다.
-    app.get(
-      "/api/v1/auth/google/start",
-      matthsController.socialOAuthLegacyAppStart,
-    );
     app.post(
       "/api/v1/auth/google/exchange",
       apiController.exchangeGoogleAuthCode,
@@ -266,24 +264,131 @@ async function main() {
       body: JSON.stringify({ code: loginCode, codeVerifier: loginVerifier }),
     });
     assert.equal(response.status, 200);
-    assert.ok(String((await response.json()).accessToken || "").split(".").length === 3);
+    const firstLoginResponse = await response.json();
+    assert.ok(String(firstLoginResponse.accessToken || "").split(".").length === 3);
 
-    // 구 `/api/v1/auth/google/start`는 Bearer 토큰 없이도 Google 302를
-    // 유지한다. 바로 뒤의 일반 API는 같은 무인증 요청을 401로 막는다.
-    const legacyJar = new CookieJar();
-    response = await jarFetch(
-      legacyJar,
-      `${appOrigin}/api/v1/auth/google/start`,
+    // 응답 유실 재시도는 새 30일 Bearer를 발급하는 경로가 아니다. iat가 달라질
+    // 만큼 기다린 뒤 같은 code+verifier를 다시 보내도 최초 응답과 정확히 같은
+    // 토큰으로 수렴해야 한다.
+    await User.updateOne(
+      { _id: loginUser._id },
+      {
+        $set: {
+          name: "재시도 중 바뀐 이름",
+          email: "google-login-user-mutated@example.test",
+        },
+      },
     );
-    assert.equal(response.status, 302);
-    assert.equal(new URL(response.headers.get("location")).origin, fakeOrigin);
+    await new Promise((resolve) => setTimeout(resolve, 1_100));
+    response = await fetch(`${appOrigin}/api/v1/auth/google/exchange`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code: loginCode, codeVerifier: loginVerifier }),
+    });
+    assert.equal(response.status, 200);
+    const retriedLoginResponse = await response.json();
+    assert.deepEqual(retriedLoginResponse, firstLoginResponse);
+    await User.updateOne(
+      { _id: loginUser._id },
+      {
+        $set: {
+          name: loginUser.name,
+          email: loginUser.email,
+        },
+      },
+    );
+
+    // 같은 grant를 동시에 소비해도 한 요청만 최초 소비자가 되고 나머지는 같은
+    // 고정 발급 시각을 읽는다. 두 응답이 서로 다른 Bearer가 되면 안 된다.
+    const concurrentVerifier = base64urlRandom();
+    const concurrentChallenge = verifierChallenge(concurrentVerifier);
     terminal = await followBrowser(
-      response.headers.get("location"),
-      legacyJar,
+      `${appOrigin}/auth/google/app?code_challenge=${concurrentChallenge}`,
+      new CookieJar(),
     );
-    assert.equal(terminal.toString().startsWith("matths://oauth/google?code="), true);
+    const concurrentCode = terminal.searchParams.get("code");
+    assert.ok(concurrentCode);
+    const exchangeConcurrent = () => fetch(`${appOrigin}/api/v1/auth/google/exchange`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        code: concurrentCode,
+        codeVerifier: concurrentVerifier,
+      }),
+    });
+    const concurrentResponses = await Promise.all(
+      Array.from({ length: 20 }, () => exchangeConcurrent()),
+    );
+    assert.ok(concurrentResponses.every(({ status }) => status === 200));
+    const concurrentBodies = await Promise.all(
+      concurrentResponses.map((candidate) => candidate.json()),
+    );
+    assert.equal(new Set(concurrentBodies.map(({ accessToken }) => accessToken)).size, 1);
+    assert.ok(concurrentBodies.every((body) => (
+      JSON.stringify(body) === JSON.stringify(concurrentBodies[0])
+    )));
+
+    response = await fetch(`${appOrigin}/api/v1/test/protected`, {
+      headers: { authorization: `Bearer ${concurrentBodies[0].accessToken}` },
+    });
+    assert.equal(response.status, 200);
+
+    const concurrentCodeHash = crypto
+      .createHash("sha256")
+      .update(concurrentCode)
+      .digest("hex");
+    const storedGrant = await MobileAuthGrant.findOne({ tokenHash: concurrentCodeHash })
+      .select("+responseCiphertext +responseIv +responseTag")
+      .lean();
+    assert.ok(storedGrant.responseCiphertext);
+    assert.ok(storedGrant.responseIv);
+    assert.ok(storedGrant.responseTag);
+    assert.doesNotMatch(
+      JSON.stringify(storedGrant),
+      new RegExp(concurrentBodies[0].accessToken.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    );
+
+    // 계정 토큰 세대가 바뀌면 저장된 응답보다 폐기가 우선이다. 동일 결과를 돌려줘도
+    // 즉시 무효인 Bearer를 200으로 전달해서는 안 된다.
+    const originalTokenVersion = Number(loginUser.tokenVersion || 0);
+    await User.updateOne(
+      { _id: loginUser._id },
+      { $set: { tokenVersion: originalTokenVersion + 1 } },
+    );
+    response = await exchangeConcurrent();
+    assert.equal(response.status, 401);
+    assert.equal((await response.json()).code, "TOKEN_REVOKED");
+    await User.updateOne(
+      { _id: loginUser._id },
+      { $set: { tokenVersion: originalTokenVersion } },
+    );
+
+    // 재시도 창 밖에서는 같은 code+verifier도 더 이상 결과를 읽지 못한다.
+    await MobileAuthGrant.updateOne(
+      { tokenHash: concurrentCodeHash },
+      { $set: { consumedAt: new Date(Date.now() - GRANT_REPLAY_WINDOW_MS - 1_000) } },
+    );
+    response = await fetch(`${appOrigin}/api/v1/auth/google/exchange`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code: concurrentCode, codeVerifier: concurrentVerifier }),
+    });
+    assert.equal(response.status, 401);
+
+    // 공개 OAuth 진입로는 Bearer 경계 밖에 있어야 하고, 그 옆의 일반 API 는
+    // 같은 무인증 요청을 401 로 막아야 한다. 위에서 `/auth/google/app` 왕복이
+    // 성공했으므로 여기서는 경계의 반대쪽만 확인한다.
+    // (구버전 별칭 `/api/v1/auth/google/start` 는 제거됐다 — PKCE 강제 이후
+    //  challenge 없는 grant 가 교환되지 않아 완료 불가능한 경로였다.)
     response = await fetch(`${appOrigin}/api/v1/test/protected`);
     assert.equal(response.status, 401);
+
+    response = await fetch(`${appOrigin}/api/v1/auth/google/start`, {
+      redirect: "manual",
+    });
+    assert.equal(response.status, 401);
+    assert.equal(response.headers.get("location"), null);
+    assert.equal((await response.json()).code, "UNAUTHORIZED");
 
     assert.equal(String(loginUser._id).length, 24);
 
@@ -448,7 +553,7 @@ async function main() {
 
     console.log(
       "Google OAuth HTTP contracts passed " +
-      "(fake upstream, isolated Mongo, PKCE app login, public legacy 302, " +
+      "(fake upstream, isolated Mongo, PKCE app login, legacy route absent, " +
       "web+iPad account deletion, one-time proof)",
     );
   } finally {

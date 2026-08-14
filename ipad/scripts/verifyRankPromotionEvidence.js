@@ -2,6 +2,8 @@
 "use strict";
 
 const fs = require("node:fs");
+const path = require("node:path");
+const { verifyRankPromotionBundle } = require("./verifyRankPromotionBundle");
 
 const filename = process.argv[2];
 if (!filename) throw new Error("rank promotion evidence JSON 경로가 필요합니다.");
@@ -10,6 +12,12 @@ const expectedTiers = [
   "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD",
   "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER",
 ];
+
+function option(name) {
+  const index = process.argv.indexOf(name);
+  if (index < 0 || !process.argv[index + 1]) return "";
+  return process.argv[index + 1];
+}
 
 if (report.schemaVersion === "MATTHS_RANK_PROMOTION_PIPELINE_PREWARM_V1") {
   if (report.result !== "PASS") throw new Error("pipeline prewarm 결과가 PASS가 아닙니다.");
@@ -44,11 +52,58 @@ if (report.schemaVersion === "MATTHS_RANK_PROMOTION_PIPELINE_PREWARM_V1") {
   process.exit(0);
 }
 
-if (report.schemaVersion !== "MATTHS_RANK_PROMOTION_PERFORMANCE_V1") {
+if (report.schemaVersion !== "MATTHS_RANK_PROMOTION_PERFORMANCE_V2") {
   throw new Error("schemaVersion 불일치");
 }
+const appOption = option("--app");
+const sourceRootOption = option("--source-root");
+if (!appOption || !sourceRootOption) {
+  throw new Error("V2 성능 증거는 --app <Matths.app> --source-root <repo> 교차검증이 필요합니다.");
+}
+const bundle = verifyRankPromotionBundle(path.resolve(appOption), {
+  sourceRoot: path.resolve(sourceRootOption),
+  requireCleanSource: true,
+});
 if (report.serverSyncSuppressed !== true) throw new Error("서버 동기화 억제 증거가 없습니다.");
 if (report.reduceMotionEnabled !== false) throw new Error("동작 줄이기가 켜진 계측은 모션 성능 증거가 아닙니다.");
+if (report.provenanceVerified !== true) throw new Error("self-test provenance 검증이 PASS가 아닙니다.");
+if (report.sourceCommit !== bundle.source.commit
+    || report.sourceTree !== bundle.source.tree
+    || report.sourceIdentityKind !== bundle.source.identityKind
+    || report.sourceTrackedWorkingTreeClean !== bundle.source.trackedWorkingTreeClean
+    || report.sourceExternalAttestationRequired !== bundle.source.externalAttestationRequired) {
+  throw new Error("self-test source identity가 실제 번들과 다릅니다.");
+}
+if (report.appExecutableSHA256 !== bundle.executable.sha256) {
+  throw new Error("self-test executable SHA-256이 실제 앱 바이너리와 다릅니다.");
+}
+if (report.rankAssetManifestSHA256 !== bundle.rankPromotion.manifestSha256) {
+  throw new Error("self-test rank manifest SHA-256이 실제 번들과 다릅니다.");
+}
+const sourceProvenance = bundle.rankPromotion.sourceProvenance;
+if (report.rankAssetSourceStatus !== sourceProvenance.status
+    || report.rankAssetApprovedSource !== sourceProvenance.approvedSource
+    || report.rankAssetExternalAttestationRequired
+      !== sourceProvenance.externalAttestationRequired) {
+  throw new Error("self-test rank asset 출처 상태가 실제 manifest와 다릅니다.");
+}
+if (report.rankAssetSourceStatus !== "unknown"
+    || report.rankAssetApprovedSource !== false
+    || report.rankAssetExternalAttestationRequired !== true
+    || report.releaseEvidenceEligible !== false) {
+  throw new Error("확인되지 않은 웹 원본을 승인·Release 적격으로 과장했습니다.");
+}
+if (!Array.isArray(report.rankAssets)
+    || report.rankAssets.length !== bundle.rankPromotion.assets.length
+    || report.rankAssets.some((row, index) => {
+      const actual = bundle.rankPromotion.assets[index];
+      return row.tierCode !== actual.tierCode
+        || row.filename !== actual.filename
+        || row.sha256 !== actual.sha256
+        || row.sizeBytes !== actual.sizeBytes;
+    })) {
+  throw new Error("self-test 티어별 MP4 SHA-256이 실제 번들과 다릅니다.");
+}
 if (!Array.isArray(report.tiers) || report.tiers.length !== expectedTiers.length) {
   throw new Error("9티어 계측이 아닙니다.");
 }

@@ -87,6 +87,7 @@ private enum CurriculumConceptDisplayState {
 
 struct CurriculumV2MapScreen: View {
     @EnvironmentObject private var store: AppStore
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -118,7 +119,11 @@ struct CurriculumV2MapScreen: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(.vertical, Tokens.Space.s8)
             } else {
-                let split = geometry.size.width >= 760 && !dynamicTypeSize.isAccessibilitySize
+                // iPhone landscape는 760pt보다 넓을 수 있어도 compact size class다.
+                // 너비만 보고 iPad 사이드바를 띄우지 않는다.
+                let split = horizontalSizeClass == .regular
+                    && geometry.size.width >= 760
+                    && !dynamicTypeSize.isAccessibilitySize
                 let narrow = geometry.size.width <= 360
                 Group {
                     if split {
@@ -217,9 +222,15 @@ struct CurriculumV2MapScreen: View {
     }
 
     private func courseScroll(compact: Bool, narrow: Bool) -> some View {
-        ScrollView {
+        let timelinePreview = topTimelinePreview
+        return ScrollView {
             LazyVStack(alignment: .leading, spacing: Tokens.Space.s7) {
                 pageHeader
+                CurriculumStoryCompactPreview(model: timelinePreview) {
+                    if let conceptID = timelinePreview.conceptID {
+                        store.openConceptV2(conceptID)
+                    }
+                }
                 if compact { compactCoursePicker }
                 courseHeader(selectedCourse)
                 learningTracksSection(course: selectedCourse)
@@ -1005,6 +1016,62 @@ struct CurriculumV2MapScreen: View {
         } ?? course.allConcepts.first {
             store.progressV2.percent(for: $0) < 100
         }
+    }
+
+    /// 웹과 같은 ProgressV2 이어학습 우선순위에서 target 한 개만 고르고,
+    /// 그 한 개의 story만 resolve한다. 과목/개념 목록을 story 뷰로 확장하지 않는다.
+    private var topTimelinePreview: CurriculumStoryCompactPreviewModel {
+        guard let (course, unit, concept) = store.progressV2.continueConcept() else {
+            let hasConcepts = courses.contains { !$0.allConcepts.isEmpty }
+            return CurriculumStoryCompactPreviewModel(
+                state: hasConcepts ? .completed : .empty,
+                story: nil,
+                courseTitle: nil,
+                unitTitle: nil,
+                conceptID: nil,
+                conceptTitle: nil,
+                estimatedMinutes: nil,
+                progress: nil,
+                message: hasConcepts
+                    ? "현재 학습 범위의 모든 개념을 완료했습니다. 아래에서 완료한 개념을 다시 선택할 수 있습니다."
+                    : "지금 보여드릴 학습 기억선이 없습니다."
+            )
+        }
+
+        let resolution = CurriculumStoryCatalog.resolve(
+            courseID: course.id,
+            unitID: unit.id,
+            conceptID: concept.id
+        )
+        let progress = store.progressV2.percent(for: concept)
+        let state: CurriculumStoryCompactState
+        let message: String
+
+        if resolution.story != nil {
+            state = progress > 0 ? .current : .next
+            message = "개념 상세에서 5분 해설 전체와 연습 문제를 이어서 학습합니다."
+        } else {
+            switch resolution.availability {
+            case .draft, .invalid:
+                state = .locked
+                message = "5분 해설을 검수하고 있습니다. 개념 학습은 바로 시작할 수 있습니다."
+            case .missing, .unavailable, .published:
+                state = .empty
+                message = "검수된 5분 해설 프리뷰가 아직 없습니다. 개념 학습은 바로 시작할 수 있습니다."
+            }
+        }
+
+        return CurriculumStoryCompactPreviewModel(
+            state: state,
+            story: resolution.story,
+            courseTitle: course.title,
+            unitTitle: unit.title,
+            conceptID: concept.id,
+            conceptTitle: concept.title,
+            estimatedMinutes: concept.lesson?.estimatedMinutes ?? 15,
+            progress: progress,
+            message: message
+        )
     }
 
     private func categoryTitle(_ id: String) -> String {

@@ -5,15 +5,21 @@ root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 work="$(mktemp -d /tmp/matths-release-audit.XXXXXX)"
 trap 'rm -rf "$work"' EXIT
 source_root="$work/source"
-mkdir -p "$source_root"
+mkdir -p "$source_root/Matths/RankMotion" "$source_root/scripts"
+cp "$root/Matths/RankMotion/rank-promotion-assets.json" \
+  "$source_root/Matths/RankMotion/"
+cp "$root/scripts/verifyRankPromotionBundle.js" "$source_root/scripts/"
 git -C "$source_root" init -q
 git -C "$source_root" config user.email release-audit@example.invalid
 git -C "$source_root" config user.name 'Release Audit Test'
 printf '%s\n' candidate > "$source_root/README.md"
-git -C "$source_root" add README.md
+printf '%s\n' .DS_Store > "$source_root/.gitignore"
+git -C "$source_root" add .
 git -C "$source_root" commit -qm candidate
 app="$work/Matths.app"
-mkdir -p "$app"
+mkdir -p "$app/RankMotion"
+cp "$root/Matths/RankMotion/rank-promotion-assets.json" "$app/RankMotion/"
+for video in "$root"/Matths/RankMotion/*.mp4; do cp "$video" "$app/RankMotion/"; done
 cp "$root/Matths/curriculum-story-policy.json" "$app/"
 cp "$root/Matths/curriculum-stories-index.json" "$app/"
 cp "$root/Matths/curriculum-v2.json" "$app/"
@@ -30,6 +36,9 @@ cat > "$app/Info.plist" <<'PLIST'
 </dict></plist>
 PLIST
 printf '%s\n' '<?xml version="1.0"?><plist version="1.0"><dict/></plist>' > "$app/PrivacyInfo.xcprivacy"
+SRCROOT="$source_root" TARGET_BUILD_DIR="$work" \
+UNLOCALIZED_RESOURCES_FOLDER_PATH=Matths.app INFOPLIST_PATH=Matths.app/Info.plist \
+CONFIGURATION=Release /bin/sh "$root/scripts/embed-build-provenance.sh"
 printf '%s\n' '** BUILD SUCCEEDED **' > "$work/build.log"
 cat > "$work/lipo" <<'SH'
 #!/bin/sh
@@ -40,7 +49,7 @@ chmod +x "$work/lipo"
 MATTHS_LIPO="$work/lipo" node "$root/scripts/createReleaseAuditEvidence.js" \
   --app "$app" --build-log "$work/build.log" --output "$work/audit.json" \
   --assets excluded --signing unsigned --source-root "$source_root"
-grep -Fq '"schemaVersion": "MATTHS_IPAD_RELEASE_AUDIT_V1"' "$work/audit.json"
+grep -Fq '"schemaVersion": "MATTHS_IPAD_RELEASE_AUDIT_V2"' "$work/audit.json"
 grep -Fq '"appStoreEligible": false' "$work/audit.json"
 grep -Eq '"commit": "[0-9a-f]{40}"' "$work/audit.json"
 grep -Eq '"tree": "[0-9a-f]{40}"' "$work/audit.json"
@@ -48,6 +57,9 @@ grep -Fq '"trackedWorkingTreeClean": true' "$work/audit.json"
 grep -Fq '"publishedStoryCount": 220' "$work/audit.json"
 grep -Fq '"shardCount": 13' "$work/audit.json"
 grep -Fq '"sha256Verified": true' "$work/audit.json"
+grep -Fq '"status": "unknown"' "$work/audit.json"
+grep -Fq '"approvedSource": false' "$work/audit.json"
+grep -Fq '"externalAttestationRequired": true' "$work/audit.json"
 
 printf '%s\n' '** ARCHIVE SUCCEEDED **' > "$work/archive.log"
 MATTHS_LIPO="$work/lipo" node "$root/scripts/createReleaseAuditEvidence.js" \
@@ -99,6 +111,11 @@ PLIST
 mkdir -p "$work/ipa/Payload"
 cp -R "$app" "$work/ipa/Payload/Matths.app"
 (cd "$work/ipa" && /usr/bin/zip -qry "$work/Matths.ipa" Payload)
+source_status=$(git -C "$source_root" status --porcelain --untracked-files=normal)
+if [ -n "$source_status" ]; then
+  echo "Release audit fixture source became dirty: $source_status" >&2
+  exit 1
+fi
 MATTHS_LIPO="$work/lipo" MATTHS_CODESIGN="$work/codesign" \
 MATTHS_SECURITY="$work/security" MATTHS_PROFILE="$work/distribution.plist" \
 node "$root/scripts/createReleaseAuditEvidence.js" \
@@ -106,10 +123,26 @@ node "$root/scripts/createReleaseAuditEvidence.js" \
   --assets compiled --signing signed --signed-archive "$work/Matths.ipa" \
   --source-root "$source_root"
 grep -Fq '"signing": "app-store-distribution"' "$work/distribution.json"
-grep -Fq '"appStoreEligible": true' "$work/distribution.json"
+grep -Fq '"appStoreBinaryEligible": true' "$work/distribution.json"
+grep -Fq '"appStoreEligible": false' "$work/distribution.json"
 grep -Fq '"signing": "app-store-distribution"' "$work/distribution.json"
 grep -Fq '"file": "Matths.ipa"' "$work/distribution.json"
 grep -Eq '"sha256": "[0-9a-f]{64}"' "$work/distribution.json"
+grep -Eq '"executableSha256": "[0-9a-f]{64}"' "$work/distribution.json"
+grep -Eq '"rankAssetManifestSha256": "[0-9a-f]{64}"' "$work/distribution.json"
+
+cp "$app/Matths" "$work/Matths-binary"
+printf x >> "$app/Matths"
+if MATTHS_LIPO="$work/lipo" MATTHS_CODESIGN="$work/codesign" \
+  MATTHS_SECURITY="$work/security" MATTHS_PROFILE="$work/distribution.plist" \
+  node "$root/scripts/createReleaseAuditEvidence.js" \
+    --app "$app" --build-log "$work/build.log" --output "$work/mismatched-ipa.json" \
+    --assets compiled --signing signed --signed-archive "$work/Matths.ipa" \
+    --source-root "$source_root" >/dev/null 2>&1; then
+  echo '다른 executable의 IPA가 Release 감사를 통과했습니다.' >&2
+  exit 1
+fi
+cp "$work/Matths-binary" "$app/Matths"
 
 if MATTHS_LIPO="$work/lipo" MATTHS_CODESIGN="$work/codesign" \
   MATTHS_SECURITY="$work/security" MATTHS_PROFILE="$work/distribution.plist" \
@@ -129,6 +162,16 @@ if MATTHS_LIPO="$work/lipo" node "$root/scripts/createReleaseAuditEvidence.js" \
   exit 1
 fi
 cp "$work/common-math-1.json" "$app/common-math-1.json"
+
+cp "$app/RankMotion/silver-rank-up.v6.mp4" "$work/silver.mp4"
+printf x >> "$app/RankMotion/silver-rank-up.v6.mp4"
+if MATTHS_LIPO="$work/lipo" node "$root/scripts/createReleaseAuditEvidence.js" \
+  --app "$app" --build-log "$work/build.log" --output "$work/tampered-rank.json" \
+  --assets excluded --signing unsigned --source-root "$source_root" >/dev/null 2>&1; then
+  echo '변조된 rank MP4가 Release 감사를 통과했습니다.' >&2
+  exit 1
+fi
+cp "$work/silver.mp4" "$app/RankMotion/silver-rank-up.v6.mp4"
 
 printf '%s\n' 'trycloudflare.com' >> "$app/Matths"
 if MATTHS_LIPO="$work/lipo" node "$root/scripts/createReleaseAuditEvidence.js" \

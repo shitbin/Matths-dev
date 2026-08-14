@@ -1,4 +1,5 @@
 #if DEBUG
+import CryptoKit
 import Foundation
 import UIKit
 
@@ -21,6 +22,13 @@ enum RankPromotionPerformanceSelfTest {
         let passed: Bool
     }
 
+    private struct RankAssetSample: Codable {
+        let tierCode: String
+        let filename: String
+        let sha256: String
+        let sizeBytes: Int64
+    }
+
     private struct Report: Codable {
         let schemaVersion: String
         let result: String
@@ -34,7 +42,105 @@ enum RankPromotionPerformanceSelfTest {
         let lowPowerModeEnabled: Bool
         let reduceMotionEnabled: Bool
         let serverSyncSuppressed: Bool
+        let sourceCommit: String
+        let sourceTree: String
+        let sourceIdentityKind: String
+        let sourceTrackedWorkingTreeClean: Bool
+        let sourceExternalAttestationRequired: Bool
+        let appExecutableSHA256: String
+        let rankAssetManifestSHA256: String
+        let rankAssetSourceStatus: String
+        let rankAssetApprovedSource: Bool
+        let rankAssetExternalAttestationRequired: Bool
+        let rankAssets: [RankAssetSample]
+        let provenanceVerified: Bool
+        let releaseEvidenceEligible: Bool
+        let provenanceError: String?
         let tiers: [TierSample]
+    }
+
+    private struct AssetManifest: Decodable {
+        struct SourceProvenance: Decodable {
+            let status: String
+            let approvedSource: Bool
+            let externalAttestationRequired: Bool
+        }
+
+        struct Asset: Decodable {
+            let tierCode: String
+            let filename: String
+            let sha256: String
+            let sizeBytes: Int64
+        }
+
+        let schemaVersion: String
+        let sourceProvenance: SourceProvenance
+        let assets: [Asset]
+    }
+
+    private struct BuildProvenance: Decodable {
+        let schemaVersion: String
+        let sourceCommit: String
+        let sourceTree: String
+        let sourceIdentityKind: String
+        let sourceTrackedWorkingTreeClean: Bool
+        let sourceExternalAttestationRequired: Bool
+        let rankAssetManifestSHA256: String
+
+        private enum CodingKeys: String, CodingKey {
+            case schemaVersion = "SchemaVersion"
+            case sourceCommit = "SourceCommit"
+            case sourceTree = "SourceTree"
+            case sourceIdentityKind = "SourceIdentityKind"
+            case sourceTrackedWorkingTreeClean = "SourceTrackedWorkingTreeClean"
+            case sourceExternalAttestationRequired = "SourceExternalAttestationRequired"
+            case rankAssetManifestSHA256 = "RankAssetManifestSHA256"
+        }
+    }
+
+    private struct ProvenanceSnapshot {
+        let sourceCommit: String
+        let sourceTree: String
+        let sourceIdentityKind: String
+        let sourceTrackedWorkingTreeClean: Bool
+        let sourceExternalAttestationRequired: Bool
+        let appExecutableSHA256: String
+        let rankAssetManifestSHA256: String
+        let rankAssetSourceStatus: String
+        let rankAssetApprovedSource: Bool
+        let rankAssetExternalAttestationRequired: Bool
+        let rankAssets: [RankAssetSample]
+        let verified: Bool
+        let releaseEvidenceEligible: Bool
+        let error: String?
+
+        static func failed(_ error: Error) -> ProvenanceSnapshot {
+            ProvenanceSnapshot(
+                sourceCommit: "unknown",
+                sourceTree: "unknown",
+                sourceIdentityKind: "unknown",
+                sourceTrackedWorkingTreeClean: false,
+                sourceExternalAttestationRequired: true,
+                appExecutableSHA256: "unknown",
+                rankAssetManifestSHA256: "unknown",
+                rankAssetSourceStatus: "unknown",
+                rankAssetApprovedSource: false,
+                rankAssetExternalAttestationRequired: true,
+                rankAssets: [],
+                verified: false,
+                releaseEvidenceEligible: false,
+                error: error.localizedDescription)
+        }
+    }
+
+    private enum ProvenanceValidationError: LocalizedError {
+        case invalid(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .invalid(let message): message
+            }
+        }
     }
 
     static func runIfRequested(store: AppStore) async {
@@ -78,11 +184,18 @@ enum RankPromotionPerformanceSelfTest {
         }
 
         let info = Bundle.main.infoDictionary ?? [:]
-        let passed = !UIAccessibility.isReduceMotionEnabled
+        let provenance: ProvenanceSnapshot
+        do {
+            provenance = try provenanceSnapshot(info: info)
+        } catch {
+            provenance = .failed(error)
+        }
+        let passed = provenance.verified
+            && !UIAccessibility.isReduceMotionEnabled
             && samples.count == RankTier.allCases.count
             && samples.allSatisfy(\.passed)
         let report = Report(
-            schemaVersion: "MATTHS_RANK_PROMOTION_PERFORMANCE_V1",
+            schemaVersion: "MATTHS_RANK_PROMOTION_PERFORMANCE_V2",
             result: passed ? "PASS" : "FAIL",
             observedAt: ISO8601DateFormatter().string(from: Date()),
             deviceModel: UIDevice.current.model,
@@ -94,6 +207,20 @@ enum RankPromotionPerformanceSelfTest {
             lowPowerModeEnabled: ProcessInfo.processInfo.isLowPowerModeEnabled,
             reduceMotionEnabled: UIAccessibility.isReduceMotionEnabled,
             serverSyncSuppressed: true,
+            sourceCommit: provenance.sourceCommit,
+            sourceTree: provenance.sourceTree,
+            sourceIdentityKind: provenance.sourceIdentityKind,
+            sourceTrackedWorkingTreeClean: provenance.sourceTrackedWorkingTreeClean,
+            sourceExternalAttestationRequired: provenance.sourceExternalAttestationRequired,
+            appExecutableSHA256: provenance.appExecutableSHA256,
+            rankAssetManifestSHA256: provenance.rankAssetManifestSHA256,
+            rankAssetSourceStatus: provenance.rankAssetSourceStatus,
+            rankAssetApprovedSource: provenance.rankAssetApprovedSource,
+            rankAssetExternalAttestationRequired: provenance.rankAssetExternalAttestationRequired,
+            rankAssets: provenance.rankAssets,
+            provenanceVerified: provenance.verified,
+            releaseEvidenceEligible: provenance.releaseEvidenceEligible,
+            provenanceError: provenance.error,
             tiers: samples)
 
         do {
@@ -116,6 +243,157 @@ enum RankPromotionPerformanceSelfTest {
                 String(cString: $0)
             }
         }
+    }
+
+    private static func provenanceSnapshot(info: [String: Any]) throws -> ProvenanceSnapshot {
+        guard let provenanceURL = Bundle.main.url(
+            forResource: "MatthsBuildProvenance", withExtension: "plist") else {
+            throw ProvenanceValidationError.invalid("MatthsBuildProvenance.plist가 없습니다.")
+        }
+        guard let manifestURL = Bundle.main.url(
+            forResource: "rank-promotion-assets",
+            withExtension: "json",
+            subdirectory: "RankMotion")
+                ?? Bundle.main.url(
+                    forResource: "rank-promotion-assets", withExtension: "json") else {
+            throw ProvenanceValidationError.invalid("rank-promotion-assets.json이 없습니다.")
+        }
+        guard let executableURL = Bundle.main.executableURL else {
+            throw ProvenanceValidationError.invalid("앱 executable URL이 없습니다.")
+        }
+
+        let provenance = try PropertyListDecoder().decode(
+            BuildProvenance.self, from: Data(contentsOf: provenanceURL))
+        let manifestData = try Data(contentsOf: manifestURL)
+        let manifest = try JSONDecoder().decode(AssetManifest.self, from: manifestData)
+        let manifestSHA256 = sha256(manifestData)
+
+        guard provenance.schemaVersion == "MATTHS_BUILD_PROVENANCE_V1",
+              info["MatthsBuildProvenanceSchema"] as? String == provenance.schemaVersion else {
+            throw ProvenanceValidationError.invalid("build provenance schema가 Info.plist와 다릅니다.")
+        }
+        guard isSourceOID(provenance.sourceCommit), isSourceOID(provenance.sourceTree) else {
+            throw ProvenanceValidationError.invalid("source commit/tree가 Git object id 형식이 아닙니다.")
+        }
+        guard provenance.sourceIdentityKind == "git",
+              provenance.sourceTrackedWorkingTreeClean,
+              !provenance.sourceExternalAttestationRequired else {
+            throw ProvenanceValidationError.invalid(
+                "self-test provenance는 clean Git source에서 직접 빌드된 경우에만 유효합니다.")
+        }
+        guard info["MatthsSourceCommit"] as? String == provenance.sourceCommit,
+              info["MatthsSourceTree"] as? String == provenance.sourceTree,
+              info["MatthsSourceIdentityKind"] as? String == provenance.sourceIdentityKind,
+              info["MatthsSourceTrackedWorkingTreeClean"] as? Bool
+                == provenance.sourceTrackedWorkingTreeClean,
+              info["MatthsSourceExternalAttestationRequired"] as? Bool
+                == provenance.sourceExternalAttestationRequired else {
+            throw ProvenanceValidationError.invalid(
+                "Info.plist source identity가 build provenance와 다릅니다.")
+        }
+        guard manifest.schemaVersion == "MATTHS_RANK_PROMOTION_ASSETS_V1",
+              manifest.sourceProvenance.status == "unknown",
+              manifest.sourceProvenance.approvedSource == false,
+              manifest.sourceProvenance.externalAttestationRequired else {
+            throw ProvenanceValidationError.invalid(
+                "확인되지 않은 rank 원본 provenance가 승인된 출처로 표기됐습니다.")
+        }
+        guard provenance.rankAssetManifestSHA256 == manifestSHA256,
+              info["MatthsRankAssetManifestSHA256"] as? String == manifestSHA256 else {
+            throw ProvenanceValidationError.invalid(
+                "rank asset manifest SHA-256이 build provenance와 다릅니다.")
+        }
+
+        let tiers = RankTier.allCases
+        guard manifest.assets.count == tiers.count else {
+            throw ProvenanceValidationError.invalid("rank asset manifest가 9티어가 아닙니다.")
+        }
+        let bundledVideoCount = try bundledRankVideoCount()
+        guard bundledVideoCount == tiers.count else {
+            throw ProvenanceValidationError.invalid(
+                "번들 rank MP4가 정확히 9개가 아닙니다: \(bundledVideoCount)")
+        }
+
+        var rankAssets: [RankAssetSample] = []
+        for (index, tier) in tiers.enumerated() {
+            let declared = manifest.assets[index]
+            guard declared.tierCode == tier.rawValue,
+                  let url = RankPromotionVideoAssets.url(for: tier),
+                  url.lastPathComponent == declared.filename else {
+                throw ProvenanceValidationError.invalid(
+                    "\(tier.rawValue): 티어 mapping이 manifest와 다릅니다.")
+            }
+            let values = try url.resourceValues(forKeys: [.fileSizeKey])
+            let sizeBytes = Int64(values.fileSize ?? -1)
+            let digest = try sha256(of: url)
+            guard sizeBytes == declared.sizeBytes, digest == declared.sha256 else {
+                throw ProvenanceValidationError.invalid(
+                    "\(tier.rawValue): 번들 MP4 SHA-256/크기가 manifest와 다릅니다.")
+            }
+            rankAssets.append(RankAssetSample(
+                tierCode: tier.rawValue,
+                filename: declared.filename,
+                sha256: digest,
+                sizeBytes: sizeBytes))
+        }
+
+        let executableSHA256 = try sha256(of: executableURL)
+        let releaseEligible = manifest.sourceProvenance.approvedSource
+            && !manifest.sourceProvenance.externalAttestationRequired
+        return ProvenanceSnapshot(
+            sourceCommit: provenance.sourceCommit,
+            sourceTree: provenance.sourceTree,
+            sourceIdentityKind: provenance.sourceIdentityKind,
+            sourceTrackedWorkingTreeClean: provenance.sourceTrackedWorkingTreeClean,
+            sourceExternalAttestationRequired: provenance.sourceExternalAttestationRequired,
+            appExecutableSHA256: executableSHA256,
+            rankAssetManifestSHA256: manifestSHA256,
+            rankAssetSourceStatus: manifest.sourceProvenance.status,
+            rankAssetApprovedSource: manifest.sourceProvenance.approvedSource,
+            rankAssetExternalAttestationRequired:
+                manifest.sourceProvenance.externalAttestationRequired,
+            rankAssets: rankAssets,
+            verified: true,
+            releaseEvidenceEligible: releaseEligible,
+            error: nil)
+    }
+
+    private static func bundledRankVideoCount() throws -> Int {
+        guard let root = Bundle.main.resourceURL,
+              let enumerator = FileManager.default.enumerator(
+                at: root,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles]) else {
+            throw ProvenanceValidationError.invalid("앱 번들 리소스를 열거할 수 없습니다.")
+        }
+        var count = 0
+        for case let url as URL in enumerator {
+            if url.lastPathComponent.range(
+                of: "-rank-up[.]v[0-9]+[.]mp4$",
+                options: .regularExpression) != nil {
+                count += 1
+            }
+        }
+        return count
+    }
+
+    private static func isSourceOID(_ value: String) -> Bool {
+        guard value.count == 40 || value.count == 64 else { return false }
+        return value.range(of: "^[a-f0-9]+$", options: .regularExpression) != nil
+    }
+
+    private static func sha256(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func sha256(of url: URL) throws -> String {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while let chunk = try handle.read(upToCount: 4 * 1_048_576), !chunk.isEmpty {
+            hasher.update(data: chunk)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     @MainActor

@@ -83,6 +83,9 @@ const {
   resolveStudentCurriculumStory,
 } = require("../services/curriculumStoryService");
 const {
+  buildCurriculumTimelinePreview,
+} = require("../services/curriculumTimelinePreviewService");
+const {
   canonicalProgressView,
 } = require("../services/progressTypeIdService");
 const {
@@ -656,13 +659,9 @@ exports.socialOAuthAppStart = (req, res, next) => {
   return exports.socialOAuthStart(req, res, next);
 };
 
-// PKCE 배포 전 앱이 이미 시작한 왕복만 보존하는 구버전 별칭이다. 신규 앱은
-// `/auth/google/app`만 사용한다.
-exports.socialOAuthLegacyAppStart = (req, res, next) => {
-  req.params.provider = "google";
-  req.socialOAuthMobile = true;
-  return exports.socialOAuthStart(req, res, next);
-};
+// socialOAuthLegacyAppStart(PKCE 이전 별칭)는 제거했다. PKCE 강제 이후 challenge
+// 없이 발급된 grant 는 교환되지 않으므로, 이 핸들러는 Google 왕복을 끝내고도
+// exchange 에서 반드시 401 이 되는 경로를 열어 두는 역할만 했다.
 
 async function redirectSocialAuthError(req, res, error, mobile = false) {
   const safeCodes = new Set([
@@ -3288,15 +3287,38 @@ exports.dismissDashboardNotification =
     }
   };
 
-exports.curriculumPage = (req, res, next) => {
+exports.curriculumPage = async (req, res, next) => {
   try {
     const curriculumData = loadCurriculum();
+    const sessionUser = req.session?.user?.id
+      ? req.session.user
+      : null;
+    let learningData = null;
+    let progressUnavailable = false;
+
+    if (sessionUser?.id) {
+      try {
+        ({ learningData } = await getUserLearningData(sessionUser.id));
+      } catch (error) {
+        progressUnavailable = true;
+        console.error(
+          "[curriculum-timeline] 사용자 진도 projection 실패:",
+          error.message
+        );
+      }
+    }
+
+    const curriculumTimelinePreview = buildCurriculumTimelinePreview({
+      curriculumData,
+      learningData,
+      loggedIn: Boolean(sessionUser),
+      progressUnavailable,
+    });
 
     res.render('curriculum', {
       curriculumData,
-      user:
-        req.session?.user ||
-        null,
+      curriculumTimelinePreview,
+      user: sessionUser,
     });
   } catch (error) {
     next(error);

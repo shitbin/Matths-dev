@@ -2730,6 +2730,38 @@
       "problem-answer-area"
     );
 
+    const drawingSection = document.querySelector(
+      ".solution-drawing"
+    );
+
+    const drawingCanvas = document.getElementById(
+      "solution-drawing-canvas"
+    );
+
+    const clearDrawingButton = document.getElementById(
+      "clear-solution-drawing"
+    );
+
+    const drawingStatus = document.getElementById(
+      "solution-drawing-status"
+    );
+
+    const floatingPreview = document.getElementById(
+      "solution-floating-preview"
+    );
+
+    const floatingImage = document.getElementById(
+      "solution-floating-image"
+    );
+
+    const analysisState = document.getElementById(
+      "solution-analysis-state"
+    );
+
+    const closeFloatingButton = document.getElementById(
+      "close-solution-floating"
+    );
+
     const feedback = document.getElementById(
       "problem-feedback"
     );
@@ -2795,6 +2827,129 @@
 
     let currentProblem = null;
     let answerSubmitted = false;
+    let floatingObjectUrl = null;
+    let floatingRequestId = 0;
+    let drawingPad = null;
+
+    try {
+      drawingPad =
+        window.MatthsSolutionDrawing?.createDrawingPad({
+          canvas: drawingCanvas,
+          clearButton: clearDrawingButton,
+          statusElement: drawingStatus,
+          windowObject: window,
+        }) || null;
+    } catch (_error) {
+      if (drawingSection) {
+        drawingSection.hidden = true;
+      }
+    }
+
+    function closeFloatingPreview() {
+      floatingRequestId += 1;
+
+      if (floatingObjectUrl) {
+        window.URL.revokeObjectURL(
+          floatingObjectUrl
+        );
+        floatingObjectUrl = null;
+      }
+
+      floatingImage?.removeAttribute("src");
+
+      if (floatingPreview) {
+        floatingPreview.hidden = true;
+      }
+
+      if (analysisState) {
+        analysisState.textContent = "";
+        delete analysisState.dataset.status;
+      }
+    }
+
+    async function presentWrongSolution(attemptId) {
+      if (
+        !drawingPad?.hasInk() ||
+        !floatingPreview ||
+        !floatingImage ||
+        !analysisState
+      ) {
+        closeFloatingPreview();
+        return;
+      }
+
+      const captureRequestId = ++floatingRequestId;
+      let imageBlob = null;
+
+      try {
+        imageBlob = await drawingPad.capturePng();
+      } catch (_error) {
+        if (drawingStatus) {
+          drawingStatus.textContent =
+            "필기 미리보기를 만들지 못했습니다. 채점 결과는 정상적으로 저장됐습니다.";
+        }
+        return;
+      }
+
+      if (captureRequestId !== floatingRequestId) {
+        return;
+      }
+
+      closeFloatingPreview();
+      const requestId = ++floatingRequestId;
+      floatingObjectUrl =
+        window.URL.createObjectURL(imageBlob);
+      floatingImage.src = floatingObjectUrl;
+      floatingPreview.hidden = false;
+      analysisState.dataset.status = "checking";
+      analysisState.textContent =
+        "내 풀이를 이 기기에서 준비했습니다. 보조 분석 가능 여부를 확인하고 있습니다.";
+
+      let analysis = null;
+
+      try {
+        analysis = window.MatthsSolutionAnalysis
+          ? await window.MatthsSolutionAnalysis.analyze({
+              attemptId,
+              imageBlob,
+            })
+          : {
+              status: "unavailable",
+              message:
+                "기기 분석 기능이 준비되지 않아 내 풀이만 표시합니다.",
+            };
+      } catch (_error) {
+        analysis = {
+          status: "failed",
+          message:
+            "풀이 분석을 마치지 못했습니다. 채점 결과와 학습 기록에는 영향이 없습니다.",
+        };
+      }
+
+      if (requestId !== floatingRequestId) {
+        return;
+      }
+
+      analysisState.dataset.status =
+        analysis.status || "failed";
+      analysisState.textContent =
+        analysis.message ||
+        "풀이 분석을 마치지 못했습니다. 채점 결과와 학습 기록에는 영향이 없습니다.";
+    }
+
+    closeFloatingButton?.addEventListener(
+      "click",
+      closeFloatingPreview
+    );
+
+    window.addEventListener(
+      "pagehide",
+      () => {
+        closeFloatingPreview();
+        drawingPad?.destroy();
+      },
+      { once: true }
+    );
 
     function renderReview(review) {
       if (!isReviewMode || !review) return;
@@ -2908,6 +3063,9 @@
 
     async function loadProblem() {
       answerSubmitted = false;
+      closeFloatingPreview();
+      drawingPad?.setEnabled(false);
+      drawingPad?.clear();
       submitButton.disabled = true;
       submitButton.textContent =
         "정답 확인";
@@ -2940,6 +3098,11 @@
         renderMastery(result.mastery);
         renderReview(result.review);
 
+        drawingPad?.setEnabled(true);
+        if (drawingStatus) {
+          drawingStatus.textContent =
+            "아직 필기가 없습니다. 필기는 선택사항입니다.";
+        }
         submitButton.disabled = false;
       } catch (error) {
         prompt.textContent =
@@ -2981,6 +3144,7 @@
       }
 
       submitButton.disabled = true;
+      drawingPad?.setEnabled(false);
 
       try {
         const result = await requestJson(
@@ -3028,6 +3192,27 @@
         renderMastery(result.mastery);
         renderReview(result.review);
 
+        const hasDrawing =
+          drawingPad?.hasInk() === true;
+        const shouldPresentPreview =
+          window.MatthsSolutionAnalysis
+            ?.shouldPresentPreview
+            ? window.MatthsSolutionAnalysis.shouldPresentPreview(
+                {
+                  correct: result.correct,
+                  hasInk: hasDrawing,
+                }
+              )
+            : result.correct === false && hasDrawing;
+
+        if (shouldPresentPreview) {
+          void presentWrongSolution(
+            result.attemptId
+          );
+        } else {
+          closeFloatingPreview();
+        }
+
         nextButton.hidden = reviewCompleted;
 
         if (reviewReturn && reviewCompleted) {
@@ -3044,6 +3229,7 @@
             "답안을 제출하지 못했습니다. 잠시 후 다시 시도해주세요."
           );
         submitButton.disabled = false;
+        drawingPad?.setEnabled(true);
       }
     });
 

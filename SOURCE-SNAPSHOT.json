@@ -1,62 +1,85 @@
 {
-  "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V2",
-  "createdAt": "2026-08-13T08:23:05+09:00",
+  "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V3",
+  "createdAt": "2026-08-15T00:58:00+09:00",
   "productionOrigin": "https://www.matths.kr",
   "upstream": {
     "repository": "https://github.com/is4553807/Matths.git",
-    "mainCommit": "023a47368bef13d763eda0377b45c989f59ef01b",
+    "mainCommitAtLastReviewedMerge": "023a47368bef13d763eda0377b45c989f59ef01b",
     "pushAllowed": false
   },
   "web": {
-    "sourceCommit": "d6c62938fdd3726e0f7d052b47b57142eb42c68a",
+    "sourceCommit": "0fac41a4202b7b972de2818d176595fcc265398d",
     "path": "web",
-    "testManifest": 138,
-    "regression": "138/138 passed in canonical and public integration workspaces"
+    "testManifest": 142,
+    "regression": "142/142 passed",
+    "ejsTemplates": 120,
+    "trackedJavaScriptAndMjs": 694,
+    "localRuntimeFingerprintMatch": true,
+    "liveDeploymentMatchesCandidate": false
   },
-  "ipad": {
-    "sourceCommit": "8869906fbb9a376b7015820a824506a79b7d2989",
+  "universalApp": {
+    "sourceCommit": "fa46a6dd7c441c2ac42a8d5940e20a4a47f902e0",
     "path": "ipad",
-    "contracts": "57/57 passed in canonical workspace",
-    "curriculumBundle": "220/220 stories and 15/15 bundle checks passed",
-    "signedDeviceBuild": "passed",
-    "physicalDeviceInstall": "passed",
-    "physicalDeviceLaunch": "passed",
-    "internalDebugIpa": "Matths-internal-debug-8869906.ipa",
-    "internalDebugIpaSha256": "9bab3ec428fa64253322c951c7d5ab920ce8c4a52ae12091c022b744a1bbdf30"
+    "deviceFamilies": ["iPhone", "iPad"],
+    "contracts": "60/60 passed in canonical workspace",
+    "signedIpadBuild": "passed",
+    "physicalIpadInstall": "passed",
+    "physicalIpadLaunch": "passed",
+    "signedExecutableSha256": "92fd2e258a46ed176b01823dfc0ac567a89e2438b1119a5622f54d05e9b84282",
+    "physicalIphone": "not yet verified"
+  },
+  "oauth": {
+    "origin": "https://www.matths.kr",
+    "callback": "https://www.matths.kr/auth/google/callback",
+    "nativeBrowser": "ASWebAuthenticationSession",
+    "modernAppRoute": "/auth/google/app",
+    "legacyPublicAliasRemoved": true,
+    "exactEncryptedReplay": true,
+    "productionBoundaryStatus": "stale: providers 401 and modern route 404 observed 2026-08-15"
   },
   "curriculum": {
     "courseCount": 13,
     "storyCount": 220,
     "sceneCount": 1100,
-    "webIpadByteParity": "passed",
-    "defaultVoice": "ko-KR female system TTS",
-    "studioExportTarget": "ElevenLabs v3"
+    "webIpadByteParityFiles": 15,
+    "defaultVoice": "ko-KR female system TTS preferred",
+    "studioExportTarget": "ElevenLabs v3",
+    "topTimeline": "one existing continueConcept target, five compact nodes"
+  },
+  "solutionFloating": {
+    "web": true,
+    "ipad": true,
+    "drawingUpload": false,
+    "analysisBoundary": "local, memory-only, network:false"
   },
   "rankPromotion": {
     "format": "H.264 MP4 with AAC",
     "tierCount": 9,
-    "webIncluded": true,
-    "ipadIncluded": true,
-    "signedDeviceEvidence": "9/9 passed"
+    "skip": true,
+    "reduceMotion": true,
+    "buildProvenanceBound": true,
+    "externalSourceAttestation": "required",
+    "appStoreEligible": false
   },
   "publicCheckout": {
     "excluded": [
-      "web evidence/dist/tmp/generated screenshots/PDF",
-      "node_modules and environment secrets",
-      "iPad KICE PDFs",
-      "Frameworks/llama.xcframework",
-      "DerivedData/build/IPA/xcarchive",
-      "signing and runtime credentials"
+      "web historical screenshots and tmp PDFs",
+      "web evidence/dist/generated media/node_modules/environment secrets/local DB/browser profiles",
+      "iPad KICE PDFs and Frameworks/llama.xcframework",
+      "DerivedData/build/IPA/XCArchive/signing and runtime credentials"
     ],
-    "ipadContractsWithoutNonRedistributableOverlay": "55/57 pass when MATTHS_WEB_REPO points to ../web from ipad/; Ling runtime and KICE resource checks require excluded overlays"
+    "webRegression": "142/142 passed in the public integration workspace",
+    "ipadContractsWithoutNonRedistributableOverlay": "58/60 passed; the Ling runtime and KICE resource contracts require the intentionally excluded llama framework and nine KICE PDFs",
+    "exactTrackedContentPolicy": "canonical tracked code minus the declared 74 web historical evidence files; iPad tracked content exact"
   },
   "rollback": {
-    "commit": "5575b8b50043006bb9c2b4a6f7b8f40bbbb8a336",
-    "branch": "rollback/pre-curriculum-sync-20260813-5575b8b",
-    "annotatedTag": "snapshot/pre-curriculum-sync-20260813-5575b8b"
+    "commit": "0e7948b2022a85eb9d90684745b1ed233cabafed",
+    "branch": "rollback/pre-v10-sync-20260815-0e7948b",
+    "annotatedTag": "snapshot/pre-v10-sync-20260815-0e7948b"
   },
   "arenaLogic": {
     "status": "frozen",
+    "productPathChangesSincePreviousSnapshot": 0,
     "policy": "Do not change gameplay, rules, economy, settlement, difficulty, tier definitions, or shop policy without explicit product approval."
   }
 }

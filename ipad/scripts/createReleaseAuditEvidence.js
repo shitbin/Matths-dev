@@ -8,6 +8,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { verifyCurriculumStoryBundle } = require("./verifyCurriculumStoryBundle");
+const { verifyRankPromotionBundle } = require("./verifyRankPromotionBundle");
 const repoRoot = path.resolve(__dirname, "..");
 
 function option(name, fallback = "") {
@@ -92,7 +93,7 @@ function inspectSigning(app) {
   }
 }
 
-function inspectSignedArchive(filename) {
+function inspectSignedArchive(filename, { sourceRoot, auditedBundle }) {
   if (!filename || !fs.existsSync(filename) || !fs.statSync(filename).isFile()) {
     throw new Error("App Store 제출용 IPA가 없습니다. --signed-archive <Matths.ipa>가 필요합니다.");
   }
@@ -111,12 +112,47 @@ function inspectSignedArchive(filename) {
       throw new Error(`IPA에 ${appPrefix}${required}가 없습니다.`);
     }
   }
-  return {
-    file: path.basename(filename),
-    sha256: sha256(filename),
-    sizeBytes: fs.statSync(filename).size,
-    appPath: appPrefix,
-  };
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "matths-signed-archive-"));
+  try {
+    run("/usr/bin/unzip", ["-q", filename, "-d", temporary]);
+    const archivedApp = path.join(temporary, appPrefix);
+    const archivedBundle = verifyRankPromotionBundle(archivedApp, {
+      sourceRoot,
+      requireCleanSource: true,
+    });
+    if (archivedBundle.executable.sha256 !== auditedBundle.executable.sha256) {
+      throw new Error("IPA executable이 감사한 .app executable과 다릅니다.");
+    }
+    if (archivedBundle.rankPromotion.manifestSha256
+        !== auditedBundle.rankPromotion.manifestSha256) {
+      throw new Error("IPA rank manifest가 감사한 .app manifest와 다릅니다.");
+    }
+    const archivedAssets = archivedBundle.rankPromotion.assets;
+    const auditedAssets = auditedBundle.rankPromotion.assets;
+    if (archivedAssets.length !== auditedAssets.length
+        || archivedAssets.some((asset, index) =>
+          asset.sha256 !== auditedAssets[index].sha256
+          || asset.filename !== auditedAssets[index].filename
+          || asset.tierCode !== auditedAssets[index].tierCode)) {
+      throw new Error("IPA rank MP4가 감사한 .app rank MP4와 다릅니다.");
+    }
+    if (archivedBundle.source.commit !== auditedBundle.source.commit
+        || archivedBundle.source.tree !== auditedBundle.source.tree) {
+      throw new Error("IPA source identity가 감사한 .app과 다릅니다.");
+    }
+    return {
+      file: path.basename(filename),
+      sha256: sha256(filename),
+      sizeBytes: fs.statSync(filename).size,
+      appPath: appPrefix,
+      executableSha256: archivedBundle.executable.sha256,
+      rankAssetManifestSha256: archivedBundle.rankPromotion.manifestSha256,
+      sourceCommit: archivedBundle.source.commit,
+      sourceTree: archivedBundle.source.tree,
+    };
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
 }
 
 function main() {
@@ -166,13 +202,24 @@ function main() {
   const schemes = (info.CFBundleURLTypes || []).flatMap((row) => row.CFBundleURLSchemes || []);
   if (!schemes.includes("matths")) throw new Error("matths OAuth callback scheme이 Release에 없습니다.");
   const signingKind = signing === "signed" ? inspectSigning(app) : "unsigned";
+  const rankPromotion = verifyRankPromotionBundle(app, {
+    sourceRoot,
+    requireCleanSource: true,
+  });
 
-  const appStoreEligible = assets === "compiled" && signingKind === "app-store-distribution";
-  const signedArchive = appStoreEligible
-    ? inspectSignedArchive(path.resolve(signedArchiveOption))
+  const appStoreBinaryEligible = assets === "compiled"
+    && signingKind === "app-store-distribution";
+  const rankAssetSourceAttested = rankPromotion.rankPromotion.sourceProvenance.approvedSource === true
+    && rankPromotion.rankPromotion.sourceProvenance.externalAttestationRequired === false;
+  const appStoreEligible = appStoreBinaryEligible && rankAssetSourceAttested;
+  const signedArchive = appStoreBinaryEligible
+    ? inspectSignedArchive(path.resolve(signedArchiveOption), {
+      sourceRoot,
+      auditedBundle: rankPromotion,
+    })
     : null;
   const report = {
-    schemaVersion: "MATTHS_IPAD_RELEASE_AUDIT_V1",
+    schemaVersion: "MATTHS_IPAD_RELEASE_AUDIT_V2",
     result: "PASS",
     generatedAt: new Date().toISOString(),
     source: sourceIdentity(sourceRoot),
@@ -183,8 +230,17 @@ function main() {
       ...(signingKind === "development" ? ["development provisioning profile; App Store distribution signing still required"] : []),
       ...(signingKind === "ad-hoc" ? ["ad-hoc provisioning profile; App Store distribution signing still required"] : []),
       ...(signingKind === "enterprise" ? ["enterprise provisioning profile; App Store distribution signing still required"] : []),
+      ...(!rankAssetSourceAttested
+        ? ["rank MP4 web origin is unknown; separate external source attestation required"]
+        : []),
     ],
-    build: { configuration: "Release", assets, signing: signingKind, architectures },
+    build: {
+      configuration: "Release",
+      assets,
+      signing: signingKind,
+      architectures,
+      appStoreBinaryEligible,
+    },
     signedArchive,
     bundle: {
       identifier: info.CFBundleIdentifier,
@@ -192,9 +248,10 @@ function main() {
       apiBaseURL: "https://www.matths.kr",
       kiceResourceCount: 0,
       privacyManifestSha256: sha256(privacyFile),
-      executableSha256: sha256(binary),
+      executableSha256: rankPromotion.executable.sha256,
       fileCount: bundledFiles.length,
       curriculumStories,
+      rankPromotion: rankPromotion.rankPromotion,
     },
     buildLog: { file: path.basename(buildLog), sha256: sha256(buildLog) },
   };

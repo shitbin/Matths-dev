@@ -683,3 +683,295 @@
     flex-direction: column;
   }
 }
+
+/*
+ * 상단 풀이 기억선 — 개념 상세의 5장면 정본 중 짧은 제목·부제만 한 번 투영한다.
+ * 직관→질문→오개념→풀이→회상의 순서 자체가 정보라 노드와 선을 장식으로 쓰지 않는다.
+ */
+.curriculum-top-memory {
+  padding: 54px 0;
+  color: var(--matths-ink);
+  background: var(--matths-surface);
+  border-bottom: 1px solid var(--matths-line);
+}
+
+.curriculum-top-memory-shell {
+  padding: clamp(24px, 4vw, 38px);
+  background: var(--matths-canvas);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-lg);
+}
+
+.curriculum-top-memory-heading,
+.curriculum-top-memory-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.curriculum-top-memory-heading > div {
+  min-width: 0;
+}
+
+.curriculum-top-memory-heading p {
+  margin: 0 0 7px;
+  color: var(--matths-progress-blue);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 18px;
+}
+
+.curriculum-top-memory-heading h2 {
+  margin: 0;
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.curriculum-top-memory-heading > div > span {
+  display: block;
+  margin-top: 8px;
+  color: var(--matths-muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.curriculum-top-memory-status {
+  min-height: 32px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  color: var(--matths-primary-dark);
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.curriculum-top-memory-status span {
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+[data-curriculum-top-state="locked"] .curriculum-top-memory-status {
+  color: #8a5300;
+}
+
+[data-curriculum-top-state="completed"] .curriculum-top-memory-status {
+  color: #0b7457;
+}
+
+.curriculum-top-memory-question {
+  max-width: 780px;
+  margin: 24px 0 0;
+  color: var(--matths-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.curriculum-top-memory-line {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.curriculum-top-memory-beat {
+  --memory-node-color: var(--matths-progress-blue);
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 38px auto;
+  gap: 10px;
+}
+
+.curriculum-top-memory-beat[data-memory-kind="question"] {
+  --memory-node-color: var(--matths-action-primary);
+}
+
+.curriculum-top-memory-beat[data-memory-kind="misconception"] {
+  --memory-node-color: #8a5300;
+}
+
+.curriculum-top-memory-beat[data-memory-kind="solution"] {
+  --memory-node-color: var(--matths-primary-dark);
+}
+
+.curriculum-top-memory-beat[data-memory-kind="recall"] {
+  --memory-node-color: #0b7457;
+}
+
+.curriculum-top-memory-beat:not(:last-child)::after {
+  position: absolute;
+  top: 18px;
+  left: 38px;
+  right: -16px;
+  height: 2px;
+  background: var(--matths-line);
+  content: "";
+}
+
+.curriculum-top-memory-node {
+  position: relative;
+  z-index: 1;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--memory-node-color);
+  border: 4px solid var(--matths-canvas);
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.curriculum-top-memory-beat > div > p {
+  margin: 0;
+  color: var(--memory-node-color);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 18px;
+}
+
+.curriculum-top-memory-beat h3 {
+  margin: 3px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.curriculum-top-memory-beat > div > span {
+  display: block;
+  margin-top: 5px;
+  color: var(--matths-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.curriculum-top-memory-empty {
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 26px;
+  padding: 22px;
+  background: var(--matths-surface);
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+}
+
+.curriculum-top-memory-empty > span {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  color: var(--matths-primary-dark);
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font-weight: 900;
+}
+
+.curriculum-top-memory-empty p,
+.curriculum-top-memory-footer p {
+  margin: 0;
+  color: var(--matths-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.curriculum-top-memory-footer {
+  align-items: center;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--matths-line);
+}
+
+.curriculum-top-memory-footer p {
+  max-width: 680px;
+}
+
+.curriculum-top-memory-footer a {
+  min-height: 48px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 18px;
+  color: var(--matths-on-brand);
+  background: var(--matths-action-primary);
+  border-radius: var(--matths-radius-md);
+  font-size: 14px;
+  font-weight: 850;
+  transition: transform var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease);
+}
+
+.curriculum-top-memory-footer a:hover {
+  background: var(--matths-action-primary-pressed);
+  transform: var(--motion-lift);
+}
+
+/* iPhone landscape와 200% 확대에서는 다섯 열을 압축하지 않고 기억선을 세운다. */
+@media (max-width: 860px) {
+  .curriculum-top-memory-line {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .curriculum-top-memory-beat {
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-rows: auto;
+    gap: 13px;
+    padding-bottom: 18px;
+  }
+
+  .curriculum-top-memory-beat:not(:last-child)::after {
+    top: 38px;
+    right: auto;
+    bottom: 0;
+    left: 18px;
+    width: 2px;
+    height: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .curriculum-top-memory {
+    padding: 34px 0;
+  }
+
+  .curriculum-top-memory-shell {
+    padding: 20px;
+  }
+
+  .curriculum-top-memory-heading,
+  .curriculum-top-memory-footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .curriculum-top-memory-status {
+    align-self: flex-start;
+  }
+
+  .curriculum-top-memory-footer a {
+    width: 100%;
+  }
+}

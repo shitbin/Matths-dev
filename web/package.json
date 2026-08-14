@@ -140,7 +140,7 @@
     "pdf-watermark:verify-db": "node scripts/verifyPdfWatermark.js",
     "ranking-operations:verify-db": "node scripts/verifyRankingOperationsDb.js",
     "accounts:configure-requested": "node scripts/configureRequestedAccounts.js",
-    "launch-data:purge": "node scripts/purgeLaunchUserAndArchiveData.js --apply"
+    "launch-data:purge": "node scripts/purgeLaunchUserAndArchiveData.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1101.0",

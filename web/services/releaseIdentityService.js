@@ -10,6 +10,14 @@ const identityFiles = Object.freeze([
   "public/images/brand/matths-logo.svg",
   "public/css/matths-brand-tokens.css",
   "routes/api-routes.js",
+  "routes/matths-routes.js",
+  "controllers/apiController.js",
+  "controllers/matthsController.js",
+  "middleware/apiAuthMiddleware.js",
+  "models/mobileAuthGrantModel.js",
+  "services/mobileAuthService.js",
+  "services/mobileSocialAuthGrantService.js",
+  "services/socialAuthService.js",
   "package-lock.json",
 ]);
 

@@ -104,6 +104,7 @@
 				A1000091000000000000001 /* Resources */,
 				A1000107000000000000001 /* Debug KICE internal materials gate */,
 				A1000104000000000000001 /* Embed Frameworks */,
+				A1000109000000000000001 /* Embed build provenance */,
 			);
 			buildRules = (
 			);
@@ -163,6 +164,30 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		A1000109000000000000001 /* Embed build provenance */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Matths/RankMotion/rank-promotion-assets.json",
+				"$(SRCROOT)/scripts/embed-build-provenance.sh",
+				"$(SRCROOT)/scripts/verifyRankPromotionBundle.js",
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Embed build provenance";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/MatthsBuildProvenance.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"${SRCROOT}/scripts/embed-build-provenance.sh\"\n";
+		};
 		A1000107000000000000001 /* Debug KICE internal materials gate */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -302,7 +327,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = kr.matths.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -338,7 +363,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = kr.matths.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const {
+  identityFiles,
   releaseFingerprint,
 } = require("../services/releaseIdentityService");
 const {
@@ -50,14 +51,14 @@ function fetchFor({
   googleStatus = 302,
   googleRedirectUri = "https://www.matths.kr/auth/google/callback",
   googleHost = "accounts.google.com",
+  legacyStatus = 404,
 } = {}) {
   return async (url) => {
     if (url.endsWith("/api/v1/health")) {
       return response({ service: "Matths API", status: "ok", releaseFingerprint: fingerprint }, "json");
     }
     if (url.endsWith("/images/brand/matths-logo.svg")) return response(logoBody, "svg");
-    if (url.includes("/auth/google/app?code_challenge=") ||
-        url.endsWith("/api/v1/auth/google/start")) {
+    if (url.includes("/auth/google/app?code_challenge=")) {
       const start = new URL(url);
       if (url.includes("/auth/google/app?code_challenge=")) {
         assert.match(start.searchParams.get("code_challenge") || "", /^[A-Za-z0-9_-]{43}$/);
@@ -69,11 +70,37 @@ function fetchFor({
       authorization.searchParams.set("state", "0123456789abcdefghijklmnopqrstuv");
       return redirectResponse(authorization.toString(), googleStatus);
     }
+    if (url.endsWith("/api/v1/auth/google/start")) {
+      if (legacyStatus < 400) {
+        return redirectResponse("https://accounts.google.com/o/oauth2/v2/auth", legacyStatus);
+      }
+      return {
+        ok: false,
+        status: legacyStatus,
+        headers: { get() { return null; } },
+      };
+    }
     return response(homepage, "html");
   };
 }
 
 async function main() {
+  for (const oauthBoundaryFile of [
+    "routes/api-routes.js",
+    "routes/matths-routes.js",
+    "controllers/apiController.js",
+    "controllers/matthsController.js",
+    "middleware/apiAuthMiddleware.js",
+    "models/mobileAuthGrantModel.js",
+    "services/mobileAuthService.js",
+    "services/mobileSocialAuthGrantService.js",
+    "services/socialAuthService.js",
+  ]) {
+    assert.ok(
+      identityFiles.includes(oauthBoundaryFile),
+      `release fingerprint must cover OAuth boundary file ${oauthBoundaryFile}`,
+    );
+  }
   assert.equal(normalizeBaseURL("https://www.matths.kr/"), "https://www.matths.kr");
   assert.throws(() => normalizeBaseURL("http://www.matths.kr"), /HTTPS/);
   assert.throws(() => normalizeBaseURL("https://matths.kr"), /운영 정본/);
@@ -83,9 +110,9 @@ async function main() {
   assert.equal(result.releaseFingerprint, releaseFingerprint);
   assert.equal(result.googleMobile.authorizationHost, "accounts.google.com");
   assert.equal(result.googleMobile.appStartPath, "/auth/google/app");
-  assert.equal(result.googleMobile.legacyAppStartPath, "/api/v1/auth/google/start");
   assert.ok(result.checks.includes("ipad-google-start-public-redirect"));
-  assert.ok(result.checks.includes("legacy-ipad-google-start-public-redirect"));
+  assert.ok(result.checks.includes("legacy-google-start-removed"));
+  assert.equal(result.googleLegacy.status, 404);
   const receipt = createDeploymentReceipt(result, {
     commit: "a".repeat(40),
     provenance: "release-archive",
@@ -125,6 +152,10 @@ async function main() {
   await assert.rejects(
     () => verifyDeployment("https://www.matths.kr", fetchFor({ googleRedirectUri: "https://old.example/callback" })),
     /callback 주소/,
+  );
+  await assert.rejects(
+    () => verifyDeployment("https://www.matths.kr", fetchFor({ legacyStatus: 302 })),
+    /이전 Google 시작 별칭/,
   );
 
   console.log("Cafe24 read-only deployment verification contracts passed");

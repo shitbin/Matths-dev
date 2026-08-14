@@ -48,6 +48,11 @@ struct SolutionCanvas: UIViewRepresentable {
         canvas.isOpaque = false
         // 격자 배경은 SwiftUI 쪽에서 깔고, 캔버스는 투명하게 얹는다
         canvas.alwaysBounceVertical = false
+        canvas.isAccessibilityElement = true
+        canvas.accessibilityLabel = "풀이 필기 캔버스"
+        canvas.accessibilityHint = inputAccessibilityHint
+        canvas.accessibilityIdentifier = "solutionCanvas"
+        canvas.accessibilityTraits.insert(.allowsDirectInteraction)
         return canvas
     }
 
@@ -56,6 +61,7 @@ struct SolutionCanvas: UIViewRepresentable {
         if canvas.drawing != drawing { canvas.drawing = drawing }
         canvas.drawingPolicy = allowsFingerDrawing ? .anyInput : .pencilOnly
         canvas.tool = configuredTool
+        canvas.accessibilityHint = inputAccessibilityHint
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -69,6 +75,12 @@ struct SolutionCanvas: UIViewRepresentable {
         case .select:
             return PKLassoTool()
         }
+    }
+
+    private var inputAccessibilityHint: String {
+        allowsFingerDrawing
+            ? "손가락 또는 호환되는 펜으로 풀이를 씁니다"
+            : "Apple Pencil로 풀이를 씁니다"
     }
 
     final class Coordinator: NSObject, PKCanvasViewDelegate {
@@ -116,7 +128,9 @@ struct GraphPaper: View {
 struct SolutionNote: View {
     @Binding var drawing: PKDrawing
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var allowsFinger = false
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @State private var allowsFinger = UniversalLayoutPolicy.defaultsToFingerDrawing(
+        on: UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad)
     @State private var zoom: CGFloat = 1
     @State private var selectedTool: SolutionCanvasTool = .pen
     @State private var inkWidth: CGFloat = 3
@@ -125,17 +139,56 @@ struct SolutionNote: View {
 
     private let zoomRange: ClosedRange<CGFloat> = 1.0...3.0
 
+    private var deviceClass: MatthsDeviceClass {
+        UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad
+    }
+
+    private var horizontalLayoutClass: MatthsLayoutClass {
+        switch horizontalSizeClass {
+        case .compact: .compact
+        case .regular: .regular
+        default: .unspecified
+        }
+    }
+
+    private var verticalLayoutClass: MatthsLayoutClass {
+        switch verticalSizeClass {
+        case .compact: .compact
+        case .regular: .regular
+        default: .unspecified
+        }
+    }
+
+    private var usesFingerDrawing: Bool {
+        deviceClass == .phone || allowsFinger
+    }
+
+    private var canvasMinimumHeight: CGFloat {
+        UniversalLayoutPolicy.solutionCanvasMinimumHeight(
+            on: deviceClass,
+            horizontal: horizontalLayoutClass,
+            vertical: verticalLayoutClass)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: Tokens.Space.s3) {
                 Text("풀이 노트").font(.caption.weight(.heavy)).foregroundStyle(.secondary)
                 Spacer()
 
-                Toggle("손가락 필기", isOn: $allowsFinger)
-                    .font(.caption)
-                    .toggleStyle(.switch)
-                    .fixedSize()
-                    .accessibilityHint("끄면 Apple Pencil로만 필기합니다")
+                if deviceClass == .phone {
+                    Label("손가락 필기", systemImage: "hand.draw")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Tokens.text3)
+                        .accessibilityLabel("손가락 필기 사용 중")
+                        .accessibilityHint("iPhone에서는 손가락으로 바로 풀이를 쓸 수 있습니다")
+                } else {
+                    Toggle("손가락 필기", isOn: $allowsFinger)
+                        .font(.caption)
+                        .toggleStyle(.switch)
+                        .fixedSize()
+                        .accessibilityHint("끄면 Apple Pencil로만 필기합니다")
+                }
             }
 
             pencilToolbar
@@ -147,7 +200,7 @@ struct SolutionNote: View {
                     GraphPaper()
                     SolutionCanvas(
                         drawing: $drawing,
-                        allowsFingerDrawing: allowsFinger,
+                        allowsFingerDrawing: usesFingerDrawing,
                         selectedTool: selectedTool,
                         inkWidth: inkWidth,
                         onStrokeCommitted: recordChange)
@@ -157,9 +210,11 @@ struct SolutionNote: View {
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color(.separator), lineWidth: 1.5))
             // 필기 공간은 화면의 주인공이다 — 320pt 는 두 줄 쓰면 끝났다.
             // (ScrollView 안이라 maxHeight: .infinity 는 금지 — 무한 제안을 받는다)
-            .frame(minHeight: horizontalSizeClass == .compact ? 420 : 620)
+            .frame(minHeight: canvasMinimumHeight)
 
-            Text("Apple Pencil로 바로 쓸 수 있습니다. 두 손가락 핀치로 확대해 좁은 구석에도 쓸 수 있고, 필기는 채점에 함께 제출됩니다.")
+            Text(deviceClass == .phone
+                 ? "손가락으로 바로 쓸 수 있습니다. 두 손가락 핀치로 확대할 수 있고, 필기는 채점에 함께 제출됩니다."
+                 : "Apple Pencil로 바로 쓸 수 있습니다. 두 손가락 핀치로 확대해 좁은 구석에도 쓸 수 있고, 필기는 채점에 함께 제출됩니다.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
     }
