@@ -1649,6 +1649,51 @@
           잠시만 기다려주세요.
         </h4>
 
+        <section
+          class="solution-drawing"
+          aria-labelledby="solution-drawing-title"
+        >
+          <div class="solution-drawing-heading">
+            <div>
+              <h5 id="solution-drawing-title">
+                내 풀이 필기
+                <span>선택</span>
+              </h5>
+              <p id="solution-drawing-help">
+                마우스, 손가락, Apple Pencil로 풀이를 적을 수 있습니다.
+                오답일 때만 이 기기에서 다시 보여줍니다.
+              </p>
+            </div>
+            <button
+              class="clear-solution-drawing"
+              id="clear-solution-drawing"
+              type="button"
+              disabled
+            >
+              필기 지우기
+            </button>
+          </div>
+
+          <div class="solution-canvas-frame">
+            <canvas
+              id="solution-drawing-canvas"
+              role="img"
+              aria-label="선택형 손글씨 풀이 영역"
+              aria-describedby="solution-drawing-help solution-drawing-status"
+            >
+              이 브라우저에서는 손글씨 풀이 영역을 사용할 수 없습니다.
+            </canvas>
+          </div>
+
+          <p
+            class="solution-drawing-status"
+            id="solution-drawing-status"
+            aria-live="polite"
+          >
+            아직 필기가 없습니다. 필기는 선택사항입니다.
+          </p>
+        </section>
+
         <form id="problem-answer-form">
           <div id="problem-answer-area"></div>
 
@@ -1744,6 +1789,45 @@
         </p>
       </aside>
     </div>
+
+    <aside
+      class="solution-floating-preview"
+      id="solution-floating-preview"
+      aria-labelledby="solution-floating-title"
+      hidden
+    >
+      <div class="solution-floating-heading">
+        <div>
+          <p>방금 적은 풀이</p>
+          <h4 id="solution-floating-title">
+            오답 피드백과 함께 확인하세요.
+          </h4>
+        </div>
+        <button
+          id="close-solution-floating"
+          type="button"
+          aria-label="손글씨 풀이 미리보기 닫기"
+        >
+          닫기
+        </button>
+      </div>
+
+      <img
+        id="solution-floating-image"
+        alt="방금 제출한 손글씨 풀이 미리보기"
+      />
+
+      <p
+        class="solution-analysis-state"
+        id="solution-analysis-state"
+        aria-live="polite"
+      ></p>
+      <small>
+        현재 기본 기능은 원본 이미지를 이 탭 메모리에서만 다루며,
+        서버로 보내거나 저장하지 않습니다.
+        보조 분석은 채점이나 개념 학습 기록을 바꾸지 않습니다.
+      </small>
+    </aside>
   </section>
 </div>
 

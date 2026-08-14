@@ -64,9 +64,9 @@ for path in pathlib.Path(sys.argv[2]).rglob("*.swift"):
             raise SystemExit(f"FAIL: {path} 사용자 문자열에 Division이 남아 있습니다: {literal}")
 PY
 
-device_family_count=$(grep -c 'TARGETED_DEVICE_FAMILY = 2;' "$root/Matths.xcodeproj/project.pbxproj")
+device_family_count=$(grep -c 'TARGETED_DEVICE_FAMILY = "1,2";' "$root/Matths.xcodeproj/project.pbxproj")
 if [ "$device_family_count" -ne 2 ]; then
-  echo "FAIL: Matths는 iPad 전용 target이어야 합니다." >&2
+  echo "FAIL: Matths는 iPhone·iPad 유니버설 target이어야 합니다." >&2
   exit 1
 fi
 
@@ -88,4 +88,4 @@ if grep -q 'Text("Matths")' "$root/Matths/SplashView.swift"; then
   exit 1
 fi
 
-echo "iPad brand and Arena language contracts passed"
+echo "Universal iOS brand and Arena language contracts passed"

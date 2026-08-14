@@ -207,6 +207,28 @@ function reviewView(attempt) {
   };
 }
 
+function practiceAttemptResponse({
+  attempt,
+  correct,
+  solution,
+  activityDurationMs,
+  mastery,
+  review,
+  coachFeedback,
+}) {
+  return {
+    // 인증된 제출자에게 방금 생성된 자기 기록의 식별자만 돌려준다.
+    // 손글씨 원본이나 분석 결과는 이 응답과 서버 저장소에 싣지 않는다.
+    attemptId: String(attempt._id),
+    correct,
+    solution,
+    activityDurationMs,
+    mastery,
+    review,
+    coachFeedback,
+  };
+}
+
 function nextReviewDate() {
   const date = new Date();
   date.setDate(date.getDate() + 1);
@@ -1051,7 +1073,8 @@ async function submitProblem({
     }
   }
 
-  return {
+  return practiceAttemptResponse({
+    attempt,
     correct,
     solution: stored.solution,
     activityDurationMs:
@@ -1069,7 +1092,7 @@ async function submitProblem({
           : "incorrect",
         seed: instanceId,
       }),
-  };
+  });
 }
 
 async function changeCompletion({
@@ -1148,4 +1171,5 @@ module.exports = {
   getPreviousReviewProblem,
   rememberReviewProblem,
   clearReviewProblem,
+  practiceAttemptResponse,
 };

@@ -20,11 +20,11 @@ Google 계정의 일반 비밀번호는 서버에 저장하지 않습니다.
 `config.env`에 다음 값을 추가합니다.
 
 ```env
-ADMIN_EMAIL=admin@lsbproduction.com
+ADMIN_EMAIL=<문의 수신 주소>
 EMAIL_FROM_NAME=Matths
-EMAIL_FROM_ADDRESS=admin@lsbproduction.com
-GMAIL_USER=matths.sender@gmail.com
-GMAIL_APP_PASSWORD=abcdefghijklmnop
+EMAIL_FROM_ADDRESS=<검증된 발신 주소>
+GMAIL_USER=<Gmail 발송 계정>
+GMAIL_APP_PASSWORD=<16자리 앱 비밀번호>
 ```
 
 - `GMAIL_USER`: 실제로 로그인할 Gmail 주소
@@ -32,12 +32,12 @@ GMAIL_APP_PASSWORD=abcdefghijklmnop
 - `ADMIN_EMAIL`: 사용자 문의를 받을 주소이며 Outlook 주소여도 됩니다.
 - `EMAIL_FROM_ADDRESS`: 수신자에게 보일 발신 주소입니다.
 
-`EMAIL_FROM_ADDRESS=admin@lsbproduction.com`을 사용하려면 해당 주소를
+`EMAIL_FROM_ADDRESS`에 Gmail 로그인 계정과 다른 주소를 사용하려면 해당 주소를
 Gmail의 **다른 주소에서 메일 보내기**에 추가하고 소유권 확인을 끝내야
 합니다. 확인하지 않은 주소를 지정하면 Gmail이 `GMAIL_USER` 주소로
 다시 쓰거나 발송을 거부할 수 있습니다. 가장 안정적인 운영 방식은
-`admin@lsbproduction.com` 도메인 메일함의 SMTP를 직접 사용하거나,
-현재 Gmail 계정에 이 주소를 검증된 발신 별칭으로 등록하는 것입니다.
+운영 도메인 메일함의 SMTP를 직접 사용하거나, 현재 Gmail 계정에 이 주소를
+검증된 발신 별칭으로 등록하는 것입니다.
 
 기존 `EMAIL_API_KEY`, `EMAIL_API_URL`, `EMAIL_FROM` 값은 더 이상
 사용하지 않으므로 삭제해도 됩니다.

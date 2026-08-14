@@ -51,8 +51,7 @@ function extractIpadCalls() {
     const source = fs.readFileSync(path.join(ipadSourceRoot, filename), "utf8");
     for (const match of source.matchAll(/["'](\/api\/v1\/[^"'\n]+)["']/g)) {
       const rawPath = match[1];
-      const method = methodBefore(source, match.index)
-        || (rawPath === "/api/v1/auth/google/start" ? "GET" : null);
+      const method = methodBefore(source, match.index);
       assert.ok(method, `${filename}: ${rawPath}의 HTTP method를 판독할 수 없습니다.`);
       calls.push({ filename, method, path: normalizePath(rawPath), rawPath });
     }
@@ -88,7 +87,6 @@ for (const action of ["submit", "expire"]) {
 const publicCalls = new Set([
   "GET /api/v1/schools",
   "GET /api/v1/auth/providers",
-  "GET /api/v1/auth/google/start",
   "POST /api/v1/auth/google/exchange",
   "POST /api/v1/auth/register",
   "POST /api/v1/auth/login",

@@ -173,6 +173,7 @@ extension View {
 struct AppTopBar: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     /// 오늘 학습했는지 — 홈 스트릭 칩과 같은 판정 축(학습일 기록).
     /// 스트릭은 보상 지표라 경고색(warning)을 쓰지 않는다 (0408 — 보상/경고 팔레트 분리).
@@ -184,12 +185,30 @@ struct AppTopBar: View {
         store.isArenaRoute
     }
 
+    private var deviceClass: MatthsDeviceClass {
+        UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad
+    }
+
+    private var verticalLayoutClass: MatthsLayoutClass {
+        switch verticalSizeClass {
+        case .compact: .compact
+        case .regular: .regular
+        default: .unspecified
+        }
+    }
+
+    private var compactChrome: Bool {
+        UniversalLayoutPolicy.usesCompactTopChrome(
+            on: deviceClass,
+            vertical: verticalLayoutClass)
+    }
+
     var body: some View {
         HStack(spacing: Tokens.Space.s3) {
             // 밝은 셸의 브랜드 식별은 심볼+텍스트 재조합이 아니라 CI 원본
             // Primary Identity를 그대로 쓴다. Arena 네이비는 icon-only 문맥으로
             // 공식 심볼 타일을 유지한다.
-            if isArena {
+            if isArena || compactChrome {
                 BrandMark(tile: true)
                     .frame(width: 28, height: 28)
                     .accessibilityLabel("Matths")
@@ -258,7 +277,11 @@ struct AppTopBar: View {
         // 본문과 같은 폭·같은 여백으로 묶는다. 순서까지 본문과 같아야 왼쪽 끝이 맞는다.
         .readableWidth()
         .adaptiveHPadding()
-        .frame(height: dynamicTypeSize.isAccessibilitySize ? 68 : 52)
+        .frame(minHeight: UniversalLayoutPolicy.topBarMinimumHeight(
+            on: deviceClass,
+            vertical: verticalLayoutClass,
+            accessibilityText: dynamicTypeSize.isAccessibilitySize))
+        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? Tokens.Space.s1 : 0)
         .background(isArena ? Tokens.brandNavy : Color(uiColor: .systemBackground))
         .overlay(alignment: .bottom) {
             Rectangle()
@@ -272,6 +295,7 @@ struct AppTopBar: View {
 
 struct MainTabBar: View {
     @EnvironmentObject private var store: AppStore
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     private struct Item {
         let route: AppStore.Route
@@ -296,10 +320,16 @@ struct MainTabBar: View {
     var body: some View {
         // 사이즈 클래스만 보면 507pt Split View와 320pt Slide Over가 둘 다 compact다.
         // 실제 가용 폭으로 판정해 507pt에서는 이름을 유지하고, 320pt에서만 아이콘으로 줄인다.
-        ViewThatFits(in: .horizontal) {
-            tabRow(showTitles: true)
-                .frame(minWidth: 350)   // 탭 5개 기준 — 이보다 좁으면(320pt) 아이콘만
-            tabRow(showTitles: false)
+        Group {
+            if UniversalLayoutPolicy.forcesIconOnlyTabs(vertical: verticalLayoutClass) {
+                tabRow(showTitles: false)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    tabRow(showTitles: true)
+                        .frame(minWidth: 350)   // 탭 5개 기준 — 이보다 좁으면(320pt) 아이콘만
+                    tabRow(showTitles: false)
+                }
+            }
         }
         .adaptiveBarPadding()
         // 탭을 화면 끝까지 벌리지 않는다. 13인치 가로에서 5개가 1366pt 에 흩어지면
@@ -307,7 +337,7 @@ struct MainTabBar: View {
         // iPadOS 의 기본 탭바도 항목을 가운데 묶어서 보여준다.
         .frame(maxWidth: 560)
         .frame(maxWidth: .infinity)
-        .padding(.top, 6)
+        .padding(.top, verticalLayoutClass == .compact ? 2 : 6)
         .background(store.isArenaRoute ? Tokens.brandNavy : Color(uiColor: .systemBackground))
         .overlay(alignment: .top) {
             Rectangle()
@@ -320,6 +350,14 @@ struct MainTabBar: View {
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var verticalLayoutClass: MatthsLayoutClass {
+        switch verticalSizeClass {
+        case .compact: .compact
+        case .regular: .regular
+        default: .unspecified
+        }
+    }
 
     private func tabRow(showTitles: Bool) -> some View {
         HStack(spacing: 0) {
@@ -372,7 +410,8 @@ struct MainTabBar: View {
                     : (arenaShell ? Tokens.onNavy.opacity(0.56)
                                   : Tokens.text3))
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 50)          // 최소 터치 타겟 44pt 초과
+            .frame(minHeight: UniversalLayoutPolicy.tabMinimumHeight(
+                vertical: verticalLayoutClass))
             .background {
                 if isArenaItem && selected {
                     RoundedRectangle(cornerRadius: Tokens.Radius.md, style: .continuous)

@@ -2,8 +2,9 @@
  * 출시 전 사용자·아카이브 정리 도구
  *
  * - 문제은행, 개념, 정책, 상점 상품은 건드리지 않는다.
- * - 명시한 4개 계정만 보존한다.
+ * - 저장소 밖의 보안 파일로 명시한 계정만 보존한다.
  * - 실행 전에는 계획만 출력하고, --apply가 있어야 실제 삭제한다.
+ * - --apply 는 보존 계정 수 재확인 없이는 실행되지 않는다.
  */
 require("dotenv").config({ path: "config.env" });
 
@@ -39,13 +40,10 @@ const {
   removeUserUploadedFiles,
 } = require("../services/accountDeletionService");
 
-const APPLY = process.argv.includes("--apply");
-const RETAINED_USERS = Object.freeze([
-  { name: "admin", email: "admin@lsbproduction.com", role: "admin" },
-  { name: "개수빈", email: "dltnqls7297@naver.com" },
-  { name: "sangyoon0807", email: "sangyoonisawesome@gmail.com" },
-  { name: "꼰대가르송", email: "playlist0726@gmail.com" },
-]);
+const REPO_ROOT = path.resolve(__dirname, "..");
+const MAX_RETAINED_USERS = 20;
+const MAX_RETAINED_FILE_BYTES = 64 * 1024;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LEGACY_ARCHIVE_DIRECTORY = path.resolve(__dirname, "..", "storage", "archive");
 const LEGACY_STORE_DIRECTORY = path.resolve(__dirname, "..", "storage", "store");
 const LEGACY_STORAGE_ROOT = path.resolve(__dirname, "..", "storage");
@@ -55,9 +53,132 @@ const RETIRED_LOCAL_UPLOAD_DIRECTORIES = Object.freeze([
   path.resolve(__dirname, "..", "storage", "tmp"),
 ]);
 
-function userSelector({ name, email, role }) {
+function maskEmail(email) {
+  const [local, domain] = String(email).split("@");
+  const visible = local.slice(0, Math.min(2, local.length));
+  return `${visible}${"*".repeat(Math.max(3, local.length - visible.length))}@${domain}`;
+}
+
+function readOption(argv, name) {
+  const exactIndex = argv.indexOf(name);
+  if (exactIndex !== -1) {
+    const value = argv[exactIndex + 1];
+    if (!value || value.startsWith("--")) throw new Error(`${name} 값이 필요합니다.`);
+    return value;
+  }
+  const prefix = `${name}=`;
+  const inline = argv.find((entry) => entry.startsWith(prefix));
+  return inline ? inline.slice(prefix.length) : "";
+}
+
+function parseCliArguments(argv = process.argv.slice(2), env = process.env) {
+  const retainedUsersFile = readOption(argv, "--retained-users-file")
+    || String(env.MATTHS_RETAINED_USERS_FILE || "").trim();
+  const countValue = readOption(argv, "--confirm-retained-count");
+  const confirmedDatabase = readOption(argv, "--confirm-database");
+  if (!retainedUsersFile) {
+    throw new Error(
+      "보존 계정 파일이 필요합니다. --retained-users-file 또는 "
+      + "MATTHS_RETAINED_USERS_FILE을 지정하세요."
+    );
+  }
+  if (countValue && !/^\d+$/.test(countValue)) {
+    throw new Error("--confirm-retained-count는 0 이상의 정수여야 합니다.");
+  }
+  if (confirmedDatabase && !/^[A-Za-z0-9_-]+$/.test(confirmedDatabase)) {
+    throw new Error("--confirm-database 형식이 올바르지 않습니다.");
+  }
   return {
-    name,
+    apply: argv.includes("--apply"),
+    retainedUsersFile,
+    confirmedRetainedCount: countValue ? Number(countValue) : null,
+    confirmedDatabase,
+  };
+}
+
+function assertApplyConfirmation(options, retainedUserCount) {
+  if (options.apply && options.confirmedRetainedCount !== retainedUserCount) {
+    throw new Error(
+      `실제 삭제에는 --confirm-retained-count=${retainedUserCount} 재확인이 필요합니다.`
+    );
+  }
+  if (options.apply && !options.confirmedDatabase) {
+    throw new Error("실제 삭제에는 --confirm-database=<DB 이름> 재확인이 필요합니다.");
+  }
+}
+
+function assertDatabaseConfirmation(options, actualDatabase) {
+  if (options.apply && options.confirmedDatabase !== actualDatabase) {
+    throw new Error("연결된 DB 이름이 --confirm-database 값과 달라 삭제를 중단했습니다.");
+  }
+}
+
+function isInsideRepository(absolutePath) {
+  const relative = path.relative(REPO_ROOT, absolutePath);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function normalizeRetainedUsers(value) {
+  if (!Array.isArray(value) || value.length < 1 || value.length > MAX_RETAINED_USERS) {
+    throw new Error(`보존 계정은 1~${MAX_RETAINED_USERS}개 배열이어야 합니다.`);
+  }
+  const seen = new Set();
+  return Object.freeze(value.map((entry, index) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      throw new Error(`보존 계정 ${index + 1}번 항목이 객체가 아닙니다.`);
+    }
+    const unknownKeys = Object.keys(entry).filter((key) => !["email", "role"].includes(key));
+    if (unknownKeys.length) {
+      throw new Error(`보존 계정 ${index + 1}번 항목에 허용되지 않은 필드가 있습니다.`);
+    }
+    const email = String(entry.email || "").trim().toLowerCase();
+    const role = String(entry.role || "").trim();
+    if (!EMAIL_PATTERN.test(email)) {
+      throw new Error(`보존 계정 ${index + 1}번 이메일 형식이 올바르지 않습니다.`);
+    }
+    if (role && !["admin", "student", "parent"].includes(role)) {
+      throw new Error(`보존 계정 ${index + 1}번 역할이 허용 범위를 벗어났습니다.`);
+    }
+    if (seen.has(email)) throw new Error("보존 계정 이메일이 중복되었습니다.");
+    seen.add(email);
+    return Object.freeze({ email, ...(role ? { role } : {}) });
+  }));
+}
+
+function loadRetainedUsers(filePath) {
+  const absolutePath = path.resolve(filePath);
+  if (isInsideRepository(absolutePath)) {
+    throw new Error("보존 계정 파일은 커밋을 막기 위해 저장소 밖에 두어야 합니다.");
+  }
+  let stat;
+  try {
+    stat = fs.lstatSync(absolutePath);
+  } catch {
+    throw new Error("보존 계정 파일을 읽을 수 없습니다.");
+  }
+  if (!stat.isFile() || stat.isSymbolicLink()) {
+    throw new Error("보존 계정 경로는 심볼릭 링크가 아닌 일반 파일이어야 합니다.");
+  }
+  if (stat.size > MAX_RETAINED_FILE_BYTES) {
+    throw new Error("보존 계정 파일이 허용 크기를 초과했습니다.");
+  }
+  if (process.platform !== "win32" && (stat.mode & 0o177) !== 0) {
+    throw new Error("보존 계정 파일 권한은 600 이하로 제한해야 합니다.");
+  }
+  if (typeof process.getuid === "function" && stat.uid !== process.getuid()) {
+    throw new Error("보존 계정 파일 소유자가 현재 실행 사용자와 다릅니다.");
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(absolutePath, "utf8"));
+  } catch {
+    throw new Error("보존 계정 파일이 유효한 JSON이 아닙니다.");
+  }
+  return normalizeRetainedUsers(parsed);
+}
+
+function userSelector({ email, role }) {
+  return {
     email: String(email).toLowerCase(),
     ...(role ? { role } : {}),
   };
@@ -108,24 +229,24 @@ async function removeEmptyLegacyStorageRoot() {
   await fs.promises.rmdir(LEGACY_STORAGE_ROOT);
 }
 
-async function resolveRetainedUsers() {
+async function resolveRetainedUsers(retainedUserDefinitions) {
   const retained = [];
-  for (const definition of RETAINED_USERS) {
+  for (const definition of retainedUserDefinitions) {
     const users = await User.find(userSelector(definition))
       .select("_id name email role accountStatus")
       .lean();
     assert.equal(
       users.length,
       1,
-      `보존 계정 확인 실패: ${definition.name} 계정이 정확히 하나여야 합니다.`
+      `보존 계정 확인 실패: ${maskEmail(definition.email)} 계정이 정확히 하나여야 합니다.`
     );
     retained.push(users[0]);
   }
   return retained;
 }
 
-async function buildPlan() {
-  const retainedUsers = await resolveRetainedUsers();
+async function buildPlan(retainedUserDefinitions) {
+  const retainedUsers = await resolveRetainedUsers(retainedUserDefinitions);
   const retainedIds = idsToStrings(retainedUsers);
   const users = await User.find({}).select("_id name email role accountStatus").lean();
   const removedUsers = users.filter((user) => !retainedIds.includes(String(user._id)));
@@ -200,11 +321,9 @@ async function buildPlan() {
 function summarizePlan(plan) {
   return {
     preservedUsers: plan.retainedUsers.map((user) => ({
-      id: String(user._id), name: user.name, role: user.role,
+      id: String(user._id), email: maskEmail(user.email), role: user.role,
     })),
-    removedUsers: plan.removedUsers.map((user) => ({
-      id: String(user._id), name: user.name, email: user.email, role: user.role,
-    })),
+    removedUserCount: plan.removedUsers.length,
     archiveItems: plan.archiveItems.length,
     archiveFolders: plan.archiveFolders.length,
     legacyLocalArchiveFiles: plan.localArchiveFiles.length,
@@ -289,41 +408,62 @@ async function purgeDeletedUsers(plan) {
   }
 }
 
-async function verifyResult() {
-  const expectedNames = RETAINED_USERS.map((entry) => entry.name).sort();
+async function verifyResult(retainedUserDefinitions) {
+  const expectedEmails = retainedUserDefinitions.map((entry) => entry.email).sort();
   const users = await User.find({}).select("_id name email role").lean();
-  const actualNames = users.map((user) => user.name).sort();
-  assert.deepEqual(actualNames, expectedNames, "보존 계정 외 사용자 레코드가 남아 있습니다.");
+  const actualEmails = users.map((user) => String(user.email).toLowerCase()).sort();
+  assert.deepEqual(actualEmails, expectedEmails, "보존 계정 외 사용자 레코드가 남아 있습니다.");
   assert.equal(await ArchiveItem.countDocuments(), 0, "아카이브 파일 DB 레코드가 남아 있습니다.");
   assert.equal(await ArchiveFolder.countDocuments(), 0, "아카이브 폴더 DB 레코드가 남아 있습니다.");
   assert.equal((await listFiles(LEGACY_ARCHIVE_DIRECTORY)).length, 0, "로컬 아카이브 원본이 남아 있습니다.");
   assert.equal((await listFiles(LEGACY_STORE_DIRECTORY)).length, 0, "R2 이관 뒤 남은 로컬 상점 원본이 있습니다.");
   assert.equal(fs.existsSync(LEGACY_STORAGE_ROOT), false, "레거시 storage 디렉터리가 남아 있습니다.");
   assert.ok(await StoreProduct.countDocuments(), "상점 상품은 보존되어야 합니다.");
-  return { users: users.map((user) => ({ id: String(user._id), name: user.name, role: user.role })) };
+  return {
+    users: users.map((user) => ({
+      id: String(user._id), email: maskEmail(user.email), role: user.role,
+    })),
+  };
 }
 
-async function run() {
-  if (!String(process.env.DB || "").trim()) throw new Error("DB 연결 정보가 없습니다.");
-  await mongoose.connect(process.env.DB);
+async function run(argv = process.argv.slice(2), env = process.env) {
+  const options = parseCliArguments(argv, env);
+  const retainedUserDefinitions = loadRetainedUsers(options.retainedUsersFile);
+  assertApplyConfirmation(options, retainedUserDefinitions.length);
+  if (!String(env.DB || "").trim()) throw new Error("DB 연결 정보가 없습니다.");
+  await mongoose.connect(env.DB);
   try {
-    const plan = await buildPlan();
+    assertDatabaseConfirmation(options, mongoose.connection.name);
+    const plan = await buildPlan(retainedUserDefinitions);
     console.log(JSON.stringify(summarizePlan(plan), null, 2));
-    if (!APPLY) {
+    if (!options.apply) {
       console.log("검토 모드입니다. 실제 삭제는 --apply 옵션으로만 실행됩니다.");
       return;
     }
     await purgeArchiveRecords(plan);
     await purgeLegacyStoreCopies();
     await purgeDeletedUsers(plan);
-    const verified = await verifyResult();
+    const verified = await verifyResult(retainedUserDefinitions);
     console.log(JSON.stringify({ status: "PURGED", ...verified }, null, 2));
   } finally {
     await mongoose.disconnect();
   }
 }
 
-run().catch((error) => {
-  console.error(`출시 데이터 정리 실패: ${error.message}`);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  run().catch((error) => {
+    console.error(`출시 데이터 정리 실패: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  assertApplyConfirmation,
+  assertDatabaseConfirmation,
+  isInsideRepository,
+  loadRetainedUsers,
+  maskEmail,
+  normalizeRetainedUsers,
+  parseCliArguments,
+  userSelector,
+};

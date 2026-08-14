@@ -61,10 +61,9 @@ router.get(
   "/auth/providers",
   apiController.socialAuthProviders
 );
-router.get(
-  "/auth/google/start",
-  matthsController.socialOAuthLegacyAppStart
-);
+// `/auth/google/start`(PKCE 이전 별칭)는 제거했다. PKCE 강제 이후로는 challenge
+// 없이 발급된 grant 가 교환되지 않아, 이 경로는 Google 왕복을 끝내고도 마지막
+// exchange 에서 반드시 401 이 되는 죽은 길이었다. 앱은 `/auth/google/app` 만 쓴다.
 router.post(
   "/auth/google/exchange",
   apiController.exchangeGoogleAuthCode

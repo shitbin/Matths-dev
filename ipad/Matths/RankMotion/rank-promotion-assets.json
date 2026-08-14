@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "MATTHS_RANK_PROMOTION_ASSETS_V1",
+  "sourceProvenance": {
+    "status": "unknown",
+    "approvedSource": false,
+    "externalAttestationRequired": true
+  },
+  "assets": [
+    {
+      "tierCode": "BRONZE",
+      "filename": "bronze-rank-up.v6.mp4",
+      "sha256": "86206344b96bd1b9ebeaf66078c49d45b70c9a0cedf9d42401dce51a7441743d",
+      "sizeBytes": 3038531
+    },
+    {
+      "tierCode": "SILVER",
+      "filename": "silver-rank-up.v6.mp4",
+      "sha256": "04b5c3d4b6cfd9354e247c9fc4df90ae89808bbad6536f079f666f9e531d5526",
+      "sizeBytes": 3236641
+    },
+    {
+      "tierCode": "GOLD",
+      "filename": "gold-rank-up.v6.mp4",
+      "sha256": "79a55282c52100294c04be86e08baa90e9e7c88266c542b4e575f59d51e36fc8",
+      "sizeBytes": 4894268
+    },
+    {
+      "tierCode": "PLATINUM",
+      "filename": "platinum-rank-up.v7.mp4",
+      "sha256": "c5586ebd29c8ec9b579013329df72971c23e63ac00f42afde19f219c42f0bbc8",
+      "sizeBytes": 5837126
+    },
+    {
+      "tierCode": "EMERALD",
+      "filename": "emerald-rank-up.v6.mp4",
+      "sha256": "c24b825b2fd7079f01b4ff0ed8bcde465bea590ac8bc8f67a82d4b94d56b3b30",
+      "sizeBytes": 8059981
+    },
+    {
+      "tierCode": "DIAMOND",
+      "filename": "diamond-rank-up.v6.mp4",
+      "sha256": "5b107162d1366f2f7406c2e75c0a0f02194a2677e203005b91be755c5690870a",
+      "sizeBytes": 8275507
+    },
+    {
+      "tierCode": "MASTER",
+      "filename": "master-rank-up.v6.mp4",
+      "sha256": "b446d1cec5b332e7373ba10085342a1c1f6123e9a731f32cc92fc75322bc5f8b",
+      "sizeBytes": 8969082
+    },
+    {
+      "tierCode": "GRANDMASTER",
+      "filename": "grandmaster-rank-up.v6.mp4",
+      "sha256": "e5385e44304a3aa7211eee34148229ee4ebccbdf7705961e6dc3656e00b7cb6e",
+      "sizeBytes": 8803422
+    },
+    {
+      "tierCode": "CHALLENGER",
+      "filename": "challenger-rank-up.v12.mp4",
+      "sha256": "6872dae1cd44e78e3c829dce7d5627eb7d80112240c22165e961e77423dc9ecf",
+      "sizeBytes": 8368248
+    }
+  ]
+}
