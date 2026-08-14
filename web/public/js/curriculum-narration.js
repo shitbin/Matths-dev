@@ -15,6 +15,10 @@
 })(typeof window !== "undefined" ? window : null, function () {
   "use strict";
 
+  // 브라우저 SpeechSynthesis의 1.0은 수학 기호와 수식을 강의하기에 너무 빠르다.
+  // 플랫폼별 엔진 차이를 감안해 웹은 차분한 강의 속도로 고정한다.
+  const CALM_LECTURE_RATE = 0.68;
+
   function normalizeWhitespace(value) {
     return String(value || "").replace(/\s+/gu, " ").trim();
   }
@@ -138,7 +142,7 @@
       if (requestId !== this.requestId) return;
       const utterance = new this.Utterance(text);
       utterance.lang = "ko-KR";
-      utterance.rate = 0.92;
+      utterance.rate = CALM_LECTURE_RATE;
       utterance.pitch = 1;
       const voice = preferredKoreanVoice(this.synth.getVoices());
       if (voice) utterance.voice = voice;
@@ -486,6 +490,7 @@
   }
 
   return {
+    CALM_LECTURE_RATE,
     CurriculumNarrationSession,
     NarrationCheckpointStore,
     SystemSpeechProvider,
