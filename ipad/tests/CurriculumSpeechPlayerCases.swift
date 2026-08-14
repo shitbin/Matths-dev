@@ -61,6 +61,11 @@ private final class RecordingCurriculumCheckpointStore: CurriculumNarrationCheck
 struct CurriculumSpeechPlayerCases {
     @MainActor
     static func main() {
+        precondition(CurriculumNarrationTimingPolicy.systemSpeechRateFactor == 0.55)
+        precondition(CurriculumNarrationTimingPolicy.approximateMinimumSeconds == 230)
+        precondition(CurriculumNarrationTimingPolicy.approximateMaximumSeconds == 360)
+        precondition(SystemCurriculumSpeechProvider.preferredFemaleVoice()?.gender == .female)
+
         let scenes = CurriculumStorySceneKind.allCases.enumerated().map { index, kind in
             CurriculumStudentStoryScene(
                 id: "scene-\(index)",

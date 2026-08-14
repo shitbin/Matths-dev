@@ -5,14 +5,17 @@ Matths 웹과 iPad 앱의 공개 통합 개발 저장소입니다.
 - `web/`: Node.js/EJS 웹 서버와 Cafe24 배포 소스
 - `ipad/`: SwiftUI iPad 앱
 - 운영 기준 origin: `https://www.matths.kr`
-- 웹 소스 스냅샷: `0fac41a4202b7b972de2818d176595fcc265398d`
-- iPhone+iPad 소스 스냅샷: `fa46a6dd7c441c2ac42a8d5940e20a4a47f902e0`
+- 웹 소스 스냅샷: `863840b2fddcb06c3e1464149a48283c04fe1399`
+- iPhone+iPad 소스 스냅샷: `e4076fb8e311e91395aab2896511d5e76806d4d1`
 
 이번 스냅샷에는 13과목 220개 커리큘럼 스토리, 웹·iPhone·iPad 타임라인,
 Google OAuth의 `www.matths.kr` 기준 PKCE 앱 로그인, 웹·iPad 오답 풀이 플로팅,
 유니버설 iPhone+iPad 레이아웃, 9개 티어 하드웨어 디코딩 rank MP4와 빌드
 provenance가 포함됩니다. GOAT Arena의 경기 로직·규칙·경제·정산·난이도·티어 정의·
 상점 정책은 동결이며, 별도 제품 승인 없이 변경하면 안 됩니다.
+
+커리큘럼 시스템 TTS는 여성 `ko-KR` 음성을 우선하며, 220개 문장 chunk를 실제
+Yuna 음성으로 합성한 결과 234.9~346.7초, 평균 274.6초, timeout 0을 확인했습니다.
 
 ## Source and secret policy
 
@@ -42,6 +45,6 @@ iPhone/iPad 앱은 `ipad/Matths.xcodeproj`를 Xcode에서 엽니다. Google OAut
 
 동기화 전 공개 `main`은 다음 두 원격 ref로 보존했습니다.
 
-- branch: `rollback/pre-v10-sync-20260815-0e7948b`
-- annotated tag: `snapshot/pre-v10-sync-20260815-0e7948b`
-- commit: `0e7948b2022a85eb9d90684745b1ed233cabafed`
+- branch: `rollback/pre-tts-sync-20260815-cbd8ecf`
+- annotated tag: `snapshot/pre-tts-sync-20260815-cbd8ecf`
+- commit: `cbd8ecf2be24114ae516a8befec597be86ab9711`

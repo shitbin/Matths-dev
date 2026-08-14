@@ -350,6 +350,8 @@ class FakeSpeechProvider {
   voicesChanged();
   await delayedSpeak;
   assert.equal(utterances[0].voice.name, "Yuna");
+  assert.equal(utterances[0].rate, narration.CALM_LECTURE_RATE);
+  assert.equal(narration.CALM_LECTURE_RATE, 0.68);
 
   // 엔진이 종료 callback 없이 멈추면 현재 문장 checkpoint를 보존하고 재개 상태로 닫는다.
   let watchdogCallback;

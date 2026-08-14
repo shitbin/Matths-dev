@@ -134,6 +134,14 @@ enum CurriculumNarrationChunker {
     }
 }
 
+enum CurriculumNarrationTimingPolicy {
+    // AVSpeechUtterance는 Web Speech와 rate 스케일이 다르다. 220개 실제 Yuna
+    // ko-KR 문장-chunk 합성에서 234.9~346.7초, 평균 274.6초를 기록한 값이다.
+    static let systemSpeechRateFactor: Float = 0.55
+    static let approximateMinimumSeconds = 230.0
+    static let approximateMaximumSeconds = 360.0
+}
+
 enum CurriculumStudioScriptCompiler {
     static func compile(_ script: String, aliases: [String: String]) throws -> String {
         let regex = try NSRegularExpression(pattern: #"\[([^\]\n]{1,40})\]"#)

@@ -116,7 +116,8 @@ final class SystemCurriculumSpeechProvider: NSObject, CurriculumSpeechProviding 
 
         let utterance = AVSpeechUtterance(string: request.text)
         utterance.voice = Self.preferredFemaleVoice(locale: request.locale)
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.92
+        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+            * CurriculumNarrationTimingPolicy.systemSpeechRateFactor
         utterance.pitchMultiplier = 1
         utterance.preUtteranceDelay = 0.04
         activeUtterance = utterance
