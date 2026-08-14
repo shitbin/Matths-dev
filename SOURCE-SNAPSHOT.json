@@ -1,6 +1,6 @@
 {
   "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V3",
-  "createdAt": "2026-08-15T02:02:54+09:00",
+  "createdAt": "2026-08-15T02:11:00+09:00",
   "productionOrigin": "https://www.matths.kr",
   "upstream": {
     "repository": "https://github.com/is4553807/Matths.git",
@@ -23,9 +23,10 @@
     "deviceFamilies": ["iPhone", "iPad"],
     "contracts": "60/60 passed in canonical workspace",
     "currentSourceSimulatorBuild": "passed",
-    "lastPhysicalIpadBuildCommit": "fa46a6dd7c441c2ac42a8d5940e20a4a47f902e0",
-    "lastPhysicalIpadInstall": "passed on the preceding build; current TTS-only commit not reinstalled",
-    "lastSignedExecutableSha256": "92fd2e258a46ed176b01823dfc0ac567a89e2438b1119a5622f54d05e9b84282",
+    "currentSignedIpadBuild": "passed",
+    "physicalIpadInstall": "passed",
+    "physicalIpadLaunch": "passed",
+    "signedExecutableSha256": "34d89e2bbff8d1db56f19bd008d4676babd53a0b0b173b465098df01b8d81f45",
     "physicalIphone": "not yet verified"
   },
   "oauth": {
