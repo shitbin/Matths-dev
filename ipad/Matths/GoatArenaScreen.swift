@@ -323,18 +323,18 @@ struct GoatArenaScreen: View {
             ExamRule()
 
             if dynamicTypeSize.isAccessibilitySize {
-                rulebookButton
+                headerActions
             } else {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .center, spacing: Tokens.Space.s4) {
                         headerDescription
                         Spacer(minLength: Tokens.Space.s3)
-                        rulebookButton
+                        headerActions
                     }
 
                     VStack(alignment: .leading, spacing: Tokens.Space.s3) {
                         headerDescription
-                        rulebookButton
+                        headerActions
                     }
                 }
             }
@@ -358,6 +358,31 @@ struct GoatArenaScreen: View {
         }
         .buttonStyle(SecondaryButtonStyle())
         .accessibilityHint("GOAT Arena의 공식 경기 규칙을 엽니다")
+    }
+
+    private var commerceButton: some View {
+        Button {
+            store.route = .commerce
+        } label: {
+            Label("상점·이용권", systemImage: "bag")
+                .font(.mCaption)
+                .frame(minHeight: 44)
+        }
+        .buttonStyle(SecondaryButtonStyle())
+        .accessibilityHint("기간 이용권과 Ranked 상점을 한곳에서 확인합니다")
+    }
+
+    private var headerActions: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Tokens.Space.s3) {
+                commerceButton
+                rulebookButton
+            }
+            VStack(alignment: .leading, spacing: Tokens.Space.s3) {
+                commerceButton
+                rulebookButton
+            }
+        }
     }
 
     private var headerTitle: some View {
@@ -1003,10 +1028,10 @@ struct GoatArenaScreen: View {
                     tint: Tokens.primary,
                     background: Tokens.primarySoft))
 
-            Link(
-                destination: ServerAPI.baseURL.appendingPathComponent("goat-arena")
-            ) {
-                Label("웹 GOAT Arena에서 주문 상태 확인", systemImage: "arrow.up.right.square")
+            Button {
+                store.route = .commerce
+            } label: {
+                Label("이용권과 상점 보기", systemImage: "bag")
                     .font(.mBodyB)
                     .padding(.horizontal, Tokens.Space.s5)
                     .frame(minHeight: 44)
@@ -1015,8 +1040,9 @@ struct GoatArenaScreen: View {
                         RoundedRectangle(cornerRadius: Tokens.Radius.md)
                             .strokeBorder(Tokens.lineStrong, lineWidth: 1))
             }
+            .buttonStyle(.plain)
             .foregroundStyle(Tokens.primary)
-            .accessibilityHint("웹 브라우저에서 GOAT Arena를 엽니다")
+            .accessibilityHint("구독 상태와 결제, Ranked 상점 이용 조건을 확인합니다")
         }
     }
 

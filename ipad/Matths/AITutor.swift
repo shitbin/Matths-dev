@@ -1208,6 +1208,21 @@ final class AITutor: ObservableObject {
             p += "<｜User｜>\(prefix)\(newUserTurn)"
             p += "<｜Assistant｜><think>\n"
             return p
+
+        case .bailingV3:
+            var p = "<role>SYSTEM</role>\(systemPrompt)\n"
+                + "detailed thinking \(thinking ? "on" : "off")<|role_end|>"
+            for m in kept {
+                if m.role == .user {
+                    p += "<role>HUMAN</role>\(m.text)<|role_end|>"
+                } else {
+                    p += "<role>ASSISTANT</role>\n<think></think>\(m.text)<|role_end|>"
+                }
+            }
+            p += "<role>HUMAN</role>\(newUserTurn)<|role_end|>"
+            p += "<role>ASSISTANT</role>\n"
+            p += thinking ? "<think>" : "<think></think>"
+            return p
         }
     }
 

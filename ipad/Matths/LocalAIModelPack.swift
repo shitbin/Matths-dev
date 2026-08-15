@@ -349,6 +349,10 @@ final class LocalAIModelPack: ObservableObject {
             return 844_757_728
         case ModelDownloader.specDeepSeek7B.file:
             return 3_808_390_880
+        #if DEBUG
+        case ModelDownloader.specLing3Q3.file:
+            return 3_841_570_656
+        #endif
         case ModelDownloader.spec9B.file:
             return 5_680_522_464
         case ModelDownloader.spec9BLite.file:
@@ -372,6 +376,10 @@ final class LocalAIModelPack: ObservableObject {
             return "980c9b2f78c04e6cff93d277ada09e768394f112d75db3b4e9dea8a69f9fb904"
         case ModelDownloader.specDeepSeek7B.file:
             return "0931f946c6f439a3b5cc0226f39dce14c092c2ee4386be98f12ca6305cef7ec7"
+        #if DEBUG
+        case ModelDownloader.specLing3Q3.file:
+            return "3481953f64fa2dad7e22a254faba1681ab5b83061ac378ea144704fe6019bba2"
+        #endif
         case ModelDownloader.spec9B.file:
             return "03b74727a860a56338e042c4420bb3f04b2fec5734175f4cb9fa853daf52b7e8"
         case ModelDownloader.spec9BLite.file:

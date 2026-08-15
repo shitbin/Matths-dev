@@ -1,7 +1,7 @@
 # Ling 3.0 tiny — Matths iPad 적용성 검토
 
-검토일: 2026-08-12  
-현재 판정: **텍스트 추론 보조 후보. 현재 앱에는 직접 로드 불가, 사용자 노출 금지.**
+검토일: 2026-08-15
+현재 판정: **DEBUG 텍스트 추론 후보. 실험 런타임·모델 선택 UI 구현, Release 노출 금지.**
 
 ## 결론
 
@@ -10,19 +10,18 @@ Ling 3.0 tiny는 Matths의 사진 판독 모델을 대체할 수 없다. 공개 
 `Qwen2.5-VL 3B 판독 → DeepSeek-R1 7B 추론` 파이프라인에서 두 번째 텍스트 추론
 단계를 대체할 후보로는 가치가 높다.
 
-다만 지금 앱에 넣으면 열리지 않는다. 앱에 포함된 llama.cpp b10159는 2026-07-28
-commit `f95de9776b5b90dd993f36d2bd66a3eee21c887f`이고, 바이너리에는
-`bailingmoe`, `bailingmoe2`만 있으며 필요한 `bailingmoe3`가 없다. BailingMoE3
-지원은 2026-08-12 현재 upstream PR #26608에 있고 승인 리뷰는 받았지만 아직 merge와
-공식 XCFramework release가 끝나지 않았다.
+공식 llama.cpp release에는 아직 bailingmoe3가 없다. 이번 DEBUG 빌드는 upstream
+PR #26608의 정확한 head `db4480bc802dda303627830833e0e6c2a7c47297`에서
+XCFramework를 직접 빌드했다. iOS arm64 바이너리에서 `bailingmoe3`를 확인했지만
+PR은 2026-08-15 현재도 미병합이므로 이 런타임을 정식 배포 근거로 쓰지 않는다.
 
-따라서 이번 반영은 다음까지만 한다.
+따라서 이번 반영 범위는 다음과 같다.
 
 1. 후보와 가중치 SHA를 고정한다.
 2. DEBUG + 검토한 runtime commit + architecture + 기기 RAM + 파일 무결성이 모두
    맞을 때만 벤치마크를 허용한다.
-3. 제품 모델 목록과 Release build에는 연결하지 않는다.
-4. upstream release 뒤 M2 8 GB 실기에서 Q3_K_M부터 검증한다.
+3. DEBUG의 프로필·채점 Pro에서만 Q3_K_M을 선택하고, 사진 판독은 Qwen VL 3B로 고정한다.
+4. Release 선택은 계속 막고 M2 8 GB 실기에서 Q3_K_M 로드·추론을 검증한다.
 
 코드 장벽은 `Matths/ExperimentalLocalModelCatalog.swift`, 회귀 검사는
 `tests/run-ling3-candidate-contract.sh`에 있다.
@@ -59,16 +58,15 @@ MIT 본문과 저작권 고지를 앱 고지에 포함하고 최종 라이선스
 
 | 경로 | 2026-08-12 상태 | iPad 앱 적용 판단 |
 |---|---|---|
-| 현재 llama.cpp b10159 XCFramework | `bailingmoe3` 없음 | 로드 불가 |
-| llama.cpp PR #26608 | head `d8d862521e9ad842f2b47f3b392b039317782aa0`, open, approved, 일부 CI failure | DEBUG 실험만 가능 |
+| 공식 llama.cpp release | `bailingmoe3` 미포함 | 정식 배포에 사용 불가 |
+| llama.cpp PR #26608 | head `db4480bc802dda303627830833e0e6c2a7c47297`, open | DEBUG XCFramework 실험만 가능 |
 | 공식 INT4 safetensors | llama.cpp GGUF가 아님 | 현재 bridge로 로드 불가 |
 | Ollama PR #17643 MLX | open, 공식 release 아님, macOS용 실험 경로 | iOS 앱 runtime으로 사용 불가 |
 | upstream MLX Swift LM | `bailing_moe`는 있으나 `bailing_hybrid`/KDA 경로 없음 | 바로 사용 불가 |
 
-llama.cpp PR #26608은 tiny의 Q-LoRA 경로를 commit `517b4675...`에서 추가했고,
-PR head에서 Metal CI는 통과했다. 하지만 iOS XCFramework와 M2 iPad를 검증한 것이
-아니며 PR 자체도 merge 전이다. 기존 b10159 바이너리만 바꿔 끼우지 않고, merge된
-공식 release XCFramework가 나오면 API/Metal/mtmd 회귀를 다시 확인해야 한다.
+PR head의 공식 Apple 빌드 스크립트로 iOS arm64·simulator를 포함한 XCFramework를
+만들고 앱 Debug simulator 링크까지 확인했다. 그러나 PR 자체가 merge 전이므로
+공식 release가 나오면 새 commit으로 API·Metal·mtmd 회귀를 다시 확인해야 한다.
 
 - 현재 llama.cpp release: <https://github.com/ggml-org/llama.cpp/releases/tag/b10159>
 - BailingMoE3 PR: <https://github.com/ggml-org/llama.cpp/pull/26608>
@@ -109,5 +107,4 @@ Q3_K_M을 기본 DeepSeek 경로와 같은 데이터로 비교한다.
 6. 발열 상태 15분 연속 실행과 백그라운드 복귀에서 작업 복구가 유지될 것.
 7. 위 조건을 Q4_K_M에서도 확인하되 16 GB iPad 전용 결과와 섞지 않을 것.
 
-이 기준을 통과하기 전에는 Ling을 다운로드 화면·프로필 모델 선택·Release 빌드에
-노출하지 않는다.
+이 기준을 통과하기 전에는 Ling을 DEBUG 밖이나 Release 빌드에 노출하지 않는다.

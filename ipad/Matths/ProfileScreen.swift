@@ -21,6 +21,9 @@ struct ProfileScreen: View {
     @State private var confirmReset = false
     /// 8GB 기기에서 9B 경량판을 쓰겠다는 선택 (UserDefaults 직결)
     @State private var force9B = ModelDownloader.force9BOnSmallDevice
+    #if DEBUG
+    @State private var debugTier: String? = ModelDownloader.debugForcedTier
+    #endif
     /// 티어 전환 다운로드는 이 화면에서만 시작된다 — 진행률도 여기서 보여야 한다
     @ObservedObject private var downloader = ModelDownloader.shared
     /// 동기화 상태 표면화 — pending·lastSyncedAt·lastError 는 지금까지 아무 화면도
@@ -202,6 +205,10 @@ struct ProfileScreen: View {
                 DottedRule()
                 // 메모리 작은 기기(8GB)에서만 노출 — 큰 기기는 이미 9B 를 쓴다
                 if !ModelDownloader.hasLargeMemory {
+                    #if DEBUG
+                    DebugLocalModelSelector(selection: $debugTier, openModelLabel: nil)
+                    DottedRule()
+                    #else
                     // 용량은 스펙에서 읽는다 — 하드코딩한 숫자는 모델을 낮춰도 그대로 남아
                     // 화면이 실제 선택 모델과 다른 용량을 말하지 않게 스펙에서 읽는다.
                     settingRow("AI 모델 · 9B 실험 모드",
@@ -234,13 +241,15 @@ struct ProfileScreen: View {
                             .padding(.bottom, Tokens.Space.s3)
                     }
                     DottedRule()
+                    #endif
                 }
                 // 공개 랭킹은 약관·서버 정본과 동일하게 닉네임만 사용한다.
                 if store.authProvider == "server" {
                     RankingIdentityRow()
                 }
 
-                // Pro 구독 — 채점 Pro 탭과 연결
+                // 채점 Pro는 기기 내 분석 기능이다. 실제 이용권 상태처럼 보이는
+                // 고정 '체험 중' 표시는 제거하고 별도 이용권 허브로 분리한다.
                 Button { store.route = .pro } label: {
                     HStack(spacing: Tokens.Space.s3) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -256,13 +265,40 @@ struct ProfileScreen: View {
                                 .font(.mCaption).foregroundStyle(Tokens.text3)
                         }
                         Spacer()
-                        Text("체험 중").font(.mCaption).foregroundStyle(Tokens.primary)
+                        Text("분석 도구").font(.mCaption).foregroundStyle(Tokens.text3)
                         Image(systemName: "chevron.right").font(.mMicro).foregroundStyle(Tokens.text4)
                     }
                     .padding(.vertical, Tokens.Space.s3)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+
+                DottedRule()
+
+                Button { store.route = .commerce } label: {
+                    HStack(spacing: Tokens.Space.s3) {
+                        Image(systemName: "bag")
+                            .font(.mHeading)
+                            .foregroundStyle(Tokens.primary)
+                            .frame(width: 30)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("이용권과 상점")
+                                .font(.mBodyB)
+                                .foregroundStyle(Tokens.ink)
+                            Text("구독 상태 · 결제 · Ranked 상점")
+                                .font(.mCaption)
+                                .foregroundStyle(Tokens.text3)
+                        }
+                        Spacer(minLength: Tokens.Space.s3)
+                        Image(systemName: "chevron.right")
+                            .font(.mMicro)
+                            .foregroundStyle(Tokens.text4)
+                    }
+                    .padding(.vertical, Tokens.Space.s3)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("이용권 상태와 결제, Ranked 상점을 확인합니다")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .card()

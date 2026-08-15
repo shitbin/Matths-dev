@@ -13,11 +13,14 @@ const identityFiles = Object.freeze([
   "routes/matths-routes.js",
   "controllers/apiController.js",
   "controllers/matthsController.js",
+  "controllers/appCommerceController.js",
   "middleware/apiAuthMiddleware.js",
   "models/mobileAuthGrantModel.js",
+  "models/appCommerceHandoffModel.js",
   "services/mobileAuthService.js",
   "services/mobileSocialAuthGrantService.js",
   "services/socialAuthService.js",
+  "services/appCommerceService.js",
   "package-lock.json",
 ]);
 

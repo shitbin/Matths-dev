@@ -779,49 +779,7 @@ struct ProScreen: View {
     /// 프롬프트 탓인지 가르는 가장 빠른 방법이다. 파일이 없는 체급은 고를 수 있게
     /// 두되 "없음" 을 표시한다(고르면 다운로드가 시작된다).
     private var debugModelPicker: some View {
-        VStack(alignment: .leading, spacing: Tokens.Space.s2) {
-            HStack(spacing: 6) {
-                Image(systemName: "cpu")
-                Text("분석 모델 (디버그)")
-                Spacer()
-                // **지금 실제로 열려 있는 것**을 말한다. 권장 스펙 이름만 띄우면
-                // 고르자마자 바뀐 것처럼 보이지만 엔진은 옛 모델을 쥐고 있을 수 있다.
-                Text(openModelLabel)
-                    .foregroundStyle(tutor.isReady ? Tokens.success : Tokens.warning)
-            }
-            .font(.mCaption).foregroundStyle(Tokens.text2)
-
-            Picker("", selection: Binding(
-                get: { debugTier ?? "auto" },
-                set: { newValue in
-                    let tier: String? = (newValue == "auto") ? nil : newValue
-                    debugTier = tier
-                    ModelDownloader.debugForcedTier = tier
-                    // 고른 체급의 파일이 없으면 받기 시작하고, 있으면 즉시 갈아 끼운다.
-                    // (프로필 토글과 같은 통로 — 이게 없으면 옆에 있던 모델이 그대로 열린다)
-                    if !ModelDownloader.shared.startForTierSwitch() {
-                        AITutor.shared.loadRecommended()
-                    }
-                })) {
-                Text("자동").tag("auto")
-                Text(tierLabel("VL 3B 판독", ModelDownloader.specVision3B)).tag("vision3B")
-                Text(tierLabel("DeepSeek 7B", ModelDownloader.specDeepSeek7B)).tag("deepseek7B")
-                Text(tierLabel("4B", ModelDownloader.spec4B)).tag("4B")
-                Text(tierLabel("9B 경량", ModelDownloader.spec9BLite)).tag("9B-lite")
-                Text(tierLabel("9B 경량·텍스트", ModelDownloader.spec9BLiteText)).tag("9B-lite-text")
-                Text(tierLabel("9B 3비트·텍스트 진단", ModelDownloader.spec9BIQ3Text)).tag("9B-iq3-text")
-                Text(tierLabel("9B 풀", ModelDownloader.spec9B)).tag("9B")
-            }
-            .pickerStyle(.segmented)
-
-            Text(debugTier == nil
-                 ? "기기 메모리 판정대로 고릅니다."
-                 : "강제 선택 중 — 기기 판정을 무시합니다. 9B 풀은 8GB 기기에서 로드 중 죽을 수 있습니다.")
-                .font(.mMicro).foregroundStyle(Tokens.text4)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(Tokens.Space.s3)
-        .background(Tokens.paper2.opacity(0.6), in: RoundedRectangle(cornerRadius: Tokens.Radius.sm))
+        DebugLocalModelSelector(selection: $debugTier, openModelLabel: openModelLabel)
     }
 
     /// 지금 엔진이 쥐고 있는 모델 (또는 그 상태)
@@ -844,11 +802,6 @@ struct ProScreen: View {
         }
     }
 
-    /// 파일이 이미 받아져 있는지까지 라벨에 적는다 — 없으면 고른 뒤 기다려야 한다
-    private func tierLabel(_ name: String, _ spec: ModelDownloader.ModelSpec) -> String {
-        let ready = LocalAIModelPack.fileReady(spec.file)
-        return ready ? name : "\(name)·없음"
-    }
     #endif
 
     private var reportView: some View {

@@ -296,7 +296,7 @@ final class AppStore: ObservableObject {
     @Published var wrongNoteStorageAlert: String?
 
     enum Route: Hashable, CaseIterable {
-        case home, curriculum, concept, solve, result, assess, weeklyMock, wrongNotes, rank, arenaShop, placement, pro, profile, kice, paper, chat, quickPractice
+        case home, curriculum, concept, solve, result, assess, weeklyMock, wrongNotes, rank, arenaShop, commerce, placement, pro, profile, kice, paper, chat, quickPractice
     }
 
     /// 서버가 확정한 실제 티어 공개 이벤트만 재생한다. 현재 티어를 단순 조회했다고
@@ -2144,7 +2144,7 @@ final class AppStore: ObservableObject {
     var selectedTab: Route {
         switch route {
         case .concept: return .curriculum
-        case .placement, .arenaShop: return .rank
+        case .placement, .arenaShop, .commerce: return .rank
         case .weeklyMock: return .assess
         default:       return route
         }

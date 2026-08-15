@@ -3,6 +3,7 @@ const router = express.Router();
 const matthsController = require('../controllers/matthsController');
 const storeController = require('../controllers/storeController');
 const checkoutController = require('../controllers/checkoutController');
+const appCommerceController = require('../controllers/appCommerceController');
 const authMiddleware = require('../middleware/authMiddleware');
 const {
   adminArchiveUpload,
@@ -73,6 +74,7 @@ async function requirePaidPlacementAccess(req, _res, next) {
 router.get('/', matthsController.mainPage);
 router.get('/intro', matthsController.introPage);
 router.get('/pricing', matthsController.pricingPage);
+router.get('/app/commerce/:token', appCommerceController.consumeHandoff);
 router.get('/visual-learning', matthsController.visualLearningPage);
 router.get('/learning-flow', matthsController.learningFlowPage);
 router.get("/curriculum", matthsController.curriculumPage);

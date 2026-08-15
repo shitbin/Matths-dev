@@ -63,6 +63,14 @@ const {
   canonicalProgressView,
 } = require("../services/progressTypeIdService");
 const {
+  getProblemGenerator,
+} = require("../services/problemGenerators");
+const {
+  getCurriculumConceptCheckGenerator,
+} = require(
+  "../services/problemGenerators/curriculumConceptCheck"
+);
+const {
   listStuckPoints,
   resetLearningProgress,
   saveStuckPoint,
@@ -77,6 +85,8 @@ const IPAD_ATTENDANCE_EVENT_TYPES =
   ]);
 const IPAD_CLIENT_EVENT_ID_MAX_LENGTH = 120;
 const IPAD_LEARNING_CONTEXT_MAX_LENGTH = 180;
+const IPAD_MASTERY_TYPE_ID_MAX_LENGTH = 120;
+const IPAD_MASTERY_TYPE_ID_MAX_COUNT = 50;
 const IPAD_INTEGRITY_EVENT_TYPES =
   new Set([
     "protected-screen-screenshot",
@@ -94,6 +104,102 @@ const ERROR_TYPES = [
   "prerequisite-missing",
   "unknown",
 ];
+
+function requestError(message, status = 400) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
+/**
+ * iPad는 문제를 오프라인으로 생성·채점하므로 서버가 개별 정답을 재채점하지는
+ * 않는다. 대신 학습 진도에 적립할 수 있는 개념과 유형 ID, 완료에 필요한 서로
+ * 다른 유형 수는 서버 커리큘럼/생성기만 정본으로 삼는다. 클라이언트가 임의
+ * 문자열을 다섯 개 보내 완료 게이트를 여는 경로를 여기서 차단한다.
+ */
+function requireIpadMasteryContract({ courseId, unitId, conceptId }) {
+  const curriculumItem = findCurriculumConcept(
+    loadCurriculum(),
+    courseId,
+    unitId,
+    conceptId
+  );
+  if (!curriculumItem) {
+    throw requestError(
+      "교육과정에서 해당 개념을 찾을 수 없습니다.",
+      404
+    );
+  }
+
+  const generator =
+    getProblemGenerator({ courseId, unitId, conceptId }) ||
+    getCurriculumConceptCheckGenerator({ courseId, unitId, conceptId });
+  const allowedTypeIds = new Set(
+    (generator?.problemTypes || [])
+      .map((problemType) =>
+        canonicalProgressTypeId(problemType?.id)
+      )
+      .filter(Boolean)
+  );
+  if (!allowedTypeIds.size) {
+    throw requestError(
+      "이 개념의 문제 유형이 아직 등록되지 않았습니다.",
+      404
+    );
+  }
+
+  const configuredRequired = Math.max(
+    1,
+    Number(generator.requiredDistinctTypes) || 5
+  );
+  return {
+    curriculumItem,
+    allowedTypeIds,
+    requiredDistinctTypes: Math.min(
+      configuredRequired,
+      allowedTypeIds.size
+    ),
+  };
+}
+
+function requireAllowedMasteryTypeIds(rawValues, allowedTypeIds) {
+  if (rawValues === undefined || rawValues === null) return [];
+  if (!Array.isArray(rawValues)) {
+    throw requestError("문제 유형 목록 형식이 올바르지 않습니다.");
+  }
+
+  const normalized = rawValues.map(canonicalProgressTypeId);
+  if (
+    normalized.some(
+      (typeId) =>
+        !typeId ||
+        typeId.length > IPAD_MASTERY_TYPE_ID_MAX_LENGTH ||
+        !allowedTypeIds.has(typeId)
+    )
+  ) {
+    throw requestError("등록되지 않은 문제 유형은 진도에 반영할 수 없습니다.");
+  }
+
+  const distinct = [...new Set(normalized)];
+  if (distinct.length > IPAD_MASTERY_TYPE_ID_MAX_COUNT) {
+    throw requestError("한 번에 반영할 문제 유형이 너무 많습니다.");
+  }
+  return distinct;
+}
+
+function requireMasteryCompletionAllowed({
+  requested,
+  correctTypeIds,
+  requiredDistinctTypes,
+}) {
+  if (requested !== true) return;
+  if (correctTypeIds.length < requiredDistinctTypes) {
+    throw requestError(
+      "필수 문제 유형을 모두 학습한 뒤 완료할 수 있습니다.",
+      409
+    );
+  }
+}
 
 /**
  * 생성형 문항의 서버 identity.
@@ -315,16 +421,15 @@ exports.getDashboardActivity = async (req, res, next) => {
 exports.patchMastery = async (req, res, next) => {
   try {
     const { courseId, unitId, conceptId } = req.params;
-    const raw = Array.isArray(req.body.addCorrectTypeIds)
-      ? req.body.addCorrectTypeIds
-      : [];
-    const typeIds = [
-      ...new Set(
-        raw
-          .map(canonicalProgressTypeId)
-          .filter((t) => t.length > 0 && t.length <= 120)
-      ),
-    ].slice(0, 50);
+    const masteryContract = requireIpadMasteryContract({
+      courseId,
+      unitId,
+      conceptId,
+    });
+    const typeIds = requireAllowedMasteryTypeIds(
+      req.body?.addCorrectTypeIds,
+      masteryContract.allowedTypeIds
+    );
 
     // **문서를 불러와 save() 한다. findOneAndUpdate 를 쓰면 안 된다.**
     //
@@ -346,19 +451,33 @@ exports.patchMastery = async (req, res, next) => {
         courseId,
         unitId,
         conceptId,
-        masteryGate: { correctTypeIds: [] },
+        topicCount:
+          masteryContract.curriculumItem.concept.topics?.length || 0,
+        masteryGate: {
+          requiredDistinctTypes:
+            masteryContract.requiredDistinctTypes,
+          correctTypeIds: [],
+        },
       });
     }
 
-    if (typeIds.length) {
-      // $addToSet 과 같은 뜻 — 중복 없이 합친다
-      const seen = new Set(
-        canonicalProgressTypeIds(progress.masteryGate?.correctTypeIds)
-      );
-      typeIds.forEach((t) => seen.add(t));
-      progress.masteryGate.correctTypeIds = [...seen];
-    }
-    if (req.body.userCompleted === true) {
+    progress.topicCount =
+      masteryContract.curriculumItem.concept.topics?.length || 0;
+    progress.masteryGate.requiredDistinctTypes =
+      masteryContract.requiredDistinctTypes;
+    // 이미 저장된 값도 현재 서버 생성기 allowlist를 통과한 것만 유지한다.
+    const seen = new Set(
+      canonicalProgressTypeIds(progress.masteryGate?.correctTypeIds)
+        .filter((typeId) => masteryContract.allowedTypeIds.has(typeId))
+    );
+    typeIds.forEach((typeId) => seen.add(typeId));
+    progress.masteryGate.correctTypeIds = [...seen];
+    requireMasteryCompletionAllowed({
+      requested: req.body?.userCompleted,
+      correctTypeIds: progress.masteryGate.correctTypeIds,
+      requiredDistinctTypes: masteryContract.requiredDistinctTypes,
+    });
+    if (req.body?.userCompleted === true) {
       progress.masteryGate.userCompleted = true;
       // 오프라인 재전송으로 같은 완료 요청이 와도 최초 완료 시각을 보존한다.
       progress.masteryGate.completedAt =
@@ -400,18 +519,12 @@ exports.patchMastery = async (req, res, next) => {
 exports.patchProgressSnapshot = async (req, res, next) => {
   try {
     const { courseId, unitId, conceptId } = req.params;
-    const curriculumData = loadCurriculum();
-    const curriculumItem = findCurriculumConcept(
-      curriculumData,
+    const masteryContract = requireIpadMasteryContract({
       courseId,
       unitId,
       conceptId
-    );
-    if (!curriculumItem) {
-      const error = new Error("교육과정에서 해당 개념을 찾을 수 없습니다.");
-      error.status = 404;
-      throw error;
-    }
+    });
+    const { curriculumItem } = masteryContract;
 
     const topics = Array.isArray(curriculumItem.concept.topics)
       ? curriculumItem.concept.topics
@@ -430,15 +543,10 @@ exports.patchProgressSnapshot = async (req, res, next) => {
           )
       ),
     ];
-    const incomingTypes = [
-      ...new Set(
-        (Array.isArray(req.body.correctTypeIds)
-          ? req.body.correctTypeIds
-          : [])
-          .map(canonicalProgressTypeId)
-          .filter((value) => value.length > 0 && value.length <= 120)
-      ),
-    ].slice(0, 50);
+    const incomingTypes = requireAllowedMasteryTypeIds(
+      req.body?.correctTypeIds,
+      masteryContract.allowedTypeIds
+    );
 
     let progress = await ConceptProgress.findOne({
       userId: req.apiUser._id,
@@ -456,7 +564,11 @@ exports.patchProgressSnapshot = async (req, res, next) => {
         conceptId,
         topicCount: topics.length,
         completedTopicIndexes: [],
-        masteryGate: { correctTypeIds: [] },
+        masteryGate: {
+          requiredDistinctTypes:
+            masteryContract.requiredDistinctTypes,
+          correctTypeIds: [],
+        },
       });
     }
 
@@ -467,15 +579,28 @@ exports.patchProgressSnapshot = async (req, res, next) => {
         ...incomingTopics,
       ]),
     ].sort((left, right) => left - right);
+    progress.masteryGate.requiredDistinctTypes =
+      masteryContract.requiredDistinctTypes;
     const correctTypeIds = new Set(
       canonicalProgressTypeIds(progress.masteryGate?.correctTypeIds)
+        .filter((typeId) => masteryContract.allowedTypeIds.has(typeId))
     );
     incomingTypes.forEach((value) => correctTypeIds.add(value));
     progress.masteryGate.correctTypeIds = [...correctTypeIds];
 
-    const incomingLastStudiedAt = req.body.lastStudiedAt
+    const incomingLastStudiedAt = req.body?.lastStudiedAt
       ? new Date(req.body.lastStudiedAt)
       : null;
+    if (
+      req.body?.lastStudiedAt &&
+      (
+        Number.isNaN(incomingLastStudiedAt.getTime()) ||
+        incomingLastStudiedAt.getTime() >
+          Date.now() + IPAD_EVENT_FUTURE_SKEW_MS
+      )
+    ) {
+      throw requestError("마지막 학습 시각이 허용 범위를 벗어났습니다.");
+    }
     if (
       incomingLastStudiedAt &&
       !Number.isNaN(incomingLastStudiedAt.getTime()) &&
@@ -486,7 +611,12 @@ exports.patchProgressSnapshot = async (req, res, next) => {
     ) {
       progress.lastStudiedAt = incomingLastStudiedAt;
     }
-    if (req.body.userCompleted === true) {
+    requireMasteryCompletionAllowed({
+      requested: req.body?.userCompleted,
+      correctTypeIds: progress.masteryGate.correctTypeIds,
+      requiredDistinctTypes: masteryContract.requiredDistinctTypes,
+    });
+    if (req.body?.userCompleted === true) {
       progress.masteryGate.userCompleted = true;
       progress.masteryGate.completedAt =
         progress.masteryGate.completedAt ||

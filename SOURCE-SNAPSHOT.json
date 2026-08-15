@@ -1,6 +1,6 @@
 {
   "schemaVersion": "MATTHS_DEV_SOURCE_SNAPSHOT_V3",
-  "createdAt": "2026-08-15T13:11:30+09:00",
+  "createdAt": "2026-08-15T14:57:29+09:00",
   "productionOrigin": "https://www.matths.kr",
   "upstream": {
     "repository": "https://github.com/is4553807/Matths.git",
@@ -8,28 +8,45 @@
     "pushAllowed": false
   },
   "web": {
-    "sourceCommit": "1c2fe6ccad89557518dfc968036906ca7a11a045",
+    "sourceCommit": "9e31faf3659fb588ef847300fe4758b7234c29a4",
+    "productCodeBaseline": "3fe6350fd1dc9113939949ac4bccfb3ee7782b7c",
     "path": "web",
-    "testManifest": 148,
-    "regression": "148/148 passed in canonical workspace",
+    "testManifest": 149,
+    "regression": "149/149 passed in canonical workspace",
     "ejsTemplates": 120,
-    "trackedJavaScriptAndMjs": 722,
-    "localRuntimeFingerprintMatch": true,
+    "trackedJavaScriptAndMjs": 726,
     "liveDeploymentMatchesCandidate": false
   },
   "universalApp": {
-    "sourceCommit": "63d7f5e5a5121ebe9d79cc424885f4b2c1cae81f",
+    "sourceCommit": "2819dbe3fb4f09933177d42ae580fb649b407a20",
     "path": "ipad",
     "deviceFamilies": ["iPhone", "iPad"],
-    "contracts": "62/62 passed in canonical workspace",
+    "contracts": "64/64 passed in canonical workspace",
     "debugSimulatorBuild": "passed",
     "releaseSimulatorBuild": "passed",
-    "currentSignedIpadBuild": "not rebuilt after the scene-capture change",
-    "lastSignedIpadSourceCommit": "4a77c2266653cdff7d255bcb65ce4dc927c95900",
-    "lastPhysicalIpadInstall": "passed for 4a77c22",
-    "lastPhysicalIpadLaunch": "blocked because the device was locked",
-    "lastSignedExecutableSha256": "24d04a902ba70120cad7e20530b623dcfb69f070c1931338c50f8791447e254b",
+    "currentSignedIpadBuild": "signed Debug build from exact 2819dbe source passed codesign and installed on physical iPad",
+    "lastSignedExecutableSha256": "b7d522cb3bcad64f62e7f310edaaf0c78f3414715d8d55540e7394256911878d",
+    "lastPhysicalIpadInstall": "passed 2026-08-15 15:06 KST",
+    "lastPhysicalIpadLaunch": "blocked only because the connected device was locked",
+    "ling3DeviceArtifact": "Documents/models/Ling-3.0-tiny-Q3_K_M.gguf present, 3.58 GB; inference rerun pending unlocked device",
     "physicalIphone": "not yet verified"
+  },
+  "principlesAndSmellReview": {
+    "status": "DIRECT_SOURCE_REVIEWED",
+    "appPrinciples": {
+      "pages": 84,
+      "numberedPrinciples": 2000,
+      "sha256": "7461bd6a870ff49e01ae23f8d3fd37fd5151b564cb4f91dd84368f91ecee464b"
+    },
+    "vibeCodingSmellGuide": {
+      "pages": 204,
+      "badPatterns": 72,
+      "goodPatterns": 72,
+      "domains": 8,
+      "releaseChecklistItems": 288,
+      "sha256": "6acd16ec4a5f3368304ed5e8a206707c33f102357b0686d35ed51f30d092290c"
+    },
+    "report": "web/docs/FINAL-PRINCIPLES-SMELL-READJUDICATION-20260815.md"
   },
   "oauth": {
     "origin": "https://www.matths.kr",
@@ -38,8 +55,22 @@
     "modernAppRoute": "/auth/google/app",
     "legacyPublicAliasRemoved": true,
     "exactEncryptedReplay": true,
-    "productionHost": "www.matths.kr currently resolves to Cloudtype; apex matths.kr resolves to Cafe24",
-    "productionBoundaryStatus": "NOT_DEPLOYED: providers 401 and modern app route 404 observed 2026-08-15 13:01 KST"
+    "productionBoundaryStatus": "NOT_DEPLOYED: GitHub source sync does not prove the current www host is running this candidate"
+  },
+  "commerce": {
+    "ipadHub": true,
+    "catalogAuthority": "web Bearer API",
+    "handoff": "two-minute, one-use, SHA-256 token; fixed destination allowlist",
+    "releaseExternalDigitalPurchase": "hidden",
+    "entitlementRefreshOnReturn": true
+  },
+  "learningProgressBoundary": {
+    "status": "SERVER_VALIDATED",
+    "curriculumConceptAllowlist": true,
+    "generatorTypeAllowlist": true,
+    "requiredDistinctTypesServerOwned": true,
+    "futureTimestampRejected": true,
+    "fixedInWebCommit": "3fe6350fd1dc9113939949ac4bccfb3ee7782b7c"
   },
   "curriculum": {
     "courseCount": 13,
@@ -60,12 +91,14 @@
       "timeouts": 0
     },
     "studioExportTarget": "ElevenLabs v3",
-    "topTimeline": "one existing continueConcept target, five compact nodes"
+    "topTimeline": "one existing continueConcept target, five compact nodes",
+    "completionClaim": "PARTIAL: authored motion directions and runtime emphasis are present, but bespoke full motion-graphic lesson evidence is not complete for all 220 concepts"
   },
   "coach": {
     "format": ["observation", "reason", "nextAction"],
     "gradingAuthority": false,
-    "randomPraiseOnly": false
+    "randomPraiseOnly": false,
+    "learningEffectEvidence": "EVIDENCE_REQUIRED"
   },
   "solutionFloating": {
     "web": true,
@@ -75,9 +108,9 @@
   },
   "screenProtection": {
     "watermark": "single bottom-right mark at 3.5 percent opacity",
-    "recordingAndMirroring": "privacy cover while UIScreen.isCaptured is true",
+    "recordingAndMirroring": "privacy cover while the official scene capture signal is active",
     "applicationSwitcher": "privacy cover",
-    "oneShotScreenshot": "cannot be forced to black by public iOS APIs for general SwiftUI/UIKit content"
+    "oneShotScreenshot": "PLATFORM_LIMITATION: public iOS APIs cannot force a black gallery image for general SwiftUI/UIKit content"
   },
   "rankPromotion": {
     "format": "H.264 MP4 with AAC",
@@ -95,14 +128,14 @@
       "iPad KICE PDFs and Frameworks/llama.xcframework",
       "DerivedData/build/IPA/XCArchive/signing and runtime credentials"
     ],
-    "webRegression": "148/148 passed in the public integration workspace",
-    "ipadContractsWithoutNonRedistributableOverlay": "60/62 passed; the Ling runtime and KICE resource contracts require the intentionally excluded llama framework and nine KICE PDFs",
+    "webRegression": "149/149 passed in the public integration workspace; npm ci audited 237 packages with 0 vulnerabilities",
+    "ipadContractsWithoutNonRedistributableOverlay": "62/64 passed; exactly two expected failures require the intentionally excluded llama framework and nine KICE PDFs",
     "exactTrackedContentPolicy": "canonical tracked code minus the declared 74 web historical evidence files; iPad tracked content exact except declared non-redistributable resources"
   },
   "rollback": {
-    "commit": "717490fdef70586d5cd7bdb78e7875cc4590253c",
-    "branch": "rollback/pre-motion-sync-20260815-717490f",
-    "annotatedTag": "snapshot/pre-motion-sync-20260815-717490f"
+    "commit": "4ec8290c2785ab0a54e72308ed3793ad2b04fde3",
+    "branch": "rollback/pre-final-principles-sync-20260815-4ec8290",
+    "annotatedTag": "snapshot/pre-final-principles-sync-20260815-4ec8290"
   },
   "arenaLogic": {
     "status": "frozen",
