@@ -238,6 +238,20 @@ async function run() {
         window.scrollTo(0, 0);
         await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         const root = document.documentElement;
+        const isMeasurable = (element) => {
+          const style = getComputedStyle(element);
+          if (style.display === "none" || style.visibility === "hidden") return false;
+          if (element.closest("[hidden], [inert], [aria-hidden='true']")) return false;
+          const closedDetails = element.closest("details:not([open])");
+          const visibleSummary = element.closest("summary");
+          if (
+            closedDetails
+            && element !== closedDetails
+            && visibleSummary?.parentElement !== closedDetails
+          ) return false;
+          const rect = element.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        };
         const isClippedByInlineScroller = (element) => {
           for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
             const parentStyle = getComputedStyle(parent);
@@ -250,6 +264,7 @@ async function run() {
           return false;
         };
         const overflowingElements = [...document.body.querySelectorAll("*")]
+          .filter(isMeasurable)
           .map((element) => {
             const rect = element.getBoundingClientRect();
             const style = getComputedStyle(element);
@@ -284,6 +299,7 @@ async function run() {
           .sort((a, b) => b.rightOverflow - a.rightOverflow || b.leftOverflow - a.leftOverflow)
           .slice(0, 30);
         const intrinsicOverflowElements = [...document.body.querySelectorAll("*")]
+          .filter(isMeasurable)
           .map((element) => {
             const style = getComputedStyle(element);
             return {

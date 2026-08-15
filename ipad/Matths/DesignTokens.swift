@@ -204,6 +204,7 @@ enum Tokens {
     /// 라이트·다크 양쪽에서 일반 텍스트 4.5:1 이상을 확보한다.
     static let successInk  = adaptive(light: 0x117744, dark: 0x74D9A1)
     static let warningInk  = adaptive(light: 0x8A5800, dark: 0xFFD27A)
+    static let dangerInk   = adaptive(light: 0xB3202F, dark: 0xFF9AA7)
 
     // MARK: 채점·보상 시맨틱
     //
@@ -422,6 +423,7 @@ struct ExtrudedButtonStyle: ButtonStyle {
     // EnvironmentObject 는 ButtonStyle 에서 못 쓴다. AppStore.motionOn 이
     // 저장되는 같은 키를 직접 읽어 규칙 1(스위치는 하나)을 지킨다.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         let pressed = configuration.isPressed
@@ -429,19 +431,20 @@ struct ExtrudedButtonStyle: ButtonStyle {
         let motionOn = userMotion && !reduceMotion
         return configuration.label
             .font(.mBodyB)
-            .foregroundStyle(Tokens.onBrand)             // 바이올렛 위 글자는 항상 크림 화이트
+            .foregroundStyle(isEnabled ? Tokens.onBrand : Tokens.text4)
             .frame(maxWidth: .infinity, minHeight: 52)   // 최소 터치 타겟 44pt 초과
             .background(
                 ZStack {
                     // 밑판(압출) — brandViolet 과 같은 색상, 명도만 낮춘 고정 토큰
                     RoundedRectangle(cornerRadius: Tokens.Radius.md)
-                        .fill(Tokens.actionPrimaryPressed)
+                        .fill(isEnabled ? Tokens.actionPrimaryPressed : Tokens.lineStrong)
                     RoundedRectangle(cornerRadius: Tokens.Radius.md)
-                        .fill(Tokens.actionPrimary)
-                        .padding(.bottom, pressed ? 0.5 : 3)            // 윗판
+                        .fill(isEnabled ? Tokens.actionPrimary : Tokens.line)
+                        .padding(.bottom, isEnabled ? (pressed ? 0.5 : 3) : 0)
                 }
             )
-            .offset(y: pressed ? 2.5 : 0)
+            .offset(y: isEnabled && pressed ? 2.5 : 0)
+            .opacity(isEnabled ? 1 : 0.82)
             .animation(motionOn ? .easeOut(duration: 0.09) : nil, value: pressed)
     }
 }
@@ -469,16 +472,18 @@ struct ContactShadow: View {
 }
 
 struct SecondaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.mBodyB)
-            .foregroundStyle(Tokens.text1)
+            .foregroundStyle(isEnabled ? Tokens.text1 : Tokens.text4)
             .padding(.horizontal, Tokens.Space.s5)
             .frame(minHeight: 44)
-            .background(Tokens.surface, in: RoundedRectangle(cornerRadius: Tokens.Radius.md))
+            .background(isEnabled ? Tokens.surface : Tokens.line, in: RoundedRectangle(cornerRadius: Tokens.Radius.md))
             .overlay(
                 RoundedRectangle(cornerRadius: Tokens.Radius.md)
-                    .strokeBorder(configuration.isPressed ? Tokens.lineStrong : Tokens.line, lineWidth: 1.5)
+                    .strokeBorder(isEnabled && configuration.isPressed ? Tokens.lineStrong : Tokens.line, lineWidth: 1.5)
             )
     }
 }

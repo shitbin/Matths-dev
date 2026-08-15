@@ -90,6 +90,7 @@ document.addEventListener(
     let timerFrame = null;
     let submitting = false;
     let expiring = false;
+    let timeoutRetryCount = 0;
     let heartbeatTimer = null;
     let saveQueue =
       Promise.resolve();
@@ -104,6 +105,29 @@ document.addEventListener(
           ) || 0
         )
       );
+
+    function renderTimeoutTerminal(message, status) {
+      expiring = false;
+      submitting = true;
+      if (!saveState) return;
+
+      saveState.replaceChildren();
+      const text = document.createElement("span");
+      text.textContent = message;
+      saveState.append(text, document.createTextNode(" "));
+
+      if (status === 401 || status === 403) {
+        const login = document.createElement("a");
+        login.href = config?.loginUrl || "/login";
+        login.textContent = "다시 로그인";
+        saveState.append(login, document.createTextNode(" · "));
+      }
+
+      const leave = document.createElement("a");
+      leave.href = config?.backUrl || config?.attemptUrl || "/";
+      leave.textContent = "결과·목록 화면으로";
+      saveState.append(leave);
+    }
 
     const timerPositionKey =
       "matths-assessment-timer-position-v1";
@@ -555,8 +579,13 @@ document.addEventListener(
             }),
           }
         );
-        const result =
-          await response.json();
+        let result = {};
+        try {
+          result = await response.json();
+        } catch (parseError) {
+          // 상태 코드는 신뢰할 수 있다. 오류 본문이 비정상이어도 4xx를
+          // 네트워크 오류로 오인해 무한 재시도하지 않는다.
+        }
 
         if (
           response.status === 409 &&
@@ -583,14 +612,17 @@ document.addEventListener(
             "expired"
           );
           renderTimer();
+          timeoutRetryCount = 0;
           return;
         }
 
         if (!response.ok) {
-          throw new Error(
+          const failure = new Error(
             result.message ||
               "시간 만료 처리 실패"
           );
+          failure.status = response.status;
+          throw failure;
         }
 
         window.location.replace(
@@ -598,18 +630,34 @@ document.addEventListener(
             config.attemptUrl
         );
       } catch (error) {
-        expiring = false;
-        submitting = false;
-
-        if (saveState) {
-          saveState.textContent =
-            "시간 만료 처리 재시도 중…";
+        const status = Number(error?.status) || 0;
+        if (status >= 400 && status < 500) {
+          renderTimeoutTerminal(
+            status === 401 || status === 403
+              ? "로그인이 만료되어 시간 종료 처리를 마치지 못했습니다."
+              : "시간 종료 요청을 처리할 수 없습니다.",
+            status
+          );
+          return;
         }
 
-        window.setTimeout(
-          expireForTimeout,
-          1000
-        );
+        timeoutRetryCount += 1;
+        if (timeoutRetryCount > 5) {
+          renderTimeoutTerminal(
+            "서버 연결을 여러 번 확인했지만 시간 종료 처리를 마치지 못했습니다.",
+            status
+          );
+          return;
+        }
+
+        expiring = false;
+        submitting = false;
+        const retryDelay = Math.min(8000, 1000 * (2 ** (timeoutRetryCount - 1)));
+        if (saveState) {
+          saveState.textContent =
+            `시간 만료 처리 재시도 ${timeoutRetryCount}/5…`;
+        }
+        window.setTimeout(expireForTimeout, retryDelay);
       }
     }
 

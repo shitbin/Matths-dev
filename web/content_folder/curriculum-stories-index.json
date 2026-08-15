@@ -41,7 +41,7 @@
         "matrix-concept",
         "matrix-operations"
       ],
-      "sha256": "3b702c9b7f5f97abbd7bd5a8b891b7e89cb252efe419983bd5a449076276c303"
+      "sha256": "f6ae5684b1233e29c29e99c99af738cc18a3136ad30873ad2a983b40467db3d2"
     },
     {
       "courseId": "common-math-2",
@@ -69,7 +69,7 @@
         "rational-function",
         "irrational-function"
       ],
-      "sha256": "c57f854b96d6847176fc210ef8dffc3b8b4d815c9bc5f7148bc6a3c0cc192344"
+      "sha256": "29064f72b70702a552b9c264df22467d926fa5fd28565c23b211d1d769c4977b"
     },
     {
       "courseId": "algebra",
@@ -95,7 +95,7 @@
         "algebra-03-06",
         "algebra-03-07"
       ],
-      "sha256": "56646a96f1e98de5dcb054a55e138841c539c04a45f152eb188102409613fe66"
+      "sha256": "d68667609c4ffdb33c848adb578bfebf740956e92e2046c0adee818a40641422"
     },
     {
       "courseId": "calculus-1",
@@ -123,7 +123,7 @@
         "calculus-1-03-05",
         "calculus-1-03-06"
       ],
-      "sha256": "adf3fc21634e2d1c49944e8d2e318e46b59eb8c82ede76ed52375a8eb15585ff"
+      "sha256": "e2008393d6f5107abaaf9cafe25859bf53b7809071b99db2a7fb877939e278c9"
     },
     {
       "courseId": "probability-statistics",
@@ -147,7 +147,7 @@
         "probability-statistics-03-06",
         "probability-statistics-03-07"
       ],
-      "sha256": "621bcf067babd2a38ebe4a7b244cc1e7d35c4e6d66824080526482e0cf767b7e"
+      "sha256": "0c1d66238d2806fb38cbd87bcd8011b8acea2da4f01ff0b98fb08dbd5e418d1c"
     },
     {
       "courseId": "calculus-2",
@@ -178,7 +178,7 @@
         "calculus-2-03-06",
         "calculus-2-03-07"
       ],
-      "sha256": "12730c6cae233cbaf75af1fa2eb8d3f73a61651622fea5b841789ed44697350d"
+      "sha256": "2bdac68f4ebe3c0243eedb230c02bc4a1180b1c51e62174ae897447f08de360e"
     },
     {
       "courseId": "geometry",
@@ -200,7 +200,7 @@
         "geometry-03-04",
         "geometry-03-05"
       ],
-      "sha256": "54b370c7871df714b0cffe4190dd3646ffa44651a7a75a5955fb5a193aefe60c"
+      "sha256": "3c116aee1bbc3b5e22ced80551fb39dbab0f0603cb23f7693d499cab47c2332d"
     },
     {
       "courseId": "economics-math",
@@ -226,7 +226,7 @@
         "economics-math-04-03",
         "economics-math-04-04"
       ],
-      "sha256": "2573c4e50406ffc16d1892f0a4cd74688fa32c7d18bfbdc6cf7e67813879c12a"
+      "sha256": "1bc79715e34bf81b27d6f36982c96616707443f26c2013e23deebcc208bd6d31"
     },
     {
       "courseId": "ai-math",
@@ -249,7 +249,7 @@
         "ai-math-05-01",
         "ai-math-05-02"
       ],
-      "sha256": "b17f21051cae1820922f985ac7f50aa2b5ebc6b2e2ff453a1136e880d4e9b54d"
+      "sha256": "6c9eae02b7c20d60a4c5ff8f385885f039e159f13fdbd7006785cee420996908"
     },
     {
       "courseId": "vocational-math",
@@ -275,7 +275,7 @@
         "vocational-math-04-04",
         "vocational-math-04-05"
       ],
-      "sha256": "653fa42a7c19be13ea06e4a6c0b6273e66fa458b22728cbaf1c2490d8986658f"
+      "sha256": "e20908f8368c4abc62e6991e645be7939086a191dec1648a41c2828d94233de0"
     },
     {
       "courseId": "math-and-culture",
@@ -299,7 +299,7 @@
         "math-and-culture-04-03",
         "math-and-culture-04-04"
       ],
-      "sha256": "752a04c8f159eaa7859829f84e59e918b7bf803d1caf0fc092361c3e0c9b8761"
+      "sha256": "061521cd06e76281697275635db7e4dbf86037728ba1cfd159e43e426886359d"
     },
     {
       "courseId": "practical-statistics",
@@ -320,7 +320,7 @@
         "practical-statistics-04-01",
         "practical-statistics-04-02"
       ],
-      "sha256": "cc2b4cc7b24fd65b0808e6d14867217dfe364317d04ba520d8a974ef18ff5d23"
+      "sha256": "c7dde68e12bf2907d78a296fa10409b45746537d04f7981c2bc909d37af27a2b"
     },
     {
       "courseId": "math-research-project",
@@ -338,7 +338,7 @@
         "math-research-project-03-03",
         "math-research-project-03-04"
       ],
-      "sha256": "620f7fda061a4bcdbb4683c41f688e50367cc112b0902868b8007a16232d77d2"
+      "sha256": "186ef00d59cdef2f9d7bf33753149a00f4af3f35f0a84329a5878337ac61472a"
     }
   ]
 }

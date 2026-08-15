@@ -193,6 +193,48 @@
   margin-top: 20px;
 }
 
+.payment-result-summary {
+  display: grid;
+  gap: 0;
+  margin: 24px 0 0;
+  overflow: hidden;
+  border: 1px solid var(--matths-line);
+  border-radius: var(--matths-radius-md);
+  background: var(--matths-canvas);
+}
+
+.payment-result-summary > div {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.35fr) minmax(0, 1fr);
+  gap: 16px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--matths-line);
+}
+
+.payment-result-summary > div:last-child {
+  border-bottom: 0;
+}
+
+.payment-result-summary dt,
+.payment-result-summary dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.payment-result-summary dt {
+  color: var(--matths-muted);
+  font-weight: 700;
+}
+
+.payment-result-summary dd {
+  overflow-wrap: anywhere;
+  color: var(--matths-ink);
+  font-weight: 800;
+  text-align: right;
+}
+
 .payment-result-actions a {
   min-height: 48px;
   display: inline-flex;
@@ -217,6 +259,15 @@
 }
 
 @media (max-width: 520px) {
+  .payment-result-summary > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .payment-result-summary dd {
+    text-align: left;
+  }
+
   .payment-result-actions {
     grid-template-columns: 1fr;
   }

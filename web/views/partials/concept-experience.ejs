@@ -1271,36 +1271,67 @@
     </section>
   <% } %>
 
-  <nav class="experience-nav" aria-label="개념 학습 단계">
-    <button type="button" data-jump-to="concept-explanation">
+  <nav
+    class="experience-nav"
+    aria-label="개념 학습 단계"
+    role="tablist"
+  >
+    <button
+      type="button"
+      role="tab"
+      aria-controls="concept-motion"
+      aria-selected="true"
+      data-jump-to="concept-motion"
+    >
       <b>01</b>
-      <span>개념 이해</span>
+      <span>모션 따라보기</span>
     </button>
 
-    <button type="button" data-jump-to="concept-motion">
+    <button
+      type="button"
+      role="tab"
+      aria-controls="concept-explanation"
+      aria-selected="false"
+      data-jump-to="concept-explanation"
+    >
       <b>02</b>
-      <span>모션그래픽</span>
+      <span>핵심 정리</span>
     </button>
 
-    <button type="button" data-jump-to="concept-playground">
+    <button
+      type="button"
+      role="tab"
+      aria-controls="concept-playground"
+      aria-selected="false"
+      data-jump-to="concept-playground"
+    >
       <b>03</b>
-      <span>수학 놀이터</span>
+      <span>직접 조작</span>
     </button>
 
-    <button type="button" data-jump-to="concept-practice">
+    <button
+      type="button"
+      role="tab"
+      aria-controls="concept-practice"
+      aria-selected="false"
+      data-jump-to="concept-practice"
+    >
       <b>04</b>
-      <span>문제풀이</span>
+      <span>확인 문제</span>
     </button>
   </nav>
 
   <section
     class="experience-section explanation-section"
     id="concept-explanation"
+    role="tabpanel"
+    tabindex="-1"
+    data-experience-panel
   >
     <div class="experience-heading">
       <div>
-        <p>1단계 · 개념</p>
-        <h3>먼저 개념을 이해합니다.</h3>
+        <p>참고 · 핵심 정리</p>
+        <h3>필요할 때만 글로 다시 확인합니다.</h3>
       </div>
       <span><%= isCommonMathExperience ? "핵심 기준부터 차례대로 정리합니다." : "공식보다 움직임을 먼저 봅니다." %></span>
     </div>
@@ -1341,10 +1372,13 @@
   <section
     class="experience-section motion-section"
     id="concept-motion"
+    role="tabpanel"
+    tabindex="-1"
+    data-experience-panel
   >
     <div class="experience-heading">
       <div>
-        <p>2단계 · 모션그래픽</p>
+        <p>1단계 · 모션그래픽</p>
         <h3><%= experienceProfile.motionTitle %></h3>
       </div>
       <span><%= experienceProfile.motionNote %></span>
@@ -1460,6 +1494,9 @@
   <section
     class="experience-section playground-section <%= isProbabilityExperience || isAdvancedCalculusExperience ? 'probability-playground-section' : '' %>"
     id="concept-playground"
+    role="tabpanel"
+    tabindex="-1"
+    data-experience-panel
   >
     <div class="experience-heading">
       <div>
@@ -1614,6 +1651,9 @@
   <section
     class="experience-section practice-section"
     id="concept-practice"
+    role="tabpanel"
+    tabindex="-1"
+    data-experience-panel
   >
     <div class="experience-heading">
       <div>

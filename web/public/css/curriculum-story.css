@@ -306,3 +306,822 @@
     animation: none !important;
   }
 }
+
+/* 한 장면, 한 지시, 한 확인. 기존 5개 원문 카드를 동시에 펼치지 않는다. */
+.curriculum-motion-lesson {
+  --motion-paper: #f7f8fc;
+  --motion-ink: #151929;
+  --motion-blue: #246fe7;
+  --motion-yellow: #ffe37a;
+  --motion-red: #c54b45;
+  --motion-teal: #087f8c;
+  overflow: hidden;
+  container-type: inline-size;
+  padding: clamp(20px, 3vw, 34px);
+  background: var(--motion-paper);
+}
+
+.curriculum-motion-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 270px);
+  align-items: start;
+  gap: clamp(20px, 4vw, 44px);
+  padding-bottom: 24px;
+}
+
+.curriculum-motion-heading > div:first-child {
+  min-width: 0;
+  max-width: 680px;
+}
+
+.curriculum-motion-heading > div:first-child > p,
+.curriculum-stage-copy p,
+.curriculum-stage-toolbar span {
+  margin: 0;
+  color: var(--motion-blue);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.curriculum-motion-heading h3 {
+  margin: 7px 0 8px;
+  color: var(--motion-ink);
+  font-size: clamp(23px, 2.6vw, 34px);
+  font-weight: 850;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+
+.curriculum-motion-heading > div:first-child > span {
+  display: block;
+  color: #535e74;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+.curriculum-teacher-stage {
+  position: relative;
+  border-top: 1px solid #dce2ee;
+}
+
+.curriculum-stage-toolbar {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.curriculum-stage-toolbar strong {
+  color: #6b7488;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.curriculum-stage-board {
+  position: relative;
+  min-height: clamp(300px, 38vw, 430px);
+  overflow: hidden;
+  color: var(--motion-ink);
+  background: #fff;
+  border: 1px solid #d9dfeb;
+  border-radius: 18px;
+  box-shadow: 0 16px 44px rgba(31, 43, 76, 0.08);
+}
+
+.curriculum-stage-board > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.motion-grid {
+  fill: none;
+  opacity: 0.55;
+  stroke: #eef1f7;
+  stroke-width: 1;
+}
+
+.motion-shape,
+.motion-block,
+.motion-geometry {
+  fill: #f2f5fb;
+  stroke: #aeb9cc;
+  stroke-width: 2;
+}
+
+.motion-shape-focus,
+.motion-block-focus {
+  fill: var(--motion-yellow);
+  stroke: #b48b00;
+}
+
+.motion-block-result {
+  fill: #dff3f0;
+  stroke: var(--motion-teal);
+}
+
+.motion-label,
+.motion-operator {
+  fill: var(--motion-ink);
+  font-family: SUIT, Pretendard, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+.motion-operator {
+  font-size: 30px;
+}
+
+.motion-link,
+.motion-axis,
+.motion-geometry-line,
+.motion-radius {
+  fill: none;
+  stroke: #70809b;
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+
+.motion-link {
+  marker-end: none;
+  stroke: var(--motion-blue);
+}
+
+.motion-curve {
+  fill: none;
+  stroke: var(--motion-blue);
+  stroke-linecap: round;
+  stroke-width: 7;
+}
+
+.motion-area-positive {
+  fill: rgba(38, 102, 214, 0.2);
+  stroke: none;
+}
+
+.motion-area-negative {
+  fill: rgba(184, 72, 62, 0.2);
+  stroke: none;
+}
+
+.motion-area-strip {
+  fill: rgba(255, 220, 85, 0.36);
+  stroke: rgba(180, 139, 0, 0.62);
+  stroke-width: 1.5;
+}
+
+.motion-probability-space {
+  fill: #f6f8fc;
+  stroke: #aeb9cc;
+  stroke-width: 2;
+}
+
+.motion-probability-event {
+  fill: rgba(38, 102, 214, 0.17);
+  stroke: var(--motion-blue);
+  stroke-width: 3;
+}
+
+.motion-probability-event-b {
+  fill: rgba(17, 137, 120, 0.18);
+  stroke: var(--motion-teal);
+}
+
+.motion-probability-muted {
+  fill: rgba(255, 220, 85, 0.32);
+  stroke: #b48b00;
+}
+
+.motion-probability-condition {
+  fill: rgba(38, 102, 214, 0.12);
+  stroke: var(--motion-blue);
+  stroke-width: 3;
+}
+
+.motion-probability-intersection {
+  fill: rgba(255, 220, 85, 0.72);
+  stroke: #b48b00;
+  stroke-width: 3;
+}
+
+.motion-probability-divider {
+  fill: rgba(255, 220, 85, 0.34);
+  stroke: #b48b00;
+  stroke-width: 2;
+}
+
+.motion-probability-path {
+  stroke: var(--motion-red);
+  stroke-width: 6;
+}
+
+.motion-probability-mass {
+  fill: #dce6f7;
+  stroke: #70809b;
+  stroke-width: 2;
+}
+
+.motion-probability-mass-focus {
+  fill: var(--motion-yellow);
+  stroke: #b48b00;
+}
+
+.motion-probability-normal {
+  stroke: var(--motion-teal);
+}
+
+.motion-sample-dot {
+  fill: var(--motion-blue);
+  stroke: #fff;
+  stroke-width: 3;
+}
+
+.motion-confidence-hit,
+.motion-confidence-miss {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 7;
+}
+
+.motion-confidence-hit {
+  stroke: var(--motion-teal);
+}
+
+.motion-confidence-miss {
+  stroke: var(--motion-red);
+}
+
+.motion-underline {
+  fill: none;
+  stroke: var(--motion-blue);
+  stroke-linecap: round;
+  stroke-width: 5;
+}
+
+.motion-point {
+  fill: #fff;
+  stroke: #65738e;
+  stroke-width: 4;
+}
+
+.motion-point-focus,
+.motion-bar-focus {
+  fill: var(--motion-yellow);
+  stroke: #b48b00;
+}
+
+.motion-axis-label,
+.motion-number-label {
+  fill: #4f5d75;
+  font-family: SUIT, Pretendard, sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+.motion-number-label {
+  fill: var(--motion-blue);
+  font-size: 18px;
+}
+
+.motion-number-band {
+  fill: none;
+  stroke: var(--motion-blue);
+  stroke-linecap: round;
+  stroke-width: 12;
+}
+
+.motion-link-guide {
+  stroke-dasharray: 7 6;
+  stroke-width: 3;
+}
+
+.motion-bar {
+  fill: #dce6f7;
+}
+
+.motion-formula,
+.motion-result {
+  fill: #273149;
+  font-family: SUIT, Pretendard, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  text-anchor: end;
+}
+
+.motion-result {
+  fill: var(--motion-teal);
+  font-size: 20px;
+}
+
+.motion-group-focus,
+.motion-target-ring {
+  fill: rgba(255, 227, 122, 0.12);
+  stroke: #d4a900;
+  stroke-dasharray: 9 7;
+  stroke-width: 3;
+}
+
+.motion-reference-line {
+  fill: none;
+  stroke: var(--motion-red);
+  stroke-dasharray: 8 6;
+  stroke-width: 3;
+}
+
+.curriculum-teacher-stage[data-motion-authored="true"] .curriculum-stage-board {
+  border-color: #cbd8ef;
+}
+
+.curriculum-teacher-stage.is-drawn :is(
+  .motion-shape,
+  .motion-block,
+  .motion-curve,
+  .motion-area-positive,
+  .motion-area-negative,
+  .motion-area-strip,
+  .motion-probability-event,
+  .motion-probability-condition,
+  .motion-probability-intersection,
+  .motion-probability-mass,
+  .motion-sample-dot,
+  .motion-confidence-hit,
+  .motion-confidence-miss,
+  .motion-geometry,
+  .motion-bar,
+  .motion-formula,
+  .motion-result,
+  .motion-group-focus,
+  .motion-target-ring
+) {
+  animation: curriculum-motion-beat-in 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes curriculum-motion-beat-in {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.curriculum-stage-focus {
+  position: absolute;
+  top: 28px;
+  left: clamp(20px, 5vw, 58px);
+  z-index: 2;
+  max-width: min(70%, 470px);
+  display: grid;
+  justify-items: start;
+  min-width: 0;
+}
+
+.curriculum-stage-focus > span {
+  margin-bottom: 7px;
+  color: #58647a;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.curriculum-stage-focus > strong {
+  position: relative;
+  z-index: 1;
+  padding: 4px 7px;
+  color: var(--motion-ink);
+  font-size: clamp(22px, 4vw, 42px);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1.18;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+.curriculum-stage-focus > strong::before {
+  position: absolute;
+  inset: 50% 0 -2px;
+  z-index: -1;
+  background: var(--motion-yellow);
+  border-radius: 3px;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.curriculum-stage-focus > i {
+  width: 0;
+  height: 4px;
+  margin: 4px 0 0 6px;
+  background: var(--motion-blue);
+  border-radius: 99px;
+  transition: width 520ms 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.curriculum-teacher-stage.is-drawn .curriculum-stage-focus > strong::before {
+  transform: scaleX(1);
+}
+
+.curriculum-teacher-stage.is-drawn .curriculum-stage-focus > i {
+  width: min(calc(100% - 6px), 260px);
+}
+
+.curriculum-teacher-pen {
+  position: absolute;
+  top: 90px;
+  left: 42px;
+  z-index: 3;
+  color: var(--motion-blue);
+  font-size: 32px;
+  opacity: 0;
+  transform: translate(-12px, -10px) rotate(-22deg);
+  transition: opacity 180ms, transform 560ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.curriculum-teacher-stage.is-drawn .curriculum-teacher-pen {
+  opacity: 0.78;
+  transform: translate(min(32vw, 250px), 24px) rotate(-12deg);
+}
+
+.curriculum-stage-board > p {
+  position: absolute;
+  right: clamp(18px, 4vw, 42px);
+  bottom: 20px;
+  max-width: min(52%, 440px);
+  margin: 0;
+  padding: 10px 12px;
+  color: #465169;
+  background: rgba(255, 255, 255, 0.92);
+  border-left: 3px solid var(--motion-blue);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.curriculum-stage-copy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 20px;
+  padding: 20px 2px 0;
+}
+
+.curriculum-stage-copy h4 {
+  margin: 6px 0 6px;
+  color: var(--motion-ink);
+  font-size: clamp(20px, 2vw, 27px);
+  letter-spacing: -0.035em;
+}
+
+.curriculum-stage-copy strong {
+  display: block;
+  color: #4b566e;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.curriculum-stage-copy button,
+.curriculum-branch-actions button,
+.curriculum-scene-check button {
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1px solid #cbd3e2;
+  border-radius: 11px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.curriculum-stage-copy button {
+  color: #334058;
+  background: #fff;
+}
+
+.curriculum-stage-source {
+  margin: 14px 0 0;
+  padding: 16px 18px;
+  color: #3f4960;
+  background: #fff;
+  border-left: 3px solid #a9badb;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.curriculum-understanding-branch {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid #dce2ee;
+}
+
+.curriculum-understanding-branch > p:first-child {
+  margin: 0 0 12px;
+  color: var(--motion-ink);
+  font-size: 16px;
+  font-weight: 820;
+}
+
+.curriculum-branch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.curriculum-branch-actions button {
+  color: #27334c;
+  background: #fff;
+}
+
+.curriculum-branch-actions [data-motion-understood] {
+  color: #fff;
+  background: var(--motion-blue);
+  border-color: var(--motion-blue);
+}
+
+.curriculum-branch-actions [data-motion-explain="spicy"] {
+  color: #923934;
+  background: #fff6f4;
+  border-color: #e4b5b0;
+}
+
+.curriculum-reexplain-copy {
+  margin: 14px 0 0;
+  padding: 15px 17px;
+  color: #334058;
+  background: #fff;
+  border-left: 4px solid var(--motion-blue);
+  font-size: 15px;
+  font-weight: 620;
+  line-height: 1.7;
+}
+
+.curriculum-reexplain-copy[data-mode="spicy"] {
+  border-color: var(--motion-red);
+}
+
+.curriculum-scene-check {
+  margin-top: 16px;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #d7deea;
+  border-radius: 14px;
+}
+
+.curriculum-scene-check > strong {
+  display: block;
+  color: var(--motion-ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.curriculum-scene-check > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 13px;
+}
+
+.curriculum-scene-check > div button {
+  min-height: 54px;
+  color: #303b53;
+  background: #f8f9fc;
+}
+
+.curriculum-scene-check > div button:disabled {
+  opacity: 0.55;
+}
+
+.curriculum-scene-check > p {
+  margin: 12px 0 0;
+  color: #536078;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.curriculum-scene-check > p[data-result="correct"] {
+  color: var(--motion-teal);
+  font-weight: 760;
+}
+
+.curriculum-scene-check > p[data-result="retry"] {
+  color: var(--motion-red);
+  font-weight: 720;
+}
+
+.curriculum-scene-check > [data-motion-next] {
+  margin-top: 12px;
+  color: #fff;
+  background: var(--motion-blue);
+  border-color: var(--motion-blue);
+}
+
+.curriculum-motion-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.curriculum-motion-nav > div {
+  display: flex;
+  gap: 8px;
+}
+
+.curriculum-motion-nav button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.curriculum-motion-nav button span {
+  width: 9px;
+  height: 9px;
+  background: #aab4c6;
+  border-radius: 50%;
+}
+
+.curriculum-motion-nav button[aria-current="step"] span {
+  width: 24px;
+  background: var(--motion-blue);
+  border-radius: 99px;
+}
+
+.curriculum-motion-nav > span {
+  color: #6b758a;
+  font-size: 12px;
+}
+
+.curriculum-motion-lesson button:focus-visible {
+  outline: 3px solid rgba(36, 111, 231, 0.36);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .curriculum-motion-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .curriculum-stage-board {
+    min-height: 350px;
+  }
+
+  .curriculum-stage-board > p {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    max-width: none;
+  }
+
+  .curriculum-stage-copy,
+  .curriculum-scene-check > div {
+    grid-template-columns: 1fr;
+  }
+
+  .curriculum-stage-copy button,
+  .curriculum-branch-actions button,
+  .curriculum-scene-check button {
+    width: 100%;
+  }
+
+  .curriculum-branch-actions {
+    display: grid;
+  }
+
+  .curriculum-motion-nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/*
+ * 1024px 화면에서도 왼쪽 개념 목록이 열리면 실제 보드 폭은 500px 안팎이다.
+ * viewport가 아니라 학습 카드의 가용 폭을 기준으로 정보 계층을 한 열로 접는다.
+ */
+@container (max-width: 700px) {
+  .curriculum-motion-heading {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .curriculum-narration-controls {
+    width: 100%;
+  }
+
+  .curriculum-motion-heading h3 {
+    font-size: clamp(22px, 7cqw, 30px);
+    overflow-wrap: anywhere;
+  }
+
+  .curriculum-stage-board {
+    min-height: 380px;
+  }
+
+  .curriculum-stage-focus {
+    top: 20px;
+    left: 16px;
+    max-width: calc(100% - 32px);
+  }
+
+  .curriculum-stage-focus > strong {
+    font-size: clamp(20px, 6.4cqw, 30px);
+  }
+
+  .curriculum-stage-board > svg {
+    top: 58px;
+    height: calc(100% - 58px);
+  }
+
+  .curriculum-stage-board > p {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    max-width: none;
+  }
+
+  .curriculum-stage-copy,
+  .curriculum-scene-check > div {
+    grid-template-columns: 1fr;
+  }
+
+  .curriculum-stage-copy button,
+  .curriculum-branch-actions button,
+  .curriculum-scene-check button {
+    width: 100%;
+  }
+
+  .curriculum-branch-actions {
+    display: grid;
+  }
+}
+
+@media (max-width: 420px) {
+  .curriculum-motion-lesson {
+    padding-inline: 14px;
+  }
+
+  .curriculum-stage-board {
+    min-height: 380px;
+  }
+
+  .curriculum-stage-focus {
+    top: 20px;
+    left: 16px;
+    max-width: calc(100% - 32px);
+  }
+
+  .curriculum-stage-board > svg {
+    top: 58px;
+    height: calc(100% - 58px);
+  }
+
+  .curriculum-motion-nav > div {
+    gap: 0;
+  }
+
+  .curriculum-motion-nav button {
+    margin-inline: -1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .curriculum-teacher-stage.is-drawn :is(
+    .motion-shape,
+    .motion-block,
+    .motion-curve,
+    .motion-geometry,
+    .motion-bar,
+    .motion-formula,
+    .motion-result,
+    .motion-group-focus,
+    .motion-target-ring
+  ) {
+    animation: none;
+  }
+
+  .curriculum-stage-focus > strong::before {
+    transform: scaleX(1);
+  }
+
+  .curriculum-stage-focus > i {
+    width: min(calc(100% - 6px), 260px);
+  }
+
+  .curriculum-teacher-pen {
+    opacity: 0.78;
+    transform: translate(min(32vw, 250px), 24px) rotate(-12deg);
+  }
+}

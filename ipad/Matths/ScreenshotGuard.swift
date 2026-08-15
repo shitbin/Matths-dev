@@ -1,8 +1,9 @@
 //  ScreenshotGuard.swift
 //  Matths
 //
-//  스크린샷 감지. iOS 는 캡처를 "막는" API 를 제공하지 않는다 —
-//  감지 후 대응이 유일하게 정상적인 방법이다.
+//  화면 보호. iOS 공개 API는 녹화·미러링 상태를 사전에 알려 주지만,
+//  단발 스크린샷은 저장이 끝난 뒤에만 알린다. 따라서 녹화·미러링은 즉시
+//  검정 덮개로 가리고, 스크린샷 알림은 비차단 감사 신호로만 기록한다.
 //  (isSecureTextEntry 로 화면을 검게 만드는 편법은 심사에서 문제가 되고
 //   VoiceOver 접근성을 깨뜨린다. 쓰지 않는다.)
 
@@ -108,6 +109,12 @@ final class ScreenshotGuard: ObservableObject {
         isPrivacyCoverActive = !sceneIsActive && isProtected
     }
 
+    /// iOS 17+의 scene 단위 정식 감지 신호를 표시 계층에서 전달받는다.
+    /// `UIScreen.isCaptured`는 초기화·구형 알림 폴백으로만 남긴다.
+    func setSceneCaptureState(_ captured: Bool) {
+        applyCaptureState(captured)
+    }
+
     private func refreshCaptureState() {
         // iPad의 외부 디스플레이/다중 scene도 포함한다. scene이 아직 연결되기 전인
         // 앱 초기화 구간만 UIScreen.main으로 폴백한다.
@@ -147,12 +154,9 @@ final class ScreenshotGuard: ObservableObject {
 
     private func handleScreenshotDetected() {
         guard isProtected else { return }
-        // 시스템 알림은 촬영 뒤에 오므로 캡처 자체를 취소할 수는 없다. 경고가 이미
-        // 떠 있어도 새 알림은 별도 무결성 신호이므로 매번 먼저 기록한다.
+        // 시스템 알림은 촬영 뒤에 오므로 캡처 자체를 취소할 수 없다. 학생의 풀이를
+        // 가리는 사후 처벌형 모달은 띄우지 않고, 최소 감사 신호만 매번 기록한다.
         recordIntegrityEvent("protected-screen-screenshot")
-        guard !isShowing else { return }
-        isShowing = true
-        UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
 
     #if DEBUG
@@ -189,25 +193,29 @@ private struct ProtectedAssessmentSurface: ViewModifier {
 /// 별도 presentation 계층으로 올라오므로, 루트와 보호 모달이 이 한 구현을 각각
 /// 자기 최상단에 붙인다. 상태와 워터마크 코드는 같은 ScreenshotGuard를 공유한다.
 struct ScreenProtectionLayer: View {
+    @Environment(\.isSceneCaptured) private var isSceneCaptured
     @ObservedObject var guardModel: ScreenshotGuard
     var onCapture: (String) -> Void
 
-    @ViewBuilder var body: some View {
-        if guardModel.isCaptureActive || guardModel.isPrivacyCoverActive {
-            CapturePrivacyCover()
-        } else {
-            ZStack {
-                if guardModel.isShowing {
-                    ScreenshotGuardOverlay(guardModel: guardModel, onCapture: onCapture)
-                }
-                // 경고창이 떠 있는 동안 다시 촬영해도 계정·세션 가명 코드가
-                // 사라지지 않는다. 워터마크는 hit testing/접근성에서 제외된다.
+    var body: some View {
+        Group {
+            if guardModel.isCaptureActive || guardModel.isPrivacyCoverActive {
+                CapturePrivacyCover()
+            } else {
+                // 풀이를 가로질러 반복하던 워터마크를 제거한다. 화면 한 구역의 저대비
+                // 가명 표식만 남겨 문제·수식·필기 가독성을 해치지 않는다.
                 if guardModel.protectionEnabled {
                     ProtectedContentWatermark(
                         accountCode: guardModel.accountWatermarkCode,
                         sessionCode: guardModel.watermarkCode)
                 }
             }
+        }
+        .onAppear {
+            guardModel.setSceneCaptureState(isSceneCaptured)
+        }
+        .onChange(of: isSceneCaptured) { _, captured in
+            guardModel.setSceneCaptureState(captured)
         }
     }
 }
@@ -285,32 +293,25 @@ struct CapturePrivacyCover: View {
     }
 }
 
-/// 일반 SwiftUI 화면은 FairPlay 영상처럼 캡처 결과를 강제로 검게 만들 수 없다.
-/// 대신 보호 화면 전체에 낮은 대비의 실행 코드를 반복해 무단 공유 억제와 사후 대조를 돕는다.
+/// 일반 SwiftUI 화면은 FairPlay 영상처럼 단발 스크린샷 결과를 강제로 검게 만들 수 없다.
+/// 가명 코드는 풀이를 방해하지 않는 우하단 한 구역에만 아주 낮은 대비로 둔다.
 struct ProtectedContentWatermark: View {
     let accountCode: String
     let sessionCode: String
 
     var body: some View {
         GeometryReader { proxy in
-            // 계정+세션 코드가 320pt Split View에서 서로 겹치지 않게 셀 폭을
-            // 충분히 확보한다. 좁은 화면도 세로 반복(rows)으로 추적성은 유지한다.
-            let columns = max(1, Int(proxy.size.width / 240))
-            let rows = max(5, Int(proxy.size.height / 150))
-            ZStack {
-                ForEach(0..<(columns * rows), id: \.self) { index in
-                    let column = index % columns
-                    let row = index / columns
-                    Text("MATTHS · A \(accountCode) · S \(sessionCode)")
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(.primary.opacity(0.075))
-                        .rotationEffect(.degrees(-22))
-                        .position(
-                            x: (CGFloat(column) + 0.5) * proxy.size.width / CGFloat(columns),
-                            y: (CGFloat(row) + 0.5) * proxy.size.height / CGFloat(rows)
-                        )
-                }
-            }
+            Text("MATTHS · \(accountCode) · \(sessionCode)")
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(.primary.opacity(0.035))
+                .lineLimit(1)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .frame(maxWidth: min(210, max(150, proxy.size.width * 0.42)))
+                .background(.ultraThinMaterial.opacity(0.18), in: Capsule())
+                .padding(.trailing, 10)
+                .padding(.bottom, 10)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)

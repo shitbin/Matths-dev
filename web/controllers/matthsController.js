@@ -4956,6 +4956,7 @@ exports.unitLearning = async (
         courseId: unitView.course.id,
         unitId: unitView.unit.id,
         conceptId,
+        visualizationIdeas: unitView.selectedConcept.visualizationIdeas,
       });
     const conceptTypeGuides =
       getConceptTypeGuides({

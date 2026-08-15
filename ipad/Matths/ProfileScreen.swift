@@ -230,7 +230,7 @@ struct ProfileScreen: View {
                     }
                     if case .failed(let why) = downloader.state {
                         Text("내려받기 실패 — \(why)")
-                            .font(.mCaption).foregroundStyle(Tokens.danger)
+                            .font(.mCaption).foregroundStyle(Tokens.dangerInk)
                             .padding(.bottom, Tokens.Space.s3)
                     }
                     DottedRule()
@@ -281,7 +281,7 @@ struct ProfileScreen: View {
                             if let e = sync.lastError {
                                 // 마지막 실패를 삼키지 않고 그대로 보여준다 —
                                 // "왜 안 올라가요" 상담의 첫 번째 증거다.
-                                Text(e).font(.mMicro).foregroundStyle(Tokens.danger)
+                                Text(e).font(.mMicro).foregroundStyle(Tokens.dangerInk)
                                     .lineLimit(2)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
@@ -299,7 +299,7 @@ struct ProfileScreen: View {
 
                 Button { confirmReset = true } label: {
                     HStack {
-                        Text("진도 초기화").font(.mBody).foregroundStyle(Tokens.danger)
+                        Text("진도 초기화").font(.mBody).foregroundStyle(Tokens.dangerInk)
                         Spacer()
                         Text("완료 개념 \(completedConceptCount)개 · 통계 포함")
                             .font(.mCaption).foregroundStyle(Tokens.text4)
@@ -355,7 +355,7 @@ struct ProfileScreen: View {
                     DottedRule()
                     Button { showWithdraw = true } label: {
                         HStack {
-                            Text("회원 탈퇴").font(.mBody).foregroundStyle(Tokens.danger)
+                            Text("회원 탈퇴").font(.mBody).foregroundStyle(Tokens.dangerInk)
                             Spacer()
                             Text("개인정보 삭제 · 학습 데이터는 익명 보존")
                                 .font(.mCaption).foregroundStyle(Tokens.text4)
@@ -677,7 +677,7 @@ struct SchoolPickerRow: View {
             } else if let errorText {
                 Text(errorText)
                     .font(.mMicro)
-                    .foregroundStyle(Tokens.danger)
+                    .foregroundStyle(Tokens.dangerInk)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -864,11 +864,12 @@ private struct WithdrawSheet: View {
                             Label("Google 본인 확인 완료 · 5분 동안 한 번만 사용 가능",
                                   systemImage: "checkmark.shield.fill")
                                 .font(.mCallout)
-                                .foregroundStyle(Tokens.success)
+                                .foregroundStyle(Tokens.successInk)
                                 .fixedSize(horizontal: false, vertical: true)
                         } else {
                             Text("현재 비밀번호").font(.mCaption).foregroundStyle(Tokens.text3)
                             SecureField("비밀번호", text: $password)
+                                .textContentType(.password)
                                 .textFieldStyle(.roundedBorder)
 
                             if options?.googleReauthentication.linked == true {
@@ -899,7 +900,7 @@ private struct WithdrawSheet: View {
 
                                 if options?.googleReauthentication.available == false {
                                     Text("Google 본인 확인이 아직 서버에 설정되지 않았습니다.")
-                                        .font(.mCaption).foregroundStyle(Tokens.danger)
+                                        .font(.mCaption).foregroundStyle(Tokens.dangerInk)
                                 } else {
                                     Text("Google로 가입해 비밀번호가 없다면 이 방법을 사용해주세요.")
                                         .font(.mCaption).foregroundStyle(Tokens.text3)
@@ -921,7 +922,7 @@ private struct WithdrawSheet: View {
                     }
 
                     if let e = errorText {
-                        Text(e).font(.mCaption).foregroundStyle(Tokens.danger)
+                        Text(e).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
@@ -959,7 +960,7 @@ private struct WithdrawSheet: View {
 
     private func bullet(_ text: String) -> some View {
         HStack(alignment: .top, spacing: Tokens.Space.s2) {
-            Text("·").font(.mBody).foregroundStyle(Tokens.danger)
+            Text("·").font(.mBody).foregroundStyle(Tokens.dangerInk)
             Text(text).font(.mCallout).foregroundStyle(Tokens.text2)
                 .fixedSize(horizontal: false, vertical: true)
         }

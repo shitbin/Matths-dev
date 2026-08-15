@@ -130,8 +130,18 @@ app.get("/__evidence__/payment/parent-checkout", (_req, res) => {
 app.get("/__evidence__/payment/result", (_req, res) => {
   res.render("payment-result", {
     success: true,
+    uncertain: false,
     heading: "결제가 완료됐습니다.",
     message: "이용권 반영이 끝났습니다. 학습 화면에서 바로 확인할 수 있습니다.",
+    primaryHref: "/my-learning",
+    primaryLabel: "학습 시작하기",
+    paymentSummary: {
+      orderName: product.name,
+      amount: product.amount,
+      approvedAt: new Date("2026-08-13T00:00:00+09:00"),
+      orderId: "V8-EVIDENCE-ORDER",
+      receiptUrl: null,
+    },
   });
 });
 

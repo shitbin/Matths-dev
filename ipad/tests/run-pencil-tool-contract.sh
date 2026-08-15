@@ -23,7 +23,10 @@ grep -Fq 'Text("캔버스 배율")' "$canvas"
 grep -Fq 'toolButton(tool, expands: true)' "$canvas"
 grep -Fq '.accessibilityLabel("선 굵기 \(Int(inkWidth))포인트")' "$canvas"
 grep -Fq 'private let zoomRange: ClosedRange<CGFloat> = 1.0...3.0' "$canvas"
-grep -Fq 'SolutionNote(drawing: $drawing)' "$solve"
+grep -Fq 'SolutionNote(' "$solve"
+grep -Fq 'undoStack: $noteUndoStack' "$solve"
+grep -Fq '@Binding var undoStack: [PKDrawing]' "$canvas"
+grep -Fq '@Binding var zoom: CGFloat' "$canvas"
 grep -Fq 'drawing.pngForGrading(scale: 1)' "$solve"
 
 touch_targets=$(grep -Ec '\.frame\(minHeight: 44\)|\.frame\(minWidth: 44, minHeight: 44\)' "$canvas")

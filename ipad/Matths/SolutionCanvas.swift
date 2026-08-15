@@ -127,15 +127,14 @@ struct GraphPaper: View {
 /// 풀이 노트 전체 (격자 + 캔버스 + 도구 + 확대·축소)
 struct SolutionNote: View {
     @Binding var drawing: PKDrawing
+    @Binding var allowsFinger: Bool
+    @Binding var zoom: CGFloat
+    @Binding var selectedTool: SolutionCanvasTool
+    @Binding var inkWidth: CGFloat
+    @Binding var undoStack: [PKDrawing]
+    @Binding var redoStack: [PKDrawing]
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-    @State private var allowsFinger = UniversalLayoutPolicy.defaultsToFingerDrawing(
-        on: UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad)
-    @State private var zoom: CGFloat = 1
-    @State private var selectedTool: SolutionCanvasTool = .pen
-    @State private var inkWidth: CGFloat = 3
-    @State private var undoStack: [PKDrawing] = []
-    @State private var redoStack: [PKDrawing] = []
 
     private let zoomRange: ClosedRange<CGFloat> = 1.0...3.0
 

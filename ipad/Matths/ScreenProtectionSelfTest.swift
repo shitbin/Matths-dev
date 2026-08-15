@@ -19,7 +19,7 @@ enum ScreenProtectionSelfTest {
         let appBuild: String
         let serverSyncSuppressed: Bool
         let baseProtectionEnabled: Bool
-        let screenshotOverlayShown: Bool
+        let screenshotModalSuppressed: Bool
         let repeatedScreenshotRecorded: Bool
         let accountWatermarkPseudonymous: Bool
         let captureCoverShown: Bool
@@ -52,13 +52,12 @@ enum ScreenProtectionSelfTest {
         let baseProtectionEnabled = guardModel.protectionEnabled
 
         guardModel.simulateScreenshotForDeviceQA()
-        let screenshotOverlayShown = guardModel.isShowing
-        // 경고창이 떠 있는 사이에 다시 촬영해도 두 번째 시스템 알림을 버리지 않는다.
+        let screenshotModalSuppressed = !guardModel.isShowing
+        // 학생 흐름을 막는 모달 없이도 두 번째 시스템 알림을 버리지 않는다.
         guardModel.simulateScreenshotForDeviceQA()
         let repeatedScreenshotRecorded = events.filter {
             $0.type == "protected-screen-screenshot"
         }.count == 2
-        guardModel.isShowing = false
 
         let accountCode = guardModel.accountWatermarkCode
         let accountWatermarkPseudonymous = accountCode == "GUEST"
@@ -86,7 +85,7 @@ enum ScreenProtectionSelfTest {
             at: documents.appendingPathComponent("screen-integrity-device-qa.jsonl")
         )
         let passed = baseProtectionEnabled
-            && screenshotOverlayShown
+            && screenshotModalSuppressed
             && repeatedScreenshotRecorded
             && accountWatermarkPseudonymous
             && captureCoverShown
@@ -110,7 +109,7 @@ enum ScreenProtectionSelfTest {
             appBuild: String(info["CFBundleVersion"] as? String ?? "unknown"),
             serverSyncSuppressed: true,
             baseProtectionEnabled: baseProtectionEnabled,
-            screenshotOverlayShown: screenshotOverlayShown,
+            screenshotModalSuppressed: screenshotModalSuppressed,
             repeatedScreenshotRecorded: repeatedScreenshotRecorded,
             accountWatermarkPseudonymous: accountWatermarkPseudonymous,
             captureCoverShown: captureCoverShown,

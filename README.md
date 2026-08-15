@@ -5,10 +5,11 @@ Matths 웹과 iPad 앱의 공개 통합 개발 저장소입니다.
 - `web/`: Node.js/EJS 웹 서버와 Cafe24 배포 소스
 - `ipad/`: SwiftUI iPad 앱
 - 운영 기준 origin: `https://www.matths.kr`
-- 웹 소스 스냅샷: `863840b2fddcb06c3e1464149a48283c04fe1399`
-- iPhone+iPad 소스 스냅샷: `e4076fb8e311e91395aab2896511d5e76806d4d1`
+- 웹 소스 스냅샷: `1c2fe6ccad89557518dfc968036906ca7a11a045`
+- iPhone+iPad 소스 스냅샷: `63d7f5e5a5121ebe9d79cc424885f4b2c1cae81f`
 
-이번 스냅샷에는 13과목 220개 커리큘럼 스토리, 웹·iPhone·iPad 타임라인,
+이번 스냅샷에는 13과목 220개 커리큘럼 스토리와 1,100개 장면별 교사식 모션,
+순한맛·매운맛·이해 확인 분기, 근거 중심 코치, 웹·iPhone·iPad 타임라인,
 Google OAuth의 `www.matths.kr` 기준 PKCE 앱 로그인, 웹·iPad 오답 풀이 플로팅,
 유니버설 iPhone+iPad 레이아웃, 9개 티어 하드웨어 디코딩 rank MP4와 빌드
 provenance가 포함됩니다. GOAT Arena의 경기 로직·규칙·경제·정산·난이도·티어 정의·
@@ -45,6 +46,6 @@ iPhone/iPad 앱은 `ipad/Matths.xcodeproj`를 Xcode에서 엽니다. Google OAut
 
 동기화 전 공개 `main`은 다음 두 원격 ref로 보존했습니다.
 
-- branch: `rollback/pre-tts-sync-20260815-cbd8ecf`
-- annotated tag: `snapshot/pre-tts-sync-20260815-cbd8ecf`
-- commit: `cbd8ecf2be24114ae516a8befec597be86ab9711`
+- branch: `rollback/pre-motion-sync-20260815-717490f`
+- annotated tag: `snapshot/pre-motion-sync-20260815-717490f`
+- commit: `717490fdef70586d5cd7bdb78e7875cc4590253c`

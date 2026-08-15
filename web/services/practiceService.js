@@ -49,6 +49,167 @@ const MAX_SESSION_QUESTIONS = 30;
 const REVIEW_VARIATION_ATTEMPTS = 16;
 const MAX_REVIEW_PROMPT_ENTRIES = 50;
 
+function coachDiagnosticPlan(typeId = "") {
+  const key = String(typeId).toLowerCase();
+  const plan = (first, second, action) => ({
+    first,
+    second,
+    mildAction: action,
+    spicyAction: `답을 다시 찍지 말고, ${action}`,
+  });
+
+  if (/(conditional|condition)/u.test(key)) {
+    return plan(
+      "분모를 전체가 아니라 조건이 주어진 표본공간으로 다시 잡습니다.",
+      "그 안에서 두 사건이 함께 일어나는 경우만 분자로 셉니다.",
+      "조건 사건에 울타리를 치고 ‘울타리 안 전체 → 겹치는 부분’ 순서로 다시 세어 보세요.",
+    );
+  }
+  if (/binomial/u.test(key)) {
+    return plan(
+      "시행 횟수·성공 확률·구하려는 성공 횟수를 각각 표시합니다.",
+      "조합계수와 성공·실패 확률의 지수가 횟수와 맞는지 확인합니다.",
+      "n, p, r 세 값을 문제 옆에 먼저 적고 이항확률 한 항만 다시 만드세요.",
+    );
+  }
+  if (/normal/u.test(key)) {
+    return plan(
+      "원래 값을 평균 0, 표준편차 1인 z값으로 바꾼 방향을 확인합니다.",
+      "구간이 평균의 왼쪽인지 오른쪽인지 표시한 뒤 표의 넓이를 고릅니다.",
+      "정규곡선에 평균과 경계값을 찍고 필요한 영역만 칠한 뒤 z값을 다시 계산하세요.",
+    );
+  }
+  if (/(confidence|sampling)/u.test(key)) {
+    return plan(
+      "표본통계량과 모집단 모수 중 무엇을 추정하는지 먼저 구분합니다.",
+      "표준오차에서 표본크기의 제곱근이 분모에 들어갔는지 확인합니다.",
+      "‘추정 대상 → 표준오차 → 신뢰계수’ 세 칸을 적고 수치를 다시 배치하세요.",
+    );
+  }
+  if (/(variance|deviation|stat)/u.test(key)) {
+    return plan(
+      "각 값과 평균의 차이를 먼저 만들고 그 차이를 제곱했는지 확인합니다.",
+      "편차제곱의 합을 어떤 개수로 나누는 문제인지 다시 읽습니다.",
+      "평균을 가운데 적고 ‘차이 → 제곱 → 평균’ 세 단계만 다시 계산하세요.",
+    );
+  }
+  if (/(prob|count|comb|permut)/u.test(key)) {
+    return plan(
+      "순서를 구분하는지, 같은 대상을 중복해서 고를 수 있는지 먼저 결정합니다.",
+      "전체 경우와 조건을 만족하는 경우를 같은 기준으로 세었는지 확인합니다.",
+      "작은 예를 세 칸만 직접 나열한 뒤 순서·중복 표시를 공식에 연결하세요.",
+    );
+  }
+  if (/(log|exp)/u.test(key)) {
+    return plan(
+      "로그의 밑 조건과 진수가 양수라는 조건을 식 옆에 적습니다.",
+      "로그를 지수식으로 바꾸거나 밑을 통일한 첫 줄의 괄호를 확인합니다.",
+      "정의역을 먼저 표시하고 첫 변형 한 줄만 역으로 되돌려 검산하세요.",
+    );
+  }
+  if (/limit/u.test(key)) {
+    return plan(
+      "대입만으로 정해지는지, 0/0 꼴이라 변형이 필요한지 먼저 판별합니다.",
+      "약분·유리화 뒤에도 극한을 취하는 방향과 값이 유지되는지 확인합니다.",
+      "대입 결과를 첫 줄에 쓰고 0/0이면 공통인수 또는 유리화 대상 하나만 표시하세요.",
+    );
+  }
+  if (/(tangent|derivative|extremum)/u.test(key)) {
+    return plan(
+      "미분한 식에 어느 x값을 넣어 기울기를 구하는지 표시합니다.",
+      "극값 문제라면 도함수가 0인 후보와 실제 부호 변화 여부를 구분합니다.",
+      "도함수·기준 x값·부호표 중 빠진 한 칸을 채운 뒤 계산을 다시 시작하세요.",
+    );
+  }
+  if (/(integral|area)/u.test(key)) {
+    return plan(
+      "적분 구간과 위·아래 함수를 먼저 표시합니다.",
+      "넓이라면 함수값의 부호가 바뀌는 지점에서 구간을 나눴는지 확인합니다.",
+      "수직선에 경계값을 찍고 각 구간의 ‘위 함수 − 아래 함수’를 한 줄씩 적으세요.",
+    );
+  }
+  if (/(circle|distance|vector|geo)/u.test(key)) {
+    return plan(
+      "그림에 기준점·방향·거리의 대상을 직접 표시합니다.",
+      "좌표나 벡터를 식에 옮길 때 시작점과 끝점의 순서가 바뀌지 않았는지 확인합니다.",
+      "그림에서 아는 값은 파란 밑줄, 구할 값은 노란 상자로 표시한 뒤 식을 다시 세우세요.",
+    );
+  }
+  if (/seq/u.test(key)) {
+    return plan(
+      "공차·공비 또는 반복되는 한 주기의 길이를 먼저 확정합니다.",
+      "완전한 묶음의 합과 마지막에 남는 항을 분리했는지 확인합니다.",
+      "항 번호를 세 칸만 직접 써서 규칙을 확인한 뒤 ‘묶음 + 나머지’로 다시 계산하세요.",
+    );
+  }
+  if (/(quad|disc|vieta)/u.test(key)) {
+    return plan(
+      "이차식의 모든 항을 한쪽으로 모아 계수 a, b, c를 다시 읽습니다.",
+      "판별식 또는 근과 계수 공식에 넣을 때 b의 부호와 제곱을 확인합니다.",
+      "a, b, c 아래에 값을 적고 b만 괄호로 묶어 한 줄을 다시 계산하세요.",
+    );
+  }
+  return plan(
+    "발문에서 주어진 조건과 구해야 하는 값을 서로 다른 표시로 나눕니다.",
+    "첫 변형에서 괄호를 푸는 순서와 음수 부호가 유지됐는지 확인합니다.",
+    "모범 풀이 1단계와 내 첫 식만 나란히 놓고 달라진 기호 하나를 찾으세요.",
+  );
+}
+
+function coachSubmissionShape(submittedAnswer, inputMode = "") {
+  if (/choice/u.test(String(inputMode))) return "선택한 보기가";
+  const input = String(submittedAnswer || "").trim();
+  if (input.includes("=")) return "등식 형태로 쓴 답이";
+  if (/[\/⁄]/u.test(input)) return "분수 형태로 쓴 답이";
+  if (/[.,]/u.test(input)) return "소수 형태로 쓴 답이";
+  if (/[-−]/u.test(input)) return "음수 부호를 포함한 답이";
+  if (/\p{L}/u.test(input)) return "문자식을 포함한 답이";
+  return "제출한 답이";
+}
+
+function buildPracticeCoachGuidance({
+  mode,
+  situation,
+  seed,
+  typeId,
+  typeLabel,
+  submittedAnswer,
+  inputMode,
+}) {
+  const base = getCoachView({ mode, situation, seed });
+  if (base.mode === "silent") {
+    return { ...base, message: "", observation: "", reason: "", nextAction: "" };
+  }
+
+  const label = String(typeLabel || "이 문제 유형");
+  if (situation === "correct") {
+    return {
+      ...base,
+      observation: `관찰 · ${label}에서 최종 답이 성립했습니다.`,
+      reason: "근거 · 답만 맞춘 것으로 끝내지 않고 첫 변형의 조건과 부호를 확인하면 풀이를 재현할 수 있습니다.",
+      nextAction: "다음 행동 · 같은 풀이의 첫 줄에 핵심 조건 하나를 표시한 채 다음 문제로 넘어가세요.",
+    };
+  }
+  if (situation === "incorrect") {
+    const diagnostic = coachDiagnosticPlan(typeId);
+    return {
+      ...base,
+      observation: `관찰 · ${label}에서 ${coachSubmissionShape(submittedAnswer, inputMode)} 정답 조건을 만족하지 않았습니다.`,
+      reason: `점검 순서 · ① ${diagnostic.first} ② ${diagnostic.second}`,
+      nextAction: base.mode === "mild"
+        ? `다음 행동 · ${diagnostic.mildAction}`
+        : `다음 행동 · ${diagnostic.spicyAction}`,
+    };
+  }
+  const diagnostic = coachDiagnosticPlan(typeId);
+  return {
+    ...base,
+    observation: "관찰 · 아직 답이 입력되지 않았습니다.",
+    reason: `먼저 볼 곳 · ${diagnostic.first}`,
+    nextAction: `첫 행동 · ${diagnostic.mildAction}`,
+  };
+}
+
 function generateReviewVariation({
   problemType,
   courseId,
@@ -777,7 +938,7 @@ async function createNextProblem({
             ) + 1,
         }),
       coachPrompt:
-        getCoachView({
+        buildPracticeCoachGuidance({
           mode:
             req.session?.user
               ?.preferences
@@ -785,6 +946,9 @@ async function createNextProblem({
           situation:
             "unanswered",
           seed: instanceId,
+          typeId: problemType.id,
+          typeLabel: problemType.label,
+          inputMode: generated.inputMode,
         }),
     },
     mastery: masteryView(progress),
@@ -1082,7 +1246,7 @@ async function submitProblem({
     mastery: masteryView(progress),
     review,
     coachFeedback:
-      getCoachView({
+      buildPracticeCoachGuidance({
         mode:
           req.session?.user
             ?.preferences
@@ -1091,6 +1255,10 @@ async function submitProblem({
           ? "correct"
           : "incorrect",
         seed: instanceId,
+        typeId: stored.typeId,
+        typeLabel: stored.typeLabel,
+        submittedAnswer,
+        inputMode: stored.inputMode,
       }),
   });
 }
@@ -1172,4 +1340,5 @@ module.exports = {
   rememberReviewProblem,
   clearReviewProblem,
   practiceAttemptResponse,
+  buildPracticeCoachGuidance,
 };

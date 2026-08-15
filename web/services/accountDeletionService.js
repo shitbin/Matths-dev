@@ -103,6 +103,32 @@ function normalizeRetentionChoice(value) {
   ].includes(value);
 }
 
+const WITHDRAWAL_STAGE_ORDER = Object.freeze([
+  "started",
+  "private-data-removed",
+  "uploads-removed",
+  "public-data-anonymized",
+  "owned-data-purged",
+  "completed",
+]);
+
+function withdrawalStageReached(current, expected) {
+  return WITHDRAWAL_STAGE_ORDER.indexOf(String(current || "")) >=
+    WITHDRAWAL_STAGE_ORDER.indexOf(expected);
+}
+
+async function markWithdrawalStage(userId, stage) {
+  await User.updateOne(
+    { _id: userId },
+    {
+      $set: {
+        "withdrawal.stage": stage,
+        "withdrawal.lastErrorAt": null,
+      },
+    }
+  );
+}
+
 function buildAnonymousAccountUpdate({
   user,
   initiatedBy,
@@ -141,8 +167,9 @@ function buildAnonymousAccountUpdate({
       suspendedUntil: null,
       accountStatusChangedAt: now,
       tokenVersion:
-        (Number(user?.tokenVersion) ||
-          0) + 1,
+        user?.accountStatus === "inactive"
+          ? (Number(user?.tokenVersion) || 0)
+          : (Number(user?.tokenVersion) || 0) + 1,
       school: {
         region: broadRegion,
         code: "ANONYMIZED",
@@ -167,6 +194,9 @@ function buildAnonymousAccountUpdate({
         retainAnonymousData
           ? "anonymous"
           : "purged",
+      "withdrawal.stage": "completed",
+      "withdrawal.completedAt": now,
+      "withdrawal.lastErrorAt": null,
     },
     $unset: {
       nameNormalized: 1,
@@ -635,7 +665,7 @@ async function withdrawUserAccount({
   const user =
     await User.findById(userId)
       .select(
-        "+passwordHash role school tokenVersion accountStatus"
+        "+passwordHash role school tokenVersion accountStatus accountStatusReason withdrawal"
       );
 
   if (!user) {
@@ -673,27 +703,81 @@ async function withdrawUserAccount({
     );
   }
 
-  const keepAnonymousData =
-    Boolean(retainAnonymousData);
+  const resuming =
+    user.accountStatus === "inactive" &&
+    user.accountStatusReason === "withdrawal_in_progress";
+  if (user.accountStatus !== "active" && !resuming) {
+    throw statusError(409, "현재 계정 상태에서는 탈퇴를 시작할 수 없습니다.");
+  }
 
-  await removePrivateAccountData(
-    user._id
-  );
-  await removeUserUploadedFiles(user._id);
+  const keepAnonymousData = resuming
+    ? user.withdrawal?.dataRetention === "anonymous"
+    : Boolean(retainAnonymousData);
+  const now = new Date();
 
-  if (keepAnonymousData) {
-    await anonymizePublicActivity(
-      user._id
+  if (!resuming) {
+    const started = await User.findOneAndUpdate(
+      { _id: user._id, accountStatus: "active" },
+      {
+        $set: {
+          accountStatus: "inactive",
+          accountStatusReason: "withdrawal_in_progress",
+          accountStatusChangedAt: now,
+          isActive: false,
+          "withdrawal.startedAt": now,
+          "withdrawal.stage": "started",
+          "withdrawal.initiatedBy": initiatedBy,
+          "withdrawal.dataRetention": keepAnonymousData ? "anonymous" : "purged",
+          "withdrawal.lastErrorAt": null,
+        },
+        $inc: { tokenVersion: 1 },
+      },
+      { returnDocument: "after", runValidators: true }
     );
-  } else {
-    await purgeUserOwnedData(
-      user._id
-    );
-    await User.deleteOne({ _id: user._id });
-    return {
-      user: { _id: user._id },
-      dataRetention: "purged",
-    };
+    if (!started) {
+      throw statusError(409, "다른 요청이 계정 탈퇴를 처리하고 있습니다.");
+    }
+    user.accountStatus = started.accountStatus;
+    user.accountStatusReason = started.accountStatusReason;
+    user.tokenVersion = started.tokenVersion;
+    user.withdrawal = started.withdrawal;
+  }
+
+  try {
+    if (!withdrawalStageReached(user.withdrawal?.stage, "private-data-removed")) {
+      await removePrivateAccountData(user._id);
+      await markWithdrawalStage(user._id, "private-data-removed");
+      user.withdrawal.stage = "private-data-removed";
+    }
+    if (!withdrawalStageReached(user.withdrawal?.stage, "uploads-removed")) {
+      await removeUserUploadedFiles(user._id);
+      await markWithdrawalStage(user._id, "uploads-removed");
+      user.withdrawal.stage = "uploads-removed";
+    }
+
+    if (keepAnonymousData) {
+      if (!withdrawalStageReached(user.withdrawal?.stage, "public-data-anonymized")) {
+        await anonymizePublicActivity(user._id);
+        await markWithdrawalStage(user._id, "public-data-anonymized");
+        user.withdrawal.stage = "public-data-anonymized";
+      }
+    } else {
+      if (!withdrawalStageReached(user.withdrawal?.stage, "owned-data-purged")) {
+        await purgeUserOwnedData(user._id);
+        await markWithdrawalStage(user._id, "owned-data-purged");
+      }
+      await User.deleteOne({ _id: user._id });
+      return {
+        user: { _id: user._id },
+        dataRetention: "purged",
+      };
+    }
+  } catch (error) {
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { "withdrawal.lastErrorAt": new Date() } }
+    ).catch(() => {});
+    throw error;
   }
 
   const update =
@@ -825,6 +909,56 @@ async function withdrawOwnAccount({
   });
 }
 
+async function resumePendingWithdrawals({
+  limit = 100,
+} = {}) {
+  const boundedLimit = Math.max(
+    1,
+    Math.min(500, Number(limit) || 100)
+  );
+  const pending = await User.find({
+    accountStatus: "inactive",
+    accountStatusReason: "withdrawal_in_progress",
+    "withdrawal.stage": {
+      $in: WITHDRAWAL_STAGE_ORDER.filter((stage) => stage !== "completed"),
+    },
+  })
+    .select("_id withdrawal")
+    .sort({ "withdrawal.startedAt": 1, _id: 1 })
+    .limit(boundedLimit)
+    .lean();
+
+  const results = [];
+  for (const entry of pending) {
+    try {
+      const outcome = await withdrawUserAccount({
+        userId: entry._id,
+        initiatedBy: entry.withdrawal?.initiatedBy || "admin",
+        retainAnonymousData:
+          entry.withdrawal?.dataRetention === "anonymous",
+      });
+      results.push({
+        userId: String(entry._id),
+        status: "completed",
+        dataRetention: outcome.dataRetention,
+      });
+    } catch (error) {
+      results.push({
+        userId: String(entry._id),
+        status: "failed",
+        code: String(error?.code || "WITHDRAWAL_RESUME_FAILED"),
+      });
+    }
+  }
+
+  return {
+    scanned: pending.length,
+    completed: results.filter((entry) => entry.status === "completed").length,
+    failed: results.filter((entry) => entry.status === "failed").length,
+    results,
+  };
+}
+
 module.exports = {
   anonymizePublicActivity,
   buildAnonymousAccountUpdate,
@@ -833,6 +967,7 @@ module.exports = {
   purgeArenaUserData,
   removePrivateAccountData,
   removeUserUploadedFiles,
+  resumePendingWithdrawals,
   withdrawOwnAccount,
   withdrawUserAccount,
 };

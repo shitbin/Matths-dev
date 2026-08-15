@@ -42,6 +42,18 @@ enum CoachSituation {
     case quizIntro, correct1, correctRetry, wrong1, wrong2, wrong3, done
 }
 
+/// 결과 화면에 필요한 것은 랜덤 격려문이 아니라 관찰 → 점검 이유 → 다음 행동이다.
+/// 채점 권한은 갖지 않으며, 확정할 수 없는 원인을 사실처럼 말하지 않는다.
+struct CoachGuidance: Equatable {
+    let observation: String
+    let reason: String
+    let nextAction: String
+
+    var accessibilityText: String {
+        "\(observation). \(reason). \(nextAction)"
+    }
+}
+
 struct CoachEngine {
     var level: SpiceLevel = .spicy      // 기본값: 매운맛 (데모와 동일)
     var wrongStreak = 0
@@ -152,6 +164,172 @@ struct CoachEngine {
     }
 
     mutating func onExamDone() -> String { say(.done) }
+
+    mutating func guidance(
+        problem: GeneratedProblem,
+        studentInput: String,
+        correct: Bool
+    ) -> CoachGuidance? {
+        let line = correct ? onCorrect() : onWrong()
+        guard level != .silent, !line.isEmpty else { return nil }
+
+        if correct {
+            return CoachGuidance(
+                observation: "관찰 · \(problem.typeName)에서 최종 답이 성립했습니다.",
+                reason: "근거 · 답만 맞춘 것으로 끝내지 않고, 첫 변형의 조건과 부호가 유지됐는지 확인하면 풀이를 재현할 수 있습니다.",
+                nextAction: "다음 행동 · 같은 풀이의 첫 줄에 핵심 조건 하나를 표시한 채 다음 문제로 넘어가세요."
+            )
+        }
+
+        let plan = diagnosticPlan(problem, studentInput: studentInput)
+        let effectiveMild = softened || level == .mild
+        return CoachGuidance(
+            observation: "관찰 · \(problem.typeName)에서 \(submissionShape(problem, studentInput: studentInput)) 정답 조건을 만족하지 않았습니다.",
+            reason: "점검 순서 · ① \(plan.first) ② \(plan.second)",
+            nextAction: effectiveMild
+                ? "다음 행동 · \(plan.mildAction)"
+                : "다음 행동 · \(plan.spicyAction)"
+        )
+    }
+
+    private struct DiagnosticPlan {
+        let first: String
+        let second: String
+        let mildAction: String
+        let spicyAction: String
+    }
+
+    /// 최종 답만으로 학생의 실제 사고 원인을 단정하지 않는다. 문제 유형에 따라
+    /// 다시 확인할 두 지점과 바로 실행할 한 동작만 제안한다.
+    private func diagnosticPlan(
+        _ problem: GeneratedProblem,
+        studentInput: String
+    ) -> DiagnosticPlan {
+        let key = problem.typeKey.lowercased()
+        if key.contains("conditional") || key.contains("condition") {
+            return plan(
+                "분모를 전체가 아니라 조건이 주어진 표본공간으로 다시 잡습니다.",
+                "그 안에서 두 사건이 함께 일어나는 경우만 분자로 셉니다.",
+                "조건 사건에 울타리를 치고 ‘울타리 안 전체 → 겹치는 부분’ 순서로 다시 세어 보세요."
+            )
+        }
+        if key.contains("binomial") {
+            return plan(
+                "시행 횟수·성공 확률·구하려는 성공 횟수를 각각 표시합니다.",
+                "조합계수와 성공·실패 확률의 지수가 횟수와 맞는지 확인합니다.",
+                "n, p, r 세 값을 문제 옆에 먼저 적고 이항확률 한 항만 다시 만드세요."
+            )
+        }
+        if key.contains("normal") {
+            return plan(
+                "원래 값을 평균 0, 표준편차 1인 z값으로 바꾼 방향을 확인합니다.",
+                "구간이 평균의 왼쪽인지 오른쪽인지 표시한 뒤 표의 넓이를 고릅니다.",
+                "정규곡선에 평균과 경계값을 찍고 필요한 영역만 칠한 뒤 z값을 다시 계산하세요."
+            )
+        }
+        if key.contains("confidence") || key.contains("sampling") {
+            return plan(
+                "표본통계량과 모집단 모수 중 무엇을 추정하는지 먼저 구분합니다.",
+                "표준오차에서 표본크기의 제곱근이 분모에 들어갔는지 확인합니다.",
+                "‘추정 대상 → 표준오차 → 신뢰계수’ 세 칸을 적고 수치를 다시 배치하세요."
+            )
+        }
+        if key.contains("variance") || key.contains("deviation") || key.contains("stat") {
+            return plan(
+                "각 값과 평균의 차이를 먼저 만들고 그 차이를 제곱했는지 확인합니다.",
+                "편차제곱의 합을 어떤 개수로 나누는 문제인지 다시 읽습니다.",
+                "평균을 가운데 적고 ‘차이 → 제곱 → 평균’ 세 단계만 다시 계산하세요."
+            )
+        }
+        if key.contains("prob") || key.contains("count") || key.contains("comb") || key.contains("permut") {
+            return plan(
+                "순서를 구분하는지, 같은 대상을 중복해서 고를 수 있는지 먼저 결정합니다.",
+                "전체 경우와 조건을 만족하는 경우를 같은 기준으로 세었는지 확인합니다.",
+                "작은 예를 세 칸만 직접 나열한 뒤 순서·중복 표시를 공식에 연결하세요."
+            )
+        }
+        if key.contains("log") || key.contains("exp") {
+            return plan(
+                "로그의 밑 조건과 진수가 양수라는 조건을 식 옆에 적습니다.",
+                "로그를 지수식으로 바꾸거나 밑을 통일한 첫 줄의 괄호를 확인합니다.",
+                "정의역을 먼저 표시하고 첫 변형 한 줄만 역으로 되돌려 검산하세요."
+            )
+        }
+        if key.contains("limit") {
+            return plan(
+                "대입만으로 정해지는지, 0/0 꼴이라 변형이 필요한지 먼저 판별합니다.",
+                "약분·유리화 뒤에도 극한을 취하는 방향과 값이 유지되는지 확인합니다.",
+                "대입 결과를 첫 줄에 쓰고 0/0이면 공통인수 또는 유리화 대상 하나만 표시하세요."
+            )
+        }
+        if key.contains("tangent") || key.contains("derivative") || key.contains("extremum") {
+            return plan(
+                "미분한 식에 어느 x값을 넣어 기울기를 구하는지 표시합니다.",
+                "극값 문제라면 도함수가 0인 후보와 실제 부호 변화 여부를 구분합니다.",
+                "도함수·기준 x값·부호표 중 빠진 한 칸을 채운 뒤 계산을 다시 시작하세요."
+            )
+        }
+        if key.contains("integral") || key.contains("area") {
+            return plan(
+                "적분 구간과 위·아래 함수를 먼저 표시합니다.",
+                "넓이라면 함수값의 부호가 바뀌는 지점에서 구간을 나눴는지 확인합니다.",
+                "수직선에 경계값을 찍고 각 구간의 ‘위 함수 − 아래 함수’를 한 줄씩 적으세요."
+            )
+        }
+        if key.contains("circle") || key.contains("distance") || key.contains("vector") || key.contains("geo") {
+            return plan(
+                "그림에 기준점·방향·거리의 대상을 직접 표시합니다.",
+                "좌표나 벡터를 식에 옮길 때 시작점과 끝점의 순서가 바뀌지 않았는지 확인합니다.",
+                "그림에서 아는 값은 파란 밑줄, 구할 값은 노란 상자로 표시한 뒤 식을 다시 세우세요."
+            )
+        }
+        if key.contains("seq") {
+            return plan(
+                "공차·공비 또는 반복되는 한 주기의 길이를 먼저 확정합니다.",
+                "완전한 묶음의 합과 마지막에 남는 항을 분리했는지 확인합니다.",
+                "항 번호를 세 칸만 직접 써서 규칙을 확인한 뒤 ‘묶음 + 나머지’로 다시 계산하세요."
+            )
+        }
+        if key.contains("quad") || key.contains("disc") || key.contains("vieta") {
+            return plan(
+                "이차식의 모든 항을 한쪽으로 모아 계수 a, b, c를 다시 읽습니다.",
+                "판별식 또는 근과 계수 공식에 넣을 때 b의 부호와 제곱을 확인합니다.",
+                "a, b, c 아래에 값을 적고 b만 괄호로 묶어 한 줄을 다시 계산하세요."
+            )
+        }
+        return plan(
+            "발문에서 주어진 조건과 구해야 하는 값을 서로 다른 표시로 나눕니다.",
+            "첫 변형에서 괄호를 푸는 순서와 음수 부호가 유지됐는지 확인합니다.",
+            "모범 풀이 1단계와 내 첫 식만 나란히 놓고 달라진 기호 하나를 찾으세요."
+        )
+    }
+
+    private func plan(
+        _ first: String,
+        _ second: String,
+        _ mildAction: String
+    ) -> DiagnosticPlan {
+        DiagnosticPlan(
+            first: first,
+            second: second,
+            mildAction: mildAction,
+            spicyAction: "답을 다시 찍지 말고, \(mildAction)"
+        )
+    }
+
+    private func submissionShape(
+        _ problem: GeneratedProblem,
+        studentInput: String
+    ) -> String {
+        if problem.isMultipleChoice { return "선택한 보기가" }
+        let input = studentInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        if input.contains("=") { return "등식 형태로 쓴 답이" }
+        if input.contains("/") || input.contains("⁄") { return "분수 형태로 쓴 답이" }
+        if input.contains(".") || input.contains(",") { return "소수 형태로 쓴 답이" }
+        if input.contains("-") || input.contains("−") { return "음수 부호를 포함한 답이" }
+        if input.rangeOfCharacter(from: .letters) != nil { return "문자식을 포함한 답이" }
+        return "제출한 답이"
+    }
 
     /// 오답이 누적될수록 다음 설명을 더 직접적으로 제시하는 학습 온도.
     var shuLabel: String {

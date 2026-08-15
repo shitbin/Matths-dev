@@ -440,6 +440,15 @@
       provider,
       checkpointStore,
       onChange(snapshot) {
+        if (
+          typeof browserWindow.CustomEvent === "function"
+          && typeof document.dispatchEvent === "function"
+        ) {
+          document.dispatchEvent(new browserWindow.CustomEvent(
+            "matths:curriculum-narration-state",
+            { detail: snapshot },
+          ));
+        }
         const label = toggle.querySelector("b");
         const symbol = toggle.querySelector("span");
         const chunk = snapshot.chunk;
@@ -479,6 +488,8 @@
         }
       },
     });
+
+    dataNode.curriculumNarrationSession = session;
 
     toggle.addEventListener("click", () => session.toggle());
     restart.addEventListener("click", () => session.restart());

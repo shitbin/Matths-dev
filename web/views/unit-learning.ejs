@@ -176,6 +176,10 @@
       src="/js/curriculum-narration.js"
       defer
     ></script>
+    <script
+      src="/js/curriculum-motion-lesson.js"
+      defer
+    ></script>
 
     <!-- 풀이 원본은 브라우저 메모리 안에서만 다룹니다. -->
     <script
@@ -351,7 +355,7 @@
               class="exit-learning learning-home-link learning-home-button"
               href="/main"
             >
-              학습 홈으로
+              학습 홈
             </a>
             <a
               class="exit-learning"
@@ -598,42 +602,51 @@
                   </span>
                 </header>
 
-                <div class="concept-type-guide-list">
-                  <% conceptGuidesData.forEach((guide) => { %>
-                    <details>
-                      <summary>
-                        <b>
-                          유형 <%= String(guide.order).padStart(2, "0") %>
-                        </b>
-                        <strong><%= guide.title.replace(/^유형\s*\d+\s*·?\s*/, "") %></strong>
-                        <span aria-hidden="true">+</span>
-                      </summary>
-                      <div>
-                        <p class="guide-label">예시 문제</p>
-                        <div class="guide-math"><%= guide.prompt %></div>
-                        <% if (guide.choices.length) { %>
-                          <ol>
-                            <% guide.choices.forEach((choice) => { %>
-                              <li><%= choice.text %></li>
-                            <% }) %>
-                          </ol>
-                        <% } %>
-                        <div class="guide-process">
-                          <p>
-                            <span>1</span>
-                            <strong>첫 단서</strong>
-                            <em><%= guide.hint %></em>
-                          </p>
-                          <p>
-                            <span>2</span>
-                            <strong>계산과 검산</strong>
-                            <em><%= guide.solution %></em>
-                          </p>
-                        </div>
-                      </div>
-                    </details>
-                  <% }) %>
-                </div>
+                <details class="concept-type-guide-disclosure">
+                  <summary>
+                    <strong>필요한 문제 유형만 펼쳐보기</strong>
+                    <span><%= conceptGuidesData.length %>개 유형</span>
+                    <b aria-hidden="true">+</b>
+                  </summary>
+                  <div class="concept-type-guide-disclosure-body">
+                    <div class="concept-type-guide-list">
+                      <% conceptGuidesData.forEach((guide) => { %>
+                        <details>
+                          <summary>
+                            <b>
+                              유형 <%= String(guide.order).padStart(2, "0") %>
+                            </b>
+                            <strong><%= guide.title.replace(/^유형\s*\d+\s*·?\s*/, "") %></strong>
+                            <span aria-hidden="true">+</span>
+                          </summary>
+                          <div>
+                            <p class="guide-label">예시 문제</p>
+                            <div class="guide-math"><%= guide.prompt %></div>
+                            <% if (guide.choices.length) { %>
+                              <ol>
+                                <% guide.choices.forEach((choice) => { %>
+                                  <li><%= choice.text %></li>
+                                <% }) %>
+                              </ol>
+                            <% } %>
+                            <div class="guide-process">
+                              <p>
+                                <span>1</span>
+                                <strong>첫 단서</strong>
+                                <em><%= guide.hint %></em>
+                              </p>
+                              <p>
+                                <span>2</span>
+                                <strong>계산과 검산</strong>
+                                <em><%= guide.solution %></em>
+                              </p>
+                            </div>
+                          </div>
+                        </details>
+                      <% }) %>
+                    </div>
+                  </div>
+                </details>
               </section>
             <% } %>
 

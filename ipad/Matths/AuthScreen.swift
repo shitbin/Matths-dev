@@ -53,7 +53,7 @@ struct AuthScreen: View {
                 .accessibilityLabel(googleBusy ? "Google 로그인 확인 중" : "Google로 계속하기")
 
                 if let authenticationMessage = googleError ?? store.authenticationNotice {
-                    Text(authenticationMessage).font(.mCaption).foregroundStyle(Tokens.danger)
+                    Text(authenticationMessage).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
@@ -202,8 +202,9 @@ struct EmailAuthSheet: View {
                     .disabled(busy)
 
                     if mode == .register {
-                        field("실명", text: $realName, placeholder: "홍길동")
-                        field("닉네임 (GOAT Arena 표시 이름)", text: $nickname, placeholder: "맵쓰수학왕")
+                        field("실명", text: $realName, placeholder: "홍길동", contentType: .name)
+                        field("닉네임 (GOAT Arena 표시 이름)", text: $nickname,
+                              placeholder: "맵쓰수학왕", contentType: .nickname)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("생년월일").font(.mCaption).foregroundStyle(Tokens.text3)
                             DatePicker(
@@ -218,12 +219,14 @@ struct EmailAuthSheet: View {
                         }
                     }
                     field("이메일", text: $email, placeholder: "you@example.com",
-                          keyboard: .emailAddress)
+                          keyboard: .emailAddress,
+                          contentType: mode == .login ? .username : .emailAddress)
                         .focused($focusedField, equals: .email)
                     VStack(alignment: .leading, spacing: 4) {
                         Text("비밀번호").font(.mCaption).foregroundStyle(Tokens.text3)
                         SecureField("8자 이상", text: $password)
                             .textFieldStyle(.roundedBorder)
+                            .textContentType(mode == .register ? .newPassword : .password)
                     }
 
                     if mode == .register {
@@ -241,15 +244,23 @@ struct EmailAuthSheet: View {
                             }
                         }
 
-                        Toggle(isOn: $termsOK) {
-                            Text("이용약관과 개인정보 처리방침에 동의합니다")
-                                .font(.mCallout).foregroundStyle(Tokens.text2)
+                        VStack(alignment: .leading, spacing: Tokens.Space.s2) {
+                            Toggle("필수 약관에 동의합니다", isOn: $termsOK)
+                                .font(.mCallout)
+                            HStack(spacing: Tokens.Space.s4) {
+                                Link("이용약관 보기",
+                                     destination: ServerAPI.baseURL.appendingPathComponent("terms"))
+                                Link("개인정보처리방침 보기",
+                                     destination: ServerAPI.baseURL.appendingPathComponent("privacy"))
+                            }
+                            .font(.mCaption)
+                            .foregroundStyle(Tokens.primary)
                         }
                         .tint(Tokens.primary)
                     }
 
                     if let e = errorText {
-                        Text(e).font(.mCaption).foregroundStyle(Tokens.danger)
+                        Text(e).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                     }
 
                     if mode == .login {
@@ -410,12 +421,14 @@ struct EmailAuthSheet: View {
 
     @ViewBuilder private func field(_ label: String, text: Binding<String>,
                                     placeholder: String,
-                                    keyboard: UIKeyboardType = .default) -> some View {
+                                    keyboard: UIKeyboardType = .default,
+                                    contentType: UITextContentType? = nil) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.mCaption).foregroundStyle(Tokens.text3)
             TextField(placeholder, text: text)
                 .textFieldStyle(.roundedBorder)
                 .keyboardType(keyboard)
+                .textContentType(contentType)
                 .autocapitalization(.none)
                 .autocorrectionDisabled()
         }
@@ -458,7 +471,7 @@ struct APISchoolPickerSheet: View {
                 } else {
                     if offline {
                         Text("서버에 연결하지 못해 기기 내장 목록을 표시합니다.")
-                            .font(.mMicro).foregroundStyle(Tokens.warning)
+                            .font(.mMicro).foregroundStyle(Tokens.warningInk)
                     }
                     Picker("지역", selection: $regionName) {
                         ForEach(regionNames, id: \.self) { Text($0).tag($0) }
@@ -545,6 +558,7 @@ struct PasswordResetSheet: View {
     @State private var authz: ServerAPI.ResetAuthorization?
     @State private var busy = false
     @State private var errorText: String?
+    @FocusState private var codeFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -556,6 +570,7 @@ struct PasswordResetSheet: View {
                     TextField("이메일", text: $email)
                         .textFieldStyle(.roundedBorder)
                         .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
                         .autocapitalization(.none)
                 case .code:
                     Text("이메일로 받은 6자리 코드를 입력하세요.")
@@ -565,25 +580,28 @@ struct PasswordResetSheet: View {
                     #if DEBUG
                     if !RuntimeMode.isReviewCapture, let p = previewCode {
                         Text("개발 서버 미리보기 코드: \(p)")
-                            .font(.mCaption).foregroundStyle(Tokens.warning)
+                            .font(.mCaption).foregroundStyle(Tokens.warningInk)
                     }
                     #endif
                     TextField("123456", text: $code)
                         .textFieldStyle(.roundedBorder)
                         .keyboardType(.numberPad)
+                        .textContentType(.oneTimeCode)
+                        .focused($codeFocused)
                 case .newPassword:
                     Text("새 비밀번호를 정하세요 (8자 이상).")
                         .font(.mCallout).foregroundStyle(Tokens.text2)
                     SecureField("새 비밀번호", text: $newPassword)
                         .textFieldStyle(.roundedBorder)
+                        .textContentType(.newPassword)
                 case .done:
                     Label("비밀번호가 변경되었습니다. 새 비밀번호로 로그인하세요.",
                           systemImage: "checkmark.circle.fill")
-                        .font(.mBodyB).foregroundStyle(Tokens.success)
+                        .font(.mBodyB).foregroundStyle(Tokens.successInk)
                 }
 
                 if let e = errorText {
-                    Text(e).font(.mCaption).foregroundStyle(Tokens.danger)
+                    Text(e).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                 }
 
                 Button {
@@ -605,6 +623,12 @@ struct PasswordResetSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("닫기") { dismiss() } }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    if codeFocused {
+                        Button("완료") { codeFocused = false }
+                    }
+                }
             }
             .onAppear { if email.isEmpty { email = prefillEmail } }
         }
