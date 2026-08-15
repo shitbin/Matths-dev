@@ -18,6 +18,17 @@ grep -Fq '"schema": "MATTHS_REASONING_DEVICE_EVIDENCE_V1"' "$work/reasoning-evid
 grep -Fq '"result": "PASS"' "$work/reasoning-evidence.json"
 grep -Fq '"koreanOutputClean": true' "$work/reasoning-evidence.json"
 
+cat > "$work/ling-reasoning-selftest.jsonl" <<'JSON'
+{"availableBytes":5000000000,"event":"launch","model":"Ling-3.0-tiny-Q3_K_M.gguf","residentBytes":100000000,"tier":"ling3-q3"}
+{"availableBytes":2100000000,"elapsedMs":12000,"event":"load-complete","maximumResidentBytes":3400000000,"minimumAvailableBytes":1600000000,"model":"Ling-3.0-tiny-Q3_K_M.gguf","tier":"ling3-q3","visionReady":false}
+{"elapsedMs":18000,"event":"reasoning-complete","firstTokenMs":1100,"generatedTokens":128,"maximumResidentBytes":3600000000,"minimumAvailableBytes":1400000000,"model":"Ling-3.0-tiny-Q3_K_M.gguf","tier":"ling3-q3","tokensPerSecond":7.1}
+{"event":"reasoning-language","koreanOutputClean":true,"model":"Ling-3.0-tiny-Q3_K_M.gguf","tier":"ling3-q3"}
+JSON
+node "$root/scripts/verifyReasoningEvidence.js" \
+  "$work/ling-reasoning-selftest.jsonl" --output "$work/ling-reasoning-evidence.json"
+grep -Fq '"tier": "ling3-q3"' "$work/ling-reasoning-evidence.json"
+grep -Fq '"model": "Ling-3.0-tiny-Q3_K_M.gguf"' "$work/ling-reasoning-evidence.json"
+
 cat > "$work/unclean.jsonl" <<'JSONL'
 {"event":"launch","model":"DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf","tier":"deepseek7B"}
 {"elapsedMs":1,"event":"load-complete","maximumResidentBytes":1,"minimumAvailableBytes":1,"model":"DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf","tier":"deepseek7B"}

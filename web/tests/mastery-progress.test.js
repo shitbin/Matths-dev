@@ -16,6 +16,29 @@ const identityPath = require.resolve(path.join(REPO, "services/userIdentityServi
 const mongoose = require(path.join(REPO, "node_modules/mongoose"));
 const real = require(modelPath);
 const ConceptProgressModel = real.ConceptProgress;
+const curriculumService = require(path.join(REPO, "services/curriculumService.js"));
+const { getProblemGenerator } = require(path.join(REPO, "services/problemGenerators"));
+const { getCurriculumConceptCheckGenerator } = require(path.join(
+  REPO,
+  "services/problemGenerators/curriculumConceptCheck"
+));
+
+const location = {
+  courseId: "common-math-1",
+  unitId: "polynomials",
+  conceptId: "polynomial-arithmetic",
+};
+const curriculumItem = curriculumService.findCurriculumConcept(
+  curriculumService.loadCurriculum(),
+  location.courseId,
+  location.unitId,
+  location.conceptId
+);
+const generator =
+  getProblemGenerator(location) ||
+  getCurriculumConceptCheckGenerator(location);
+const validTypeIds = generator.problemTypes.map((problemType) => problemType.id);
+const requiredDistinctTypes = generator.requiredDistinctTypes;
 
 const saved = [];
 let existing = null;
@@ -43,24 +66,55 @@ const ok = (c, label, got) =>
   const doc = new ConceptProgressModel({
     userId: new mongoose.Types.ObjectId(),
     curriculumId: "kr-2022",
-    courseId: "algebra", unitId: "u1", conceptId: "c1",
-    topicCount: 4,
-    completedTopicIndexes: [0, 1, 2, 3],
-    masteryGate: { requiredDistinctTypes: 5, correctTypeIds: [] },
+    ...location,
+    topicCount: curriculumItem.concept.topics.length,
+    completedTopicIndexes: curriculumItem.concept.topics.map((_, index) => index),
+    masteryGate: { requiredDistinctTypes, correctTypeIds: [] },
   });
   doc.save = async function () { await this.validate(); saved.push(this); return this; };
   existing = doc;
 
   const res = { json(b) { this.body = b; return this; } };
-  await ctrl.patchMastery(
-    {
+  const callMastery = async ({
+    params = location,
+    body,
+  }) => {
+    let forwardedError = null;
+    await ctrl.patchMastery({
       apiUser: { _id: doc.userId },
-      params: { courseId: "algebra", unitId: "u1", conceptId: "c1" },
-      body: { addCorrectTypeIds: ["t1", "t2", "t3", "t1"] },
+      params,
+      body,
+    }, res, (error) => { forwardedError = error; });
+    return forwardedError;
+  };
+
+  let error = await callMastery({
+    params: { ...location, conceptId: "not-a-concept" },
+    body: { addCorrectTypeIds: [validTypeIds[0]] },
+  });
+  ok(error?.status === 404 && saved.length === 0,
+     "정본에 없는 개념은 저장 전에 404", error?.status);
+
+  error = await callMastery({
+    body: { addCorrectTypeIds: ["invented-client-type"] },
+  });
+  ok(error?.status === 400 && saved.length === 0,
+     "생성기에 없는 임의 유형은 저장 전에 400", error?.status);
+
+  error = await callMastery({
+    body: { addCorrectTypeIds: [], userCompleted: true },
+  });
+  ok(error?.status === 409 && saved.length === 0,
+     "필수 유형 전에는 클라이언트 완료 플래그를 거부", error?.status);
+
+  error = await callMastery({
+    body: {
+      addCorrectTypeIds: [
+        validTypeIds[0], validTypeIds[1], validTypeIds[2], validTypeIds[0],
+      ],
     },
-    res,
-    (e) => { throw e; }
-  );
+  });
+  ok(!error, "정본 유형 적립 요청 성공", error);
 
   ok(saved.length === 1, "save() 를 태운다(쿼리 업데이트가 아니다)", saved.length);
   ok(doc.masteryGate.correctTypeIds.length === 3,
@@ -73,11 +127,10 @@ const ok = (c, label, got) =>
      "응답이 재계산된 값을 그대로 돌려준다", res.body.progress.completionPercent);
 
   // 유형을 다 채우면 게이트가 열려야 한다
-  await ctrl.patchMastery(
-    { apiUser: { _id: doc.userId },
-      params: { courseId: "algebra", unitId: "u1", conceptId: "c1" },
-      body: { addCorrectTypeIds: ["t4", "t5"] } },
-    res, (e) => { throw e; });
+  error = await callMastery({
+    body: { addCorrectTypeIds: validTypeIds.slice(3, requiredDistinctTypes) },
+  });
+  ok(!error, "남은 정본 유형 적립 요청 성공", error);
   ok(doc.masteryGate.correctTypeIds.length === 5, "5유형 적립", doc.masteryGate.correctTypeIds);
   ok(doc.completionPercent === 90,
      "5유형을 채워도 학생 완료 전에는 90%", doc.completionPercent);
@@ -85,11 +138,10 @@ const ok = (c, label, got) =>
      "게이트 해금만으로 자동 완료하지 않는다", doc.masteryGate);
 
   // 학생의 최종 완료 체크는 100%를 만들고, 재전송돼도 최초 완료 시각을 보존한다.
-  await ctrl.patchMastery(
-    { apiUser: { _id: doc.userId },
-      params: { courseId: "algebra", unitId: "u1", conceptId: "c1" },
-      body: { addCorrectTypeIds: [], userCompleted: true } },
-    res, (e) => { throw e; });
+  error = await callMastery({
+    body: { addCorrectTypeIds: [], userCompleted: true },
+  });
+  ok(!error, "게이트 해금 뒤 완료 요청 성공", error);
   ok(doc.completionPercent === 100, "완료 체크 후 100%", doc.completionPercent);
   ok(doc.status === "completed", "완료 상태 재계산", doc.status);
   ok(doc.completedAt instanceof Date &&
@@ -100,11 +152,10 @@ const ok = (c, label, got) =>
      });
   const firstCompletedAt = doc.masteryGate.completedAt.getTime();
   await new Promise((resolve) => setTimeout(resolve, 5));
-  await ctrl.patchMastery(
-    { apiUser: { _id: doc.userId },
-      params: { courseId: "algebra", unitId: "u1", conceptId: "c1" },
-      body: { addCorrectTypeIds: [], userCompleted: true } },
-    res, (e) => { throw e; });
+  error = await callMastery({
+    body: { addCorrectTypeIds: [], userCompleted: true },
+  });
+  ok(!error, "완료 요청 재전송 성공", error);
   ok(doc.masteryGate.completedAt.getTime() === firstCompletedAt,
      "같은 완료 요청 재전송에도 최초 완료 시각 불변",
      doc.masteryGate.completedAt);

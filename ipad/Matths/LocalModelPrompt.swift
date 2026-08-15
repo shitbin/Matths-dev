@@ -10,10 +10,14 @@ enum LocalModelPromptFamily: Sendable {
     case qwen25VL
     case qwenChatML
     case deepSeekR1
+    case bailingV3
 
     static func detect(_ modelIdentifier: String) -> Self {
         if modelIdentifier.localizedCaseInsensitiveContains("DeepSeek-R1") {
             return .deepSeekR1
+        }
+        if modelIdentifier.localizedCaseInsensitiveContains("Ling-3.0") {
+            return .bailingV3
         }
         if modelIdentifier.localizedCaseInsensitiveContains("Qwen2.5-VL") {
             return .qwen25VL
@@ -59,6 +63,13 @@ enum LocalModelPrompt {
                 + "변수, JSON 키에만 사용한다.\n\n[입력]\n\(user)"
                 + deepSeekAssistant
                 + "<think>\n한국어로 조건과 계산을 차례대로 확인한다.\n"
+        case .bailingV3:
+            // inclusionAI의 Bailing V3 공식 chat_template.jinja를 수동 조립한다.
+            return "<role>SYSTEM</role>\(system)\n"
+                + "detailed thinking \(thinking ? "on" : "off")<|role_end|>"
+                + "<role>HUMAN</role>\(user)<|role_end|>"
+                + "<role>ASSISTANT</role>\n"
+                + (thinking ? "<think>" : "<think></think>")
         }
     }
 
@@ -91,11 +102,12 @@ enum LocalModelPrompt {
         _ params: inout LLMGenParams,
         modelIdentifier: String
     ) {
-        guard LocalModelPromptFamily.detect(modelIdentifier) == .deepSeekR1 else { return }
+        let family = LocalModelPromptFamily.detect(modelIdentifier)
+        guard family == .deepSeekR1 || family == .bailingV3 else { return }
         // R1 distill은 temperature=0 실기에서 300토큰 이상을 생성하고도 JSON을
         // 시작하지 못하는 퇴행이 확인됐다. 공식 권장 샘플링을 유지하고, 구조화
         // 안정성은 아래 출력 검증+한국어 JSON 재작성 단계에서 보장한다.
-        params.temperature = 0.6
+        params.temperature = family == .bailingV3 ? 1.0 : 0.6
         params.topP = 0.95
         params.topK = 20
         params.minP = 0

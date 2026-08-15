@@ -63,9 +63,13 @@ struct RootView: View {
             CurriculumV2MapScreen()
                 .routeTransition(store.route)
         } else if store.route == .arenaShop {
-            // 상점은 자체 NavigationStack·스크롤을 가진다. 바깥 ScrollView에 넣으면
+            // Ranked 상점은 자체 NavigationStack·스크롤을 가진다. 바깥 ScrollView에 넣으면
             // 새로고침과 큰 글씨에서 스크롤이 이중으로 잡힌다.
             ArenaShopScreen()
+                .routeTransition(store.route)
+        } else if store.route == .commerce {
+            // 이용권 허브도 결제 브라우저·새로고침을 소유한다.
+            CommerceHubScreen()
                 .routeTransition(store.route)
         } else {
             browseScroll
@@ -87,6 +91,7 @@ struct RootView: View {
                     if store.authProvider == "server" { GoatArenaScreen() }
                     else { RankArenaScreen() }
                 case .arenaShop: ArenaShopScreen() // 특례 분기가 먼저 잡는다 — 방어용
+                case .commerce:  CommerceHubScreen() // 특례 분기가 먼저 잡는다 — 방어용
                 case .pro:        ProScreen()
                 case .chat:       ChatScreen()
                 case .quickPractice: QuickPracticeScreen()

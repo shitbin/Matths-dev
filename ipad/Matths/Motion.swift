@@ -68,7 +68,7 @@ extension AppStore.Route {
         case .concept: return 2
         case .assess: return 3
         case .wrongNotes: return 4
-        case .rank, .arenaShop: return 5
+        case .rank, .arenaShop, .commerce: return 5
         case .pro: return 6
         case .chat: return 7
         case .profile: return 8

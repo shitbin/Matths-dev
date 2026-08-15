@@ -45,7 +45,7 @@ const load = run.find((row) => row.event === "load-complete");
 const inference = run.find((row) => row.event === "reasoning-complete");
 const language = run.find((row) => row.event === "reasoning-language");
 const failure = run.find((row) => row.event === "load-failed" || row.event === "reasoning-failed");
-if (failure) throw new Error(`7B 추론이 실패했습니다: ${failure.tier || launch.tier || "tier 미상"}`);
+if (failure) throw new Error(`로컬 추론이 실패했습니다: ${failure.tier || launch.tier || "tier 미상"}`);
 if (!load) throw new Error("load-complete 이벤트가 없습니다.");
 if (!inference) throw new Error("reasoning-complete 이벤트가 없습니다.");
 if (!language) throw new Error("reasoning-language 이벤트가 없습니다.");
@@ -56,8 +56,13 @@ if (language.koreanOutputClean !== true) {
 const tier = String(inference.tier || load.tier || launch.tier || "").trim();
 const model = String(inference.model || load.model || launch.model || "").trim();
 if (!tier || !model) throw new Error("tier 또는 model 식별자가 없습니다.");
-if (tier !== "deepseek7B" || !model.toLowerCase().includes("deepseek-r1")) {
-  throw new Error("DeepSeek 7B 실기 증거가 아닙니다.");
+const supportedReasoningTiers = new Map([
+  ["deepseek7B", "deepseek-r1"],
+  ["ling3-q3", "ling-3.0"],
+]);
+const expectedModelFragment = supportedReasoningTiers.get(tier);
+if (!expectedModelFragment || !model.toLowerCase().includes(expectedModelFragment)) {
+  throw new Error(`지원하는 로컬 추론 실기 증거가 아닙니다: ${tier || "tier 미상"}`);
 }
 
 function positive(row, key) {

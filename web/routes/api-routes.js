@@ -31,6 +31,9 @@ const {
 const ipadWeeklyMock = require(
   "../controllers/ipadWeeklyMockController"
 );
+const appCommerce = require(
+  "../controllers/appCommerceController"
+);
 const {
   userIntegrityEvidenceUpload,
 } = require("../middleware/archiveUpload");
@@ -82,6 +85,15 @@ router.post(
 );
 
 router.use(requireApiAuth);
+
+router.get(
+  "/commerce/storefront",
+  appCommerce.storefront
+);
+router.post(
+  "/commerce/handoffs",
+  appCommerce.createHandoff
+);
 
 // iPad 주간 공식 모의고사. 정적 경로를 :examId보다 먼저 등록해야
 // integrity-cases/objections가 시험 ID로 오인되지 않는다.

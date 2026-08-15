@@ -18,7 +18,12 @@ MATTHS_DEVICE="수빈의 iPad" ./device-qa.sh vision vision3B
 MATTHS_DEVICE="수빈의 iPad" ./device-qa.sh collect
 MATTHS_DEVICE="수빈의 iPad" ./device-qa.sh vision deepseek7B
 MATTHS_DEVICE="수빈의 iPad" ./device-qa.sh collect
+MATTHS_DEVICE="수빈의 iPad" ./device-qa.sh vision ling3-q3
+MATTHS_DEVICE="수빈의 iPad" ./device-qa.sh collect
 ```
+
+ling3-q3는 DEBUG 전용 비교 후보다. 미병합 llama.cpp bailingmoe3 런타임과
+고정 SHA의 Q3 가중치를 함께 검증하며, Release 선택지나 사진 판독기로 사용하지 않는다.
 
 수집 파일에는 사진·OCR 결과·학생 계정·오류 경로가 없고 모델명, 로드 시간, 첫 토큰, 처리량,
 최대 상주 메모리, 최소 여유 메모리만 들어간다.

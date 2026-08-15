@@ -9,9 +9,11 @@ shop="$root/Matths/ArenaShopScreen.swift"
 placement="$root/Matths/PlacementExamScreen.swift"
 
 grep -Fq 'appendingPathComponent("goat-arena")' "$rank"
-grep -Fq 'appendingPathComponent("goat-arena")' "$arena"
 grep -Fq '웹 GOAT Arena에서 확인' "$rank"
-grep -Fq '웹 GOAT Arena에서 주문 상태 확인' "$arena"
+# 로그인 전 공개 랭킹은 웹 경로를 유지한다. 로그인 뒤 주문 상태는 앱의 Bearer
+# 세션과 웹 쿠키를 안전하게 잇는 commerce handoff 화면으로 들어가야 한다.
+grep -Fq 'store.route = .commerce' "$arena"
+grep -Fq 'Label("이용권과 상점 보기"' "$arena"
 
 if grep -Eiq 'war of goat|war-of-masters|warOfGoatLink' "$rank" "$arena"; then
   echo "iPad 사용자 Arena 화면에 폐기된 이름이나 구형 웹 경로가 남아 있습니다." >&2

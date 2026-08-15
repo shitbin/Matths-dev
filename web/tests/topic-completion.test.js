@@ -18,6 +18,15 @@ const curriculumService = require(
     "services/curriculumService.js"
   )
 );
+const { getProblemGenerator } = require(
+  path.join(REPO, "services/problemGenerators")
+);
+const { getCurriculumConceptCheckGenerator } = require(
+  path.join(
+    REPO,
+    "services/problemGenerators/curriculumConceptCheck"
+  )
+);
 
 const curriculum =
   curriculumService.loadCurriculum();
@@ -39,6 +48,20 @@ if (!location) {
     "테스트할 토픽 2개 이상 개념이 없습니다."
   );
 }
+const snapshotGenerator =
+  getProblemGenerator({
+    courseId: location.course.id,
+    unitId: location.unit.id,
+    conceptId: location.concept.id,
+  }) ||
+  getCurriculumConceptCheckGenerator({
+    courseId: location.course.id,
+    unitId: location.unit.id,
+    conceptId: location.concept.id,
+  });
+const snapshotTypeIds = snapshotGenerator.problemTypes
+  .map((problemType) => problemType.id)
+  .slice(0, snapshotGenerator.requiredDistinctTypes);
 
 const userId =
   new mongoose.Types.ObjectId();
@@ -292,9 +315,7 @@ const callTopic = async (body) => {
     "2026-07-20T01:02:03.000Z";
   const snapshotBody = {
     completedTopicIndexes: [0, 1],
-    correctTypeIds: [
-      "t1", "t2", "t3", "t4", "t5",
-    ],
+    correctTypeIds: snapshotTypeIds,
     userCompleted: true,
     lastStudiedAt: snapshotTime,
   };
@@ -321,6 +342,46 @@ const callTopic = async (body) => {
         .completionPercent === 100,
     "게스트 토픽·유형·완료를 원자적으로 병합",
     currentDocument?.toObject()
+  );
+
+  const savesBeforeRejectedSnapshot = saveCount;
+  await ipadSyncController.patchProgressSnapshot(
+    {
+      ...baseRequest,
+      body: {
+        correctTypeIds: ["invented-client-type"],
+      },
+    },
+    response,
+    (forwarded) => {
+      snapshotError = forwarded;
+    }
+  );
+  check(
+    snapshotError?.status === 400 &&
+      saveCount === savesBeforeRejectedSnapshot,
+    "snapshot 임의 유형은 저장 전에 400",
+    snapshotError?.status
+  );
+
+  await ipadSyncController.patchProgressSnapshot(
+    {
+      ...baseRequest,
+      body: {
+        correctTypeIds: [],
+        lastStudiedAt: "2999-01-01T00:00:00.000Z",
+      },
+    },
+    response,
+    (forwarded) => {
+      snapshotError = forwarded;
+    }
+  );
+  check(
+    snapshotError?.status === 400 &&
+      saveCount === savesBeforeRejectedSnapshot,
+    "snapshot 미래 시각은 저장 전에 400",
+    snapshotError?.status
   );
   check(
     storedEvents.size ===

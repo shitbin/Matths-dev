@@ -54,6 +54,24 @@ enum LocalModelPromptCases {
         require(deepSeek.contains("SYSTEM") && deepSeek.contains("USER"), "DeepSeek instruction merge")
         require(deepSeek.contains("사고 과정과 최종 설명은 모두 자연스러운 한국어"), "DeepSeek Korean language anchor")
 
+        let ling = LocalModelPrompt.oneShot(
+            modelIdentifier: "Ling-3.0-tiny-Q3_K_M.gguf",
+            system: "한국어로 설명",
+            user: "2+3은?",
+            thinking: true)
+        require(ling.hasPrefix("<role>SYSTEM</role>"), "Ling Bailing V3 system role")
+        require(ling.contains("detailed thinking on<|role_end|>"), "Ling thinking switch")
+        require(ling.contains("<role>HUMAN</role>2+3은?<|role_end|>"), "Ling human role")
+        require(ling.hasSuffix("<role>ASSISTANT</role>\n<think>"), "Ling generation prompt")
+
+        let lingFast = LocalModelPrompt.oneShot(
+            modelIdentifier: "Ling-3.0-tiny-Q3_K_M.gguf",
+            system: "JSON만",
+            user: "{}",
+            thinking: false)
+        require(lingFast.contains("detailed thinking off<|role_end|>"), "Ling fast switch")
+        require(lingFast.hasSuffix("<think></think>"), "Ling closed thinking prompt")
+
         let rewrite = LocalModelPrompt.jsonRewrite(
             modelIdentifier: "DeepSeek-R1-Distill-Qwen-7B-Q3_K_M.gguf",
             system: "JSON을 고쳐라",
@@ -68,6 +86,13 @@ enum LocalModelPromptCases {
         require(params.temperature == 0.6, "DeepSeek temperature")
         require(params.topP == 0.95, "DeepSeek top-p")
         require(params.presencePenalty == 0, "DeepSeek presence penalty")
+
+        var lingParams = LLMGenParams()
+        LocalModelPrompt.applyRecommendedSampling(
+            &lingParams,
+            modelIdentifier: "Ling-3.0-tiny-Q3_K_M.gguf")
+        require(lingParams.temperature == 1.0, "Ling official temperature")
+        require(lingParams.topP == 0.95 && lingParams.topK == 20, "Ling official top-p/top-k")
 
         require(LocalModelOutputPolicy.containsUnexpectedProseScript("정답은 3이라고 указ했다"), "Cyrillic contamination")
         require(LocalModelOutputPolicy.containsUnexpectedProseScript("答えは 3です"), "Kana contamination")

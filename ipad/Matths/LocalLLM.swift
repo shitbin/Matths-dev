@@ -1,7 +1,7 @@
 //  LocalLLM.swift
 //  Matths
 //
-//  llama.cpp (b10159 XCFramework) 브리지 — Qwen3.5-9B GGUF 를 기기 안에서 돌린다.
+//  llama.cpp XCFramework 브리지 — Qwen/DeepSeek와 DEBUG Ling GGUF를 기기 안에서 돌린다.
 //
 //  API 는 2026-07 기준 최신 이름을 쓴다 (구명은 DEPRECATED):
 //    llama_model_load_from_file / llama_init_from_model / llama_vocab_is_eog /
@@ -67,6 +67,8 @@ final class LlamaEngine: LLMEngine, @unchecked Sendable {
             let is9B = (modelPath as NSString).lastPathComponent.contains("9B")
             let isDeepSeek7B = (modelPath as NSString).lastPathComponent
                 .contains("DeepSeek-R1-Distill-Qwen-7B")
+            let isLing3 = (modelPath as NSString).lastPathComponent
+                .contains("Ling-3.0-tiny")
             let isQwen25VL = (modelPath as NSString).lastPathComponent
                 .contains("Qwen2.5-VL")
             // 메모리 빠듯한 조합(8GB 기기 + 9B)에서는 GPU 오프로드를 줄여야 한다.
@@ -74,7 +76,7 @@ final class LlamaEngine: LLMEngine, @unchecked Sendable {
             // CPU 쪽에 남은 층은 mmap(파일 백업, 정리 가능)이라 압박 시 회수된다.
             // 전부 올리면 로드 도중 jetsam 에 죽는다 — 실기 확인(8GB, 9B 경량).
             let tightVisionMemory = !big && is9B
-            let tightTextMemory = !big && isDeepSeek7B
+            let tightTextMemory = !big && (isDeepSeek7B || isLing3)
             let tightMemory = tightVisionMemory || tightTextMemory
             // 비전을 켤 참인가 — 오프로드·디바이스 선택을 여기서 같이 정한다.
             // (#if 안에 두면 시뮬 빌드에서 스코프 밖이 된다)
@@ -429,7 +431,10 @@ final class LlamaEngine: LLMEngine, @unchecked Sendable {
 
             // 이후는 텍스트 경로와 동일한 샘플링 루프 (반복 패널티 1.0 = 공식 카드값)
             let chain = llama_sampler_chain_init(llama_sampler_chain_default_params())
-            llama_sampler_chain_add(chain, llama_sampler_init_penalties(64, 1.0, 0.0, params.presencePenalty))
+            llama_sampler_chain_add(
+                chain,
+                llama_sampler_init_penalties(
+                    llama_vocab_n_tokens(vocab), 64, 1.0, 0.0, params.presencePenalty))
             llama_sampler_chain_add(chain, llama_sampler_init_top_k(params.topK))
             llama_sampler_chain_add(chain, llama_sampler_init_top_p(params.topP, 1))
             llama_sampler_chain_add(chain, llama_sampler_init_temp(params.temperature))
@@ -519,7 +524,10 @@ final class LlamaEngine: LLMEngine, @unchecked Sendable {
             // 모델 카드값이 repetition 1.0 이다. 근거 없는 1.12 가 들어가 있어서
             // 규약(AITutor.Params 주석)과 실제 샘플링이 어긋나 있었다 — 카드값으로 되돌린다.
             let chain = llama_sampler_chain_init(llama_sampler_chain_default_params())
-            llama_sampler_chain_add(chain, llama_sampler_init_penalties(64, 1.0, 0.0, params.presencePenalty))
+            llama_sampler_chain_add(
+                chain,
+                llama_sampler_init_penalties(
+                    llama_vocab_n_tokens(vocab), 64, 1.0, 0.0, params.presencePenalty))
             llama_sampler_chain_add(chain, llama_sampler_init_top_k(params.topK))
             llama_sampler_chain_add(chain, llama_sampler_init_top_p(params.topP, 1))
             if params.minP > 0 {
@@ -680,6 +688,17 @@ final class ModelDownloader: NSObject, ObservableObject {
         sizeLabel: "3.8GB", shortName: "DeepSeek-R1 7B",
         mmprojFile: "",
         mmprojURL: nil)
+
+    #if DEBUG
+    /// llama.cpp PR #26608 bailingmoe3 런타임에서만 열리는 Ling 3.0 Q3.
+    /// 사진 판독은 아래 Qwen VL 3B가 계속 담당하고, Ling은 텍스트 추론만 한다.
+    nonisolated static let specLing3Q3 = ModelSpec(
+        file: "Ling-3.0-tiny-Q3_K_M.gguf",
+        url: URL(string: "https://huggingface.co/bloomer010/Ling-3.0-tiny-GGUF/resolve/f2948e0af86d3f2c52a549dadd327b838a909482/Ling-3.0-tiny-Q3_K_M.gguf")!,
+        sizeLabel: "3.8GB", shortName: "Ling 3.0 tiny Q3 · DEBUG",
+        mmprojFile: "",
+        mmprojURL: nil)
+    #endif
 
     /// 8GB 기기 사진 판독 전용. 이 모델은 정답 추론·채점 판정을 하지 않고
     /// 인쇄문과 손글씨를 원문 그대로 전사하는 역할만 맡는다. 전사가 끝나면 즉시
@@ -891,7 +910,7 @@ final class ModelDownloader: NSObject, ObservableObject {
     /// 프로필의 `force9B` 토글은 "이 기기에서 9B 를 무리해서 쓸까" 라는
     /// **사용자 설정**이라 의미가 다르다 — 그걸 실험용으로 켰다 껐다 하면
     /// 사용자 설정이 오염된다. 그래서 별도 키를 쓴다.
-    /// 값: nil(자동) | "4B" | "9B-lite" | "9B-lite-text" | "9B-iq3-text" | "9B"
+    /// 값: nil(자동) | "ling3-q3" | "4B" | "9B-lite" | "9B-lite-text" | "9B-iq3-text" | "9B"
     nonisolated static var debugForcedTier: String? {
         get { UserDefaults.standard.string(forKey: "matths.debugTier") }
         set {
@@ -904,6 +923,7 @@ final class ModelDownloader: NSObject, ObservableObject {
         case "4B":      return spec4B
         case "vision3B": return specVision3B
         case "deepseek7B": return specDeepSeek7B
+        case "ling3-q3": return specLing3Q3
         case "9B-lite": return spec9BLite
         case "9B-lite-text": return spec9BLiteText
         case "9B-iq3-text": return spec9BIQ3Text
@@ -930,6 +950,10 @@ final class ModelDownloader: NSObject, ObservableObject {
     }
 
     nonisolated static var analysisReasoningSpec: ModelSpec {
+        #if DEBUG
+        // 디버그 선택은 사진 판독기가 내려간 뒤 여는 텍스트 추론 모델에도 그대로 반영한다.
+        if let tier = debugForcedTier { return spec(forTier: tier) }
+        #endif
         if hasLargeMemory { return spec9B }
         // 프로필에서 사용자가 명시적으로 9B 실험 모드를 켠 경우에만,
         // 사진 판독 3B를 완전히 내린 뒤 프로젝터 없는 2비트 9B를 올린다.

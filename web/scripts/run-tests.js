@@ -61,6 +61,7 @@ const testFiles = [
   "tests/authority-stale-index-cleanup.test.js",
   "tests/schema-parity.test.js",
   "tests/checkout-gate.test.js",
+  "tests/app-commerce-contract.test.js",
   "tests/toss-payments.test.js",
   "tests/production-preflight.test.js",
   "tests/cafe24-release-package.test.js",

@@ -25,7 +25,7 @@ struct Ling3CandidateCases {
         require(candidate.source.isPublic && !candidate.source.isGated, "source access pin")
         require(!candidate.source.hasStandaloneLicenseFile, "standalone license gap must stay explicit")
         require(candidate.modality == "text-only", "Ling must not replace the vision reader")
-        require(!candidate.userSelectable, "experimental model must stay out of user settings")
+        require(candidate.debugUserSelectable, "experimental model must be selectable in DEBUG")
         require(!candidate.shippingEligible, "experimental model must stay out of Release")
 
         let release = ExperimentalLocalModelCatalog.benchmarkDecision(
@@ -42,13 +42,15 @@ struct Ling3CandidateCases {
         let bundled = ExperimentalLocalModelCatalog.benchmarkDecision(
             buildIsDebug: true,
             runtimeCommit: ExperimentalLocalModelCatalog.bundledLlamaCommit,
-            runtimeArchitectures: Set(["bailingmoe2"]),
+            runtimeArchitectures: supported,
             physicalMemoryBytes: eightGiB,
             artifactID: q3.id,
             artifactByteCount: q3.byteCount,
             artifactSHA256: q3.sha256
         )
-        require(bundled == .blocked(.unreviewedRuntime), "bundled b10159 runtime must be blocked")
+        require(
+            bundled == .eligibleForControlledBenchmark(artifactID: q3.id),
+            "the pinned DEBUG bailingmoe3 runtime must admit the Q3 benchmark")
 
         let wrongHash = ExperimentalLocalModelCatalog.benchmarkDecision(
             buildIsDebug: true,

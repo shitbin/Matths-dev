@@ -2,10 +2,9 @@
 //  ExperimentalLocalModelCatalog.swift
 //  Matths
 //
-//  검증되지 않은 로컬 모델을 사용자 설정에 바로 노출하지 않기 위한 격리 장벽이다.
-//  이 파일의 후보는 DEBUG 실기 벤치마크 대상으로만 쓰며, ModelDownloader의 제품
-//  목록에는 연결하지 않는다. 런타임·가중치·기기 메모리 핀이 모두 맞아야 실험을
-//  시작할 수 있다.
+//  검증되지 않은 로컬 모델을 Release 제품 설정에서 격리하는 장벽이다.
+//  후보는 DEBUG 실기 선택기에만 연결하며, 런타임·가중치·기기 메모리 핀이 모두
+//  맞아야 실험을 시작할 수 있다.
 //
 
 import Foundation
@@ -40,7 +39,7 @@ enum ExperimentalLocalModelCatalog {
         let ggufArchitecture: String
         let source: SourcePin
         let artifacts: [ArtifactPin]
-        let userSelectable: Bool
+        let debugUserSelectable: Bool
         let shippingEligible: Bool
     }
 
@@ -58,15 +57,15 @@ enum ExperimentalLocalModelCatalog {
         case eligibleForControlledBenchmark(artifactID: String)
     }
 
-    // 2026-08-12에 앱에 포함된 공식 llama.cpp b10159 XCFramework의 commit 문자열.
-    // 이 빌드는 bailingmoe/bailingmoe2만 포함하고 bailingmoe3는 포함하지 않는다.
-    static let bundledLlamaCommit = "f95de9776b5b90dd993f36d2bd66a3eee21c887f"
+    // DEBUG 실기 배포에만 사용하는 llama.cpp PR #26608 런타임.
+    // upstream에 병합되지 않았으므로 Release 선택지가 되어서는 안 된다.
+    static let bundledLlamaCommit = "db4480bc802dda303627830833e0e6c2a7c47297"
 
     // ggml-org/llama.cpp PR #26608에서 Ling-3.0-tiny Q-LoRA 경로까지 포함해
     // 검토한 정확한 실험 commit. upstream release가 나오면 새 commit으로 다시
     // 검증하고 이 핀을 갱신해야 한다.
     static let reviewedBailingMoE3RuntimeCommit =
-        "d8d862521e9ad842f2b47f3b392b039317782aa0"
+        "db4480bc802dda303627830833e0e6c2a7c47297"
 
     static let ling3Tiny = Candidate(
         id: "ling-3.0-tiny",
@@ -90,7 +89,7 @@ enum ExperimentalLocalModelCatalog {
             ArtifactPin(
                 id: "ling3-tiny-q3-k-m-debug",
                 repository: "bloomer010/Ling-3.0-tiny-GGUF",
-                revision: "cc923f2ef87899f06552051007a6279b35a99bfb",
+                revision: "f2948e0af86d3f2c52a549dadd327b838a909482",
                 file: "Ling-3.0-tiny-Q3_K_M.gguf",
                 byteCount: 3_841_570_656,
                 sha256: "3481953f64fa2dad7e22a254faba1681ab5b83061ac378ea144704fe6019bba2",
@@ -100,7 +99,7 @@ enum ExperimentalLocalModelCatalog {
             ArtifactPin(
                 id: "ling3-tiny-q4-k-m-debug",
                 repository: "bloomer010/Ling-3.0-tiny-GGUF",
-                revision: "cc923f2ef87899f06552051007a6279b35a99bfb",
+                revision: "f2948e0af86d3f2c52a549dadd327b838a909482",
                 file: "Ling-3.0-tiny-Q4_K_M.gguf",
                 byteCount: 4_823_894_880,
                 sha256: "9842cce7c1a07ad4adefd2b79a1035710ff196576d89128eade29351b79c8e68",
@@ -108,8 +107,8 @@ enum ExperimentalLocalModelCatalog {
                 minimumPhysicalMemoryBytes: 16 * 1_024 * 1_024 * 1_024
             )
         ],
-        // UI에 연결하면 아직 열 수 없는 모델이 제품 설정에 노출된다.
-        userSelectable: false,
+        // 사용자가 요청한 비교 실험을 위해 DEBUG 빌드에서만 선택한다.
+        debugUserSelectable: true,
         // upstream runtime release, 실기 안정성, 한국 고교 수학 품질, MIT notice가
         // 모두 닫히기 전에는 Release 선택지가 될 수 없다.
         shippingEligible: false
