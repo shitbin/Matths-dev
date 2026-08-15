@@ -625,6 +625,7 @@ private struct WeeklyMockAttemptScreen: View {
             }
             .readableWidth(780).adaptiveHPadding().padding(.vertical, Tokens.Space.s8)
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private func takingView(_ value: ServerAPI.WeeklyMockAttempt) -> some View {
@@ -687,6 +688,7 @@ private struct WeeklyMockAttemptScreen: View {
             }
             .padding(Tokens.Space.s4)
         }
+        .scrollDismissesKeyboard(.interactively)
         .background(Tokens.paper2)
     }
 
@@ -935,12 +937,14 @@ private struct WeeklyMockAnswerRow: View {
                             .background(answer == key ? Tokens.primary : Tokens.surface, in: Circle())
                             .overlay(Circle().strokeBorder(answer == key ? Tokens.primary : Tokens.line, lineWidth: 1.2))
                     }
+                    .frame(width: 36, height: 44)
+                    .contentShape(Rectangle())
                     .buttonStyle(.plain).accessibilityLabel("\(number)번 \(choice)번 선지")
                 }
             } else {
                 TextField("0~999", text: $answer)
                     .keyboardType(.numberPad).multilineTextAlignment(.center).focused($focused)
-                    .frame(maxWidth: 140, minHeight: 38)
+                    .frame(maxWidth: 140, minHeight: 44)
                     .background(Tokens.surface, in: RoundedRectangle(cornerRadius: Tokens.Radius.sm))
                     .overlay(RoundedRectangle(cornerRadius: Tokens.Radius.sm).strokeBorder(focused ? Tokens.primary : Tokens.line))
             }
@@ -1077,7 +1081,7 @@ private struct WeeklyMockSelectionView: View {
                     .buttonStyle(SecondaryButtonStyle()).disabled(busy)
             }
             if busy { ProgressView("선택을 저장하고 있습니다") }
-            if let errorText { Text(errorText).font(.mCaption).foregroundStyle(Tokens.danger) }
+            if let errorText { Text(errorText).font(.mCaption).foregroundStyle(Tokens.dangerInk) }
         }
         .card()
     }

@@ -3,6 +3,9 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const {
+  buildCurriculumMotionLesson,
+} = require("./curriculumMotionLessonService");
 
 const CONTENT_DIRECTORY = path.resolve(__dirname, "..", "content_folder");
 const POLICY_PATH = path.join(CONTENT_DIRECTORY, "curriculum-story-policy.json");
@@ -104,6 +107,74 @@ function validateText(label, value, issues, { minimum = 1, maximum = 2000 } = {}
   return text;
 }
 
+const MOTION_MODES = new Set(["equation", "blocks", "graph", "geometry", "plot"]);
+const MOTION_ACTIONS = new Set(["place", "group", "point", "highlight", "transform", "verify"]);
+
+function validateSceneMotion(motion, prefix, issues) {
+  if (motion === undefined) return;
+  if (!motion || typeof motion !== "object" || Array.isArray(motion)) {
+    issues.push(`${prefix}.motion은 객체여야 합니다.`);
+    return;
+  }
+  if (motion.version !== 1) issues.push(`${prefix}.motion.version은 1이어야 합니다.`);
+  if (!MOTION_MODES.has(motion.mode)) issues.push(`${prefix}.motion.mode가 지원 범위가 아닙니다.`);
+
+  const studentCopy = [
+    validateText(`${prefix}.motion.focus`, motion.focus, issues, { minimum: 2, maximum: 48 }),
+    validateText(`${prefix}.motion.instruction`, motion.instruction, issues, { minimum: 15, maximum: 140 }),
+    validateText(`${prefix}.motion.mild.explanation`, motion.mild?.explanation, issues, { minimum: 30, maximum: 260 }),
+    validateText(`${prefix}.motion.spicy.explanation`, motion.spicy?.explanation, issues, { minimum: 25, maximum: 220 }),
+    validateText(`${prefix}.motion.check.prompt`, motion.check?.prompt, issues, { minimum: 12, maximum: 110 }),
+    validateText(`${prefix}.motion.check.correctFeedback`, motion.check?.correctFeedback, issues, { minimum: 12, maximum: 180 }),
+    validateText(`${prefix}.motion.check.retryFeedback`, motion.check?.retryFeedback, issues, { minimum: 12, maximum: 200 }),
+  ];
+
+  const beats = Array.isArray(motion.beats) ? motion.beats : [];
+  if (beats.length < 3 || beats.length > 5) {
+    issues.push(`${prefix}.motion.beats는 3~5개여야 합니다.`);
+  }
+  const beatIDs = new Set();
+  beats.forEach((beat, beatIndex) => {
+    const beatPrefix = `${prefix}.motion.beats[${beatIndex}]`;
+    const id = validateText(`${beatPrefix}.id`, beat?.id, issues, { minimum: 2, maximum: 50 });
+    if (beatIDs.has(id)) issues.push(`${beatPrefix}.id가 중복입니다.`);
+    beatIDs.add(id);
+    if (!MOTION_ACTIONS.has(beat?.action)) issues.push(`${beatPrefix}.action이 지원 범위가 아닙니다.`);
+    studentCopy.push(
+      validateText(`${beatPrefix}.target`, beat?.target, issues, { minimum: 1, maximum: 60 }),
+      validateText(`${beatPrefix}.expression`, beat?.expression, issues, { minimum: 1, maximum: 110 }),
+      validateText(`${beatPrefix}.caption`, beat?.caption, issues, { minimum: 12, maximum: 150 }),
+    );
+    if (beat?.result !== undefined) {
+      studentCopy.push(validateText(`${beatPrefix}.result`, beat.result, issues, { minimum: 1, maximum: 110 }));
+    }
+    if (!Number.isInteger(beat?.durationMs) || beat.durationMs < 650 || beat.durationMs > 5000) {
+      issues.push(`${beatPrefix}.durationMs는 650~5000 정수여야 합니다.`);
+    }
+  });
+
+  const choices = Array.isArray(motion.check?.choices) ? motion.check.choices : [];
+  if (choices.length !== 3) issues.push(`${prefix}.motion.check.choices는 정확히 3개여야 합니다.`);
+  choices.forEach((choice, choiceIndex) => {
+    studentCopy.push(validateText(
+      `${prefix}.motion.check.choices[${choiceIndex}]`,
+      choice,
+      issues,
+      { minimum: 4, maximum: 100 },
+    ));
+  });
+  if (
+    !Number.isInteger(motion.check?.answerIndex)
+    || motion.check.answerIndex < 0
+    || motion.check.answerIndex >= choices.length
+  ) {
+    issues.push(`${prefix}.motion.check.answerIndex가 선택지 범위를 벗어났습니다.`);
+  }
+  if (studentCopy.some((value) => STUDENT_STUDIO_TAG_PATTERN.test(value))) {
+    issues.push(`${prefix}.motion 학생 문구에 studio 태그가 있습니다.`);
+  }
+}
+
 function validateStory(story, shardCourseId, policy) {
   const issues = [];
   const key = storyKey(story?.courseId, story?.unitId, story?.conceptId);
@@ -203,6 +274,8 @@ function validateStory(story, shardCourseId, policy) {
     if (stripStudioTags(studioScript) !== normalizeWhitespace(narration)) {
       issues.push(`${prefix}.studioScript는 태그를 빼면 narration과 같아야 합니다.`);
     }
+
+    validateSceneMotion(scene?.motion, prefix, issues);
 
     const chunks = splitNarrationIntoChunks(
       narration,
@@ -375,17 +448,28 @@ function getPublishedCurriculumStory({ courseId, unitId, conceptId }) {
   ) || null;
 }
 
-function resolveStudentCurriculumStory({ courseId, unitId, conceptId }) {
+function resolveStudentCurriculumStory({
+  courseId,
+  unitId,
+  conceptId,
+  visualizationIdeas = [],
+}) {
   try {
     const catalog = getCurriculumStoryCatalog();
     const key = storyKey(courseId, unitId, conceptId);
     const published = catalog.publishedStoryByKey.get(key);
     if (published) {
-      return { story: toStudentCurriculumStory(published), status: "published" };
+      const story = toStudentCurriculumStory(published);
+      return {
+        story,
+        motionLesson: buildCurriculumMotionLesson(story, visualizationIdeas),
+        status: "published",
+      };
     }
     const raw = catalog.rawStoryByKey.get(key);
     return {
       story: null,
+      motionLesson: null,
       status: !raw ? "missing" : raw.status === "draft" ? "draft" : "invalid",
     };
   } catch (error) {
@@ -408,6 +492,7 @@ function toStudentCurriculumStory(story) {
       title: scene.title,
       subtitle: scene.subtitle,
       narration: scene.narration,
+      motion: scene.motion || null,
     })),
   };
 }

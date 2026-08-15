@@ -53,16 +53,86 @@
     const buttons = Array.from(
       document.querySelectorAll("[data-jump-to]")
     );
+    const panels = Array.from(
+      document.querySelectorAll("[data-experience-panel]")
+    );
+    const panelIds = new Set(
+      panels.map((panel) => panel.id)
+    );
+
+    function activatePanel(
+      requestedId,
+      { focus = false, updateHash = false } = {}
+    ) {
+      const targetId = panelIds.has(requestedId)
+        ? requestedId
+        : "concept-motion";
+
+      panels.forEach((panel) => {
+        const active = panel.id === targetId;
+        panel.hidden = !active;
+        panel.classList.toggle("active", active);
+        panel.setAttribute(
+          "aria-hidden",
+          String(!active)
+        );
+      });
+
+      buttons.forEach((button) => {
+        if (button.getAttribute("role") !== "tab") {
+          return;
+        }
+        const active =
+          button.dataset.jumpTo === targetId;
+        button.classList.toggle("active", active);
+        button.setAttribute(
+          "aria-selected",
+          String(active)
+        );
+        button.tabIndex = active ? 0 : -1;
+      });
+
+      const target = document.getElementById(targetId);
+      if (updateHash && window.history?.replaceState) {
+        window.history.replaceState(
+          null,
+          "",
+          `#${targetId}`
+        );
+      }
+      if (focus) {
+        target?.focus({ preventScroll: true });
+        target?.scrollIntoView({
+          behavior: window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+          ).matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+      }
+
+      // 숨겨진 canvas/SVG는 처음 보이는 순간 실제 폭으로 다시 계산한다.
+      window.requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("resize"));
+        void typesetMath(target);
+      });
+    }
 
     buttons.forEach((button) => {
       button.addEventListener("click", () => {
-        document
-          .getElementById(button.dataset.jumpTo)
-          ?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
+        activatePanel(button.dataset.jumpTo, {
+          focus: true,
+          updateHash: true,
+        });
       });
+    });
+
+    const requestedFromHash = window.location.hash
+      .replace(/^#/u, "");
+    activatePanel(requestedFromHash, {
+      focus: false,
+      updateHash: false,
     });
   }
 
@@ -3133,10 +3203,12 @@
         feedback.hidden = false;
         feedback.className =
           "problem-feedback wrong";
-        feedback.textContent =
-          currentProblem.coachPrompt
-            ?.message ||
-          "정답을 먼저 입력해주세요.";
+        const promptCoach = currentProblem.coachPrompt;
+        feedback.textContent = [
+          promptCoach?.observation,
+          promptCoach?.reason,
+          promptCoach?.nextAction,
+        ].filter(Boolean).join("\n") || "정답을 먼저 입력해주세요.";
         answerArea
           .querySelector("input")
           ?.focus();
@@ -3180,13 +3252,18 @@
           result.review?.completed
         );
 
+        const coachText = [
+          result.coachFeedback?.observation,
+          result.coachFeedback?.reason,
+          result.coachFeedback?.nextAction,
+        ].filter(Boolean).join("\n");
         const feedbackText = reviewCompleted
-          ? `정답입니다. 오답 복습이 완료되었습니다.\n${result.coachFeedback?.message || ""}\n${result.solution}`
+          ? `정답입니다. 오답 복습이 완료되었습니다.\n${coachText}\n${result.solution}`
           : result.correct
-            ? `정답입니다.\n${result.coachFeedback?.message || ""}\n${result.solution}`
+            ? `정답입니다.\n${coachText}\n${result.solution}`
             : isReviewMode
-              ? `아쉽습니다. 내일 복습 예정으로 예약했습니다.\n${result.coachFeedback?.message || ""}\n${result.solution}`
-              : `아쉽습니다.\n${result.coachFeedback?.message || ""}\n${result.solution}`;
+              ? `아쉽습니다. 내일 복습 예정으로 예약했습니다.\n${coachText}\n${result.solution}`
+              : `아쉽습니다.\n${coachText}\n${result.solution}`;
 
         setMath(feedback, feedbackText);
         renderMastery(result.mastery);
@@ -3276,7 +3353,6 @@
   }
 
   function init() {
-    initNavigation();
     initMotionOpening();
     initLimitPlayground();
     initCalculationPlayground();
@@ -3284,6 +3360,8 @@
     initContinuousPropertiesPlayground();
     initAlgebraPlayground();
     initPractice();
+    // 모든 시각화가 초기 크기를 잡은 뒤 한 단계만 남긴다.
+    initNavigation();
   }
 
   if (document.readyState === "loading") {

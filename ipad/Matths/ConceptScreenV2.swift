@@ -185,7 +185,8 @@ struct ConceptScreenV2: View {
                     courseID: course.id,
                     unitID: unit.id,
                     conceptID: concept.id
-                )
+                ),
+                concept: concept
             )
             .entrance(1)
 
@@ -290,7 +291,7 @@ struct ConceptScreenV2: View {
                 // 220개념 모두 출제 경로가 있어야 하므로 이 분기는 콘텐츠 준비 상태가
                 // 아니라 번들 연결 실패다. 영구 미지원처럼 말하지 않고 복구 행동을 준다.
                 Text("연습 자료를 불러오지 못했습니다. 앱을 다시 연 뒤에도 같으면 학습 지도에서 다른 개념을 선택해 주세요.")
-                    .font(.mCallout).foregroundStyle(Tokens.warning)
+                    .font(.mCallout).foregroundStyle(Tokens.warningInk)
             }
         }
     }
@@ -304,7 +305,7 @@ struct ConceptScreenV2: View {
         VStack(alignment: .leading, spacing: Tokens.Space.s2) {
             if completed {
                 Label("학습 완료", systemImage: "checkmark.seal.fill")
-                    .font(.mBodyB).foregroundStyle(Tokens.success)
+                    .font(.mBodyB).foregroundStyle(Tokens.successInk)
             } else {
                 Button("학습 완료로 표시") {
                     store.progressV2.setUserCompleted(true, concept: concept)
@@ -325,7 +326,7 @@ struct ConceptScreenV2: View {
                     Text(progress.requiredDistinctTypes(for: concept) > 0
                          ? "완료하려면 위의 유형 게이트를 먼저 채우세요. 진도는 90%까지만 오릅니다."
                          : "연습 자료 연결을 확인한 뒤 완료할 수 있습니다.")
-                        .font(.mCaption).foregroundStyle(Tokens.warning)
+                        .font(.mCaption).foregroundStyle(Tokens.warningInk)
                 }
             }
         }

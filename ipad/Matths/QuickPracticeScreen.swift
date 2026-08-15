@@ -187,7 +187,7 @@ struct QuickPracticeScreen: View {
                 // 예전엔 "문제를 받지 못했습니다" 한 줄이라, 서버가 잠깐 안 되는 건지
                 // 앱이 고장난 건지 알 수 없어 학생이 그 자리에서 멈췄다.
                 VStack(alignment: .leading, spacing: Tokens.Space.s2) {
-                    Text(e).font(.mCaption).foregroundStyle(Tokens.danger)
+                    Text(e).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                         .fixedSize(horizontal: false, vertical: true)
                     // 퀵 연습은 마감 판정이 서버 몫이라 오프라인 대체가 없다(설계).
                     // 대신 기기 안에서 끝나는 길을 알려 준다.

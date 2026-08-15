@@ -48,10 +48,13 @@
     if (!sidebar || !overlay || !openButton || !closeButton) return;
 
     function setOpen(open) {
+      const drawerMode = window.innerWidth <= 900;
       sidebar.classList.toggle("open", open);
       overlay.hidden = !open;
       document.body.classList.toggle("sidebar-visible", open);
       openButton.setAttribute("aria-expanded", String(open));
+      sidebar.setAttribute("aria-hidden", String(drawerMode && !open));
+      sidebar.toggleAttribute("inert", drawerMode && !open);
 
       if (open) {
         closeButton.focus();
@@ -74,6 +77,13 @@
         setOpen(false);
       }
     });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 900 || !sidebar.classList.contains("open")) {
+        setOpen(false);
+      }
+    });
+    setOpen(false);
   }
 
   function initDate() {

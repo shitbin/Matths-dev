@@ -31,6 +31,7 @@
     "admin:verify-db": "node scripts/verifyAdminActivityData.js",
     "account-deletion:verify": "node scripts/verifyAccountDeletionPolicy.js",
     "account-deletion:verify-db": "node scripts/verifyAccountDeletionDb.js",
+    "account-deletion:resume": "node scripts/resumePendingAccountWithdrawals.js",
     "placement:verify": "node scripts/verifyPlacementExamBank.js",
     "curriculum:editorial-audit": "node scripts/auditCurriculumEditorialQuality.js",
     "curriculum:story:index": "node scripts/buildCurriculumStoryIndex.js",

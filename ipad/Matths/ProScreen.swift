@@ -248,7 +248,7 @@ struct ProScreen: View {
                               + "아래 '분석 모델 (디버그)' 에서 체급을 직접 고르면 그 빗장을 풀고 시도합니다 "
                               + "(9B + 8GB 는 로드 중 앱이 종료될 수 있습니다). 프로필에서 9B 강제를 꺼도 켜집니다."
                             : "사진 분석 모듈(mmproj)을 아직 내려받지 않았습니다."))
-                        .font(.mCaption).foregroundStyle(Tokens.warning)
+                        .font(.mCaption).foregroundStyle(Tokens.warningInk)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -262,17 +262,17 @@ struct ProScreen: View {
                 }
 
                 if let e = errorText {
-                    Text(e).font(.mCaption).foregroundStyle(Tokens.danger)
+                    Text(e).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let message = recoveryText {
-                    Text(message).font(.mCaption).foregroundStyle(Tokens.warning)
+                    Text(message).font(.mCaption).foregroundStyle(Tokens.warningInk)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let e = grader.error {
-                    Text(e).font(.mCaption).foregroundStyle(Tokens.danger)
+                    Text(e).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -616,14 +616,14 @@ struct ProScreen: View {
                 HStack(spacing: Tokens.Space.s4) {
                     if let cur = grader.stage {
                         if st.rawValue < cur.rawValue {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Tokens.success)
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Tokens.successInk)
                         } else if st == cur {
                             ProgressView().controlSize(.small)
                         } else {
                             Image(systemName: "circle").foregroundStyle(Tokens.lineStrong)
                         }
                     } else {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Tokens.success)
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Tokens.successInk)
                     }
                     Text(st.label).font(.mBody)
                         .foregroundStyle(grader.stage.map { st.rawValue <= $0.rawValue } ?? true
@@ -689,7 +689,7 @@ struct ProScreen: View {
                 .accessibilityLabel("백그라운드 처리 안내. 다른 앱을 열면 잠시만 이어지며, 중단되면 보존한 사진으로 다음 실행에서 처음부터 다시 시작합니다.")
 
             if let e = grader.error {
-                Text(e).font(.mCaption).foregroundStyle(Tokens.danger)
+                Text(e).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                     .padding(.top, Tokens.Space.s3)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -1062,7 +1062,7 @@ struct ProScreen: View {
                 if isOpen {
                     VStack(alignment: .leading, spacing: Tokens.Space.s3) {
                         if !item.didWell.isEmpty {
-                            detailBlock("여기까지 잘했다", color: Tokens.success) {
+                            detailBlock("여기까지 잘했다", color: Tokens.successInk) {
                                 ForEach(Array(item.didWell.enumerated()), id: \.offset) { _, line in
                                     bullet(line)
                                 }
@@ -1078,7 +1078,7 @@ struct ProScreen: View {
                                 }
                             }
                         } else if let why = item.errorWhy {
-                            detailBlock("참고", color: Tokens.warning) {
+                            detailBlock("참고", color: Tokens.warningInk) {
                                 MathInline(text: why, font: .mCaption,
                                            color: Tokens.text2, pixelSize: 13)
                             }

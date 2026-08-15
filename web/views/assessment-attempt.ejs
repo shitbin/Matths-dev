@@ -712,6 +712,9 @@
           ? `/war-of-masters/placement/${attempt._id}`
           : `/assessments/${attempt._id}`,
         backUrl,
+        loginUrl: `/login?next=${encodeURIComponent(isPlacement
+          ? `/war-of-masters/placement/${attempt._id}`
+          : `/assessments/${attempt._id}`)}`,
         placement: isPlacement,
         initialQuestionIndex,
       }).replace(/</g, "\\u003c") %></script>

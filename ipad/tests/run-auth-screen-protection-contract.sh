@@ -22,6 +22,9 @@ grep -q '/api/v1/auth/google/exchange' "$ROOT/Matths/ServerAPI.swift"
 grep -q '<string>matths</string>' "$ROOT/Info.plist"
 grep -q 'UIScreen.capturedDidChangeNotification' "$ROOT/Matths/ScreenshotGuard.swift"
 grep -q 'UIScreen.main.isCaptured' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -Fq '@Environment(\.isSceneCaptured)' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'setSceneCaptureState(isSceneCaptured)' "$ROOT/Matths/ScreenshotGuard.swift"
+grep -q 'setSceneCaptureState(captured)' "$ROOT/Matths/ScreenshotGuard.swift"
 grep -q 'UIApplication.willResignActiveNotification' "$ROOT/Matths/ScreenshotGuard.swift"
 grep -q 'UIApplication.didBecomeActiveNotification' "$ROOT/Matths/ScreenshotGuard.swift"
 grep -q 'protected-screen-screenshot' "$ROOT/Matths/ScreenshotGuard.swift"
@@ -71,8 +74,11 @@ sync_source = Path(sys.argv[2]).read_text(encoding="utf-8")
 screenshot_start = guard_source.index("private func handleScreenshotDetected()")
 screenshot_end = guard_source.index("#if DEBUG", screenshot_start)
 screenshot_body = guard_source[screenshot_start:screenshot_end]
-if screenshot_body.index("recordIntegrityEvent") > screenshot_body.index("guard !isShowing"):
+if "recordIntegrityEvent" not in screenshot_body:
     raise SystemExit("every protected screenshot notification must be recorded, including repeats")
+for forbidden in ("isShowing = true", "UINotificationFeedbackGenerator"):
+    if forbidden in screenshot_body:
+        raise SystemExit("post-screenshot notification must not interrupt or punish the student")
 
 enqueue_start = sync_source.index("func enqueueIntegrityEvent(")
 enqueue_end = sync_source.index("/// 평가·기출", enqueue_start)
@@ -90,20 +96,29 @@ source = Path(sys.argv[1]).read_text(encoding="utf-8")
 layer_start = source.index("struct ScreenProtectionLayer: View")
 layer_end = source.index("private struct ScreenProtectionLayerModifier", layer_start)
 layer = source[layer_start:layer_end]
-if "else if guardModel.isShowing" in layer:
-    raise SystemExit("screenshot alert must not replace the protected-content watermark")
-if layer.index("guardModel.isShowing") > layer.index("ProtectedContentWatermark"):
-    raise SystemExit("watermark must render over the screenshot alert and protected content")
+if "ScreenshotGuardOverlay" in layer or "guardModel.isShowing" in layer:
+    raise SystemExit("post-screenshot punitive modal must not cover the student's work")
 for required in (
+    "@Environment(\\.isSceneCaptured)",
     "guardModel.isCaptureActive",
     "guardModel.isPrivacyCoverActive",
     "CapturePrivacyCover()",
     "guardModel.accountWatermarkCode",
     "guardModel.watermarkCode",
-    "ScreenshotGuardOverlay",
+    "setSceneCaptureState(isSceneCaptured)",
+    "setSceneCaptureState(captured)",
 ):
     if required not in layer:
         raise SystemExit(f"shared screen protection layer is missing {required}")
+
+watermark_start = source.index("struct ProtectedContentWatermark")
+watermark_end = source.index("struct ScreenshotGuardOverlay", watermark_start)
+watermark = source[watermark_start:watermark_end]
+if "ForEach" in watermark or "rotationEffect" in watermark:
+    raise SystemExit("watermark must stay in one quiet region instead of repeating over problems")
+for required in ("bottomTrailing", "opacity(0.035)"):
+    if required not in watermark:
+        raise SystemExit(f"quiet regional watermark is missing {required}")
 
 presentation_start = source.index("private struct ProtectedAssessmentPresentation")
 presentation_end = source.index("extension View", presentation_start)

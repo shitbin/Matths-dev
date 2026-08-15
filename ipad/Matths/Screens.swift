@@ -36,6 +36,13 @@ struct SolveScreen: View {
     @State private var hintHeight: CGFloat = 120
     @State private var showInputHelp = false       // 수식 입력 문법 팝오버
     @FocusState private var answerFocused: Bool
+    @State private var noteAllowsFinger = UniversalLayoutPolicy.defaultsToFingerDrawing(
+        on: UIDevice.current.userInterfaceIdiom == .phone ? .phone : .pad)
+    @State private var noteZoom: CGFloat = 1
+    @State private var noteTool: SolutionCanvasTool = .pen
+    @State private var noteInkWidth: CGFloat = 3
+    @State private var noteUndoStack: [PKDrawing] = []
+    @State private var noteRedoStack: [PKDrawing] = []
 
     /// 진행 표시 — 동적 모의고사 중이면 실제 문항 위치
     private var progressInfo: (value: Double, label: String) {
@@ -89,6 +96,9 @@ struct SolveScreen: View {
             answer = ""
             pickedKey = nil
             drawing = PKDrawing()
+            noteZoom = 1
+            noteUndoStack.removeAll()
+            noteRedoStack.removeAll()
             showHint = false
         }
         // 문제 푸는 중에만 스크린샷 감지가 반응한다.
@@ -215,7 +225,14 @@ struct SolveScreen: View {
     }
 
     private var right: some View {
-        SolutionNote(drawing: $drawing)
+        SolutionNote(
+            drawing: $drawing,
+            allowsFinger: $noteAllowsFinger,
+            zoom: $noteZoom,
+            selectedTool: $noteTool,
+            inkWidth: $noteInkWidth,
+            undoStack: $noteUndoStack,
+            redoStack: $noteRedoStack)
     }
 
     /// 하단 고정 답안 바 — 답 입력 + 채점. 채점 버튼은 전폭이 아니라 220pt 로
@@ -322,7 +339,7 @@ struct DebugGradeShortcut: View {
                     answer = p.answer
                     store.gradeCurrent(input: p.answer)
                 }
-                .font(.mCaption).foregroundStyle(Tokens.success)
+                .font(.mCaption).foregroundStyle(Tokens.successInk)
                 .padding(.horizontal, Tokens.Space.s3)
                 .frame(minHeight: 34)
                 .overlay(RoundedRectangle(cornerRadius: Tokens.Radius.sm)
@@ -408,8 +425,14 @@ struct ResultScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Tokens.Space.s6) {
                     verdictHeader
-                    if let line = store.coachLine {
-                        CoachBubble(line: line)
+                    if let guidance = store.coachGuidance {
+                        CoachBubble(guidance: guidance)
+                    } else if let line = store.coachLine, !line.isEmpty {
+                        CoachBubble(guidance: CoachGuidance(
+                            observation: "코치 안내 · \(line)",
+                            reason: "점검 이유 · 디버그 화면에서 선택한 코치 상태입니다.",
+                            nextAction: "다음 행동 · 실제 문항을 채점하면 문제 맥락에 맞는 안내로 바뀝니다."
+                        ))
                     }
                     stepList
                     feedbackCard
@@ -646,7 +669,7 @@ struct ResultScreen: View {
                 Text(picked == 0
                      ? "1단계 개념부터 차근차근 복습으로 잡았습니다."
                      : "\(picked)단계부터 다시 짚는 복습으로 잡았습니다. 오답노트에 함께 저장됩니다.")
-                    .font(.mCaption).foregroundStyle(Tokens.success)
+                    .font(.mCaption).foregroundStyle(Tokens.successInk)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -875,12 +898,12 @@ private struct LearningDataRecoveryView: View {
 
 // MARK: - 코치 말풍선
 //
-// 채점 직후 코치가 한마디 한다. 대사는 CoachEngine 스크립트 풀에서 나온다.
-// 수위는 학생이 직접 고른다 — 긁히는 것도 본인이 선택했을 때 효과가 있다.
+// 채점 직후 관찰 → 점검 이유 → 다음 행동만 보여 준다.
+// 수위는 정보의 직설성만 바꾸며, 랜덤 조롱 문구를 결과의 중심에 놓지 않는다.
 
 struct CoachBubble: View {
     @EnvironmentObject private var store: AppStore
-    let line: String
+    let guidance: CoachGuidance
 
     var body: some View {
         HStack(alignment: .top, spacing: Tokens.Space.s4) {
@@ -914,9 +937,23 @@ struct CoachBubble: View {
                     }
                 }
 
-                TypewriterText(text: line)
-                    .font(.mBodyB).foregroundStyle(Tokens.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: Tokens.Space.s3) {
+                    CoachGuidanceRow(
+                        symbol: "eye",
+                        text: guidance.observation,
+                        color: Tokens.progressBlue
+                    )
+                    CoachGuidanceRow(
+                        symbol: "arrow.triangle.branch",
+                        text: guidance.reason,
+                        color: Tokens.warningInk
+                    )
+                    CoachGuidanceRow(
+                        symbol: "pencil.line",
+                        text: guidance.nextAction,
+                        color: Tokens.successInk
+                    )
+                }
 
                 // 학습 온도 — 오답이 쌓이면 설명을 더 직접적으로 바꾼다
                 HStack(spacing: Tokens.Space.s3) {
@@ -925,14 +962,35 @@ struct CoachBubble: View {
                         .frame(maxWidth: 130)
                     Text(store.coach.shuLabel).font(.mMicro).foregroundStyle(Tokens.text3)
                     if store.coach.softened {
-                        Text("완화 모드").font(.mMicro).foregroundStyle(Tokens.success)
+                        Text("완화 모드").font(.mMicro).foregroundStyle(Tokens.successInk)
                     }
                 }
             }
         }
         .card()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("코치: \(line)")
+        .accessibilityLabel("맵쓰 코치. \(guidance.accessibilityText)")
+    }
+}
+
+private struct CoachGuidanceRow: View {
+    let symbol: String
+    let text: String
+    let color: Color
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Tokens.Space.s2) {
+            Image(systemName: symbol)
+                .font(.mCaption.weight(.bold))
+                .foregroundStyle(color)
+                .frame(width: 22, height: 22)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.mCallout)
+                .foregroundStyle(Tokens.ink)
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 
@@ -1914,28 +1972,20 @@ struct WrongNotesScreen: View {
     // 저장 계층 사고(파일 손상·저장 실패) 알림 — AppStore 프로퍼티가 아니라
     // 저장 계층의 싱글턴을 직접 구독한다 (WrongNoteStore.swift 의 통로 설계 주석 참조)
     @ObservedObject private var storageAlert = WrongNoteStorageAlertCenter.shared
-    @State private var expanded: Set<String> = []
-    // 웹 오답노트의 필터 축: 과목 · 틀린 이유 · 검색 (nil = 전체)
-    @State private var filterUnit: String?
-    @State private var filterError: String?
-    @State private var query = ""
-    // 목록 순서는 적재순(insert(at:0))으로 고정돼 있었다 — 고를 수 있게 한다
-    @State private var sortKey: WrongNoteSort = .latest
-
     private func applyFilters(_ list: [WrongNoteEntry]) -> [WrongNoteEntry] {
         applySort(list.filter { e in
-            (filterUnit == nil || e.unit == filterUnit)
-            && (filterError == nil || e.errorType == filterError)
-            && (query.isEmpty
-                || e.statement.localizedCaseInsensitiveContains(query)
-                || e.typeName.localizedCaseInsensitiveContains(query)
-                || e.unit.localizedCaseInsensitiveContains(query))
+            (store.wrongNoteFilterUnit == nil || e.unit == store.wrongNoteFilterUnit)
+            && (store.wrongNoteFilterError == nil || e.errorType == store.wrongNoteFilterError)
+            && (store.wrongNoteQuery.isEmpty
+                || e.statement.localizedCaseInsensitiveContains(store.wrongNoteQuery)
+                || e.typeName.localizedCaseInsensitiveContains(store.wrongNoteQuery)
+                || e.unit.localizedCaseInsensitiveContains(store.wrongNoteQuery))
         })
     }
 
     /// 같은 값이면 최신 적재를 앞에 둔다 — 순서가 흔들리지 않게 항상 2차 기준을 준다.
     private func applySort(_ list: [WrongNoteEntry]) -> [WrongNoteEntry] {
-        switch sortKey {
+        switch store.wrongNoteSortKey {
         case .latest:
             return list.sorted { $0.createdAt > $1.createdAt }
         case .oldest:
@@ -1966,7 +2016,7 @@ struct WrongNotesScreen: View {
             if let alertText = storageAlert.message ?? store.wrongNoteStorageAlert {
                 HStack(alignment: .center, spacing: Tokens.Space.s2) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.mCaption).foregroundStyle(Tokens.warning)
+                        .font(.mCaption).foregroundStyle(Tokens.warningInk)
                     Text(alertText).font(.mCaption).foregroundStyle(Tokens.text1)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
@@ -2166,9 +2216,9 @@ struct WrongNotesScreen: View {
                 .font(.mCaption).foregroundStyle(Tokens.text3)
                 .fixedSize(horizontal: false, vertical: true)
             Button("필터 초기화") {
-                filterUnit = nil
-                filterError = nil
-                query = ""
+                store.wrongNoteFilterUnit = nil
+                store.wrongNoteFilterError = nil
+                store.wrongNoteQuery = ""
             }
             .buttonStyle(.plain)
             .font(.mBodyB).foregroundStyle(Tokens.primary)
@@ -2184,28 +2234,28 @@ struct WrongNotesScreen: View {
             // Menu 안은 Button 이 아니라 Picker — 열었을 때 현재 선택에
             // 시스템 체크마크가 붙어야 같은 항목을 다시 고르는 확인 행동이 없다 (감사 1030)
             Menu {
-                Picker("과목", selection: $filterUnit) {
+                Picker("과목", selection: $store.wrongNoteFilterUnit) {
                     Text("전체 과목").tag(String?.none)
                     ForEach(Array(Set(store.wrongNotes.map(\.unit))).sorted(), id: \.self) { unit in
                         Text(unit).tag(String?.some(unit))
                     }
                 }
             } label: {
-                Label(filterUnit ?? "전체 과목", systemImage: "line.3.horizontal.decrease")
+                Label(store.wrongNoteFilterUnit ?? "전체 과목", systemImage: "line.3.horizontal.decrease")
                     .lineLimit(1).minimumScaleFactor(0.75)
                     .frame(maxWidth: .infinity, minHeight: 44)   // 최소 터치 타깃 44pt (감사 1261)
                     .contentShape(Rectangle())
             }
 
             Menu {
-                Picker("틀린 이유", selection: $filterError) {
+                Picker("틀린 이유", selection: $store.wrongNoteFilterError) {
                     Text("모든 이유").tag(String?.none)
                     ForEach(WrongErrorType.allCases) { type in
                         Text(type.label).tag(String?.some(type.rawValue))
                     }
                 }
             } label: {
-                Label(filterError.flatMap { WrongErrorType(rawValue: $0)?.label } ?? "모든 이유",
+                Label(store.wrongNoteFilterError.flatMap { WrongErrorType(rawValue: $0)?.label } ?? "모든 이유",
                       systemImage: "questionmark.circle")
                     .lineLimit(1).minimumScaleFactor(0.75)
                     .frame(maxWidth: .infinity, minHeight: 44)
@@ -2213,13 +2263,13 @@ struct WrongNotesScreen: View {
             }
 
             Menu {
-                Picker("정렬", selection: $sortKey) {
+                Picker("정렬", selection: $store.wrongNoteSortKey) {
                     ForEach(WrongNoteSort.allCases) { sort in
                         Text(sort.label).tag(sort)
                     }
                 }
             } label: {
-                Label(sortKey.label, systemImage: "arrow.up.arrow.down")
+                Label(store.wrongNoteSortKey.label, systemImage: "arrow.up.arrow.down")
                     .lineLimit(1).minimumScaleFactor(0.75)
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(Rectangle())
@@ -2231,15 +2281,15 @@ struct WrongNotesScreen: View {
 
     private var filterSearch: some View {
         HStack(spacing: 0) {
-            TextField("발문·유형·과목 검색", text: $query)
+            TextField("발문·유형·과목 검색", text: $store.wrongNoteQuery)
                 .font(.mCaption)
                 .textFieldStyle(.plain)
                 .padding(.leading, Tokens.Space.s3)
-                .padding(.trailing, query.isEmpty ? Tokens.Space.s3 : 0)
-            if !query.isEmpty {
+                .padding(.trailing, store.wrongNoteQuery.isEmpty ? Tokens.Space.s3 : 0)
+            if !store.wrongNoteQuery.isEmpty {
                 // 검색이 목록을 즉시 거르는 구조라 지우기 빈도가 높다 —
                 // 전부 백스페이스 대신 한 탭 지우기 (감사 0957)
-                Button { query = "" } label: {
+                Button { store.wrongNoteQuery = "" } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.mCaption).foregroundStyle(Tokens.text4)
                         .frame(width: 44, height: 44)
@@ -2261,12 +2311,15 @@ struct WrongNotesScreen: View {
         LazyVStack(alignment: .leading, spacing: Tokens.Space.s3) {
             SectionRule(title: "\(title) · \(items.count)")
             ForEach(items) { note in
-                WrongNoteRow(note: note, isOpen: expanded.contains(note.id)) {
+                WrongNoteRow(note: note, isOpen: store.wrongNoteExpanded.contains(note.id)) {
                     // store.anim 을 거친다 — 생 withAnimation 이라 화면 모션을 꺼도,
                     // 시스템 '동작 줄이기' 를 켜도 이 행만 계속 움직였다(감사 적발).
                     withAnimation(store.anim(.easeOut(duration: 0.18), reduceMotion)) {
-                        if expanded.contains(note.id) { expanded.remove(note.id) }
-                        else { expanded.insert(note.id) }
+                        if store.wrongNoteExpanded.contains(note.id) {
+                            store.wrongNoteExpanded.remove(note.id)
+                        } else {
+                            store.wrongNoteExpanded.insert(note.id)
+                        }
                     }
                 }
             }
@@ -2393,7 +2446,7 @@ struct WrongNoteRow: View {
                     // 힌트에도 \( \)·$ 수식이 섞여 온다 — 목록과 같은 평문 근사로 정리
                     if let first = note.steps.first {
                         HStack(alignment: .top, spacing: Tokens.Space.s2) {
-                            Image(systemName: "lightbulb").font(.mCaption).foregroundStyle(Tokens.warning)
+                            Image(systemName: "lightbulb").font(.mCaption).foregroundStyle(Tokens.warningInk)
                             Text("힌트: \(MathText.plain(first))").font(.mCallout).foregroundStyle(Tokens.text2)
                                 .fixedSize(horizontal: false, vertical: true)
                         }

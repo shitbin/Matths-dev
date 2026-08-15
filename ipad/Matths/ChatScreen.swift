@@ -137,7 +137,7 @@ struct ChatScreen: View {
                     if tutor.revertedAfterCrash {
                         Label("메모리가 부족해 9B 로드 중 앱이 종료됐어요. 기본 DeepSeek 7B로 되돌렸습니다 — 프로필에서 다시 켤 수 있어요.",
                               systemImage: "exclamationmark.triangle")
-                            .font(.mCaption).foregroundStyle(Tokens.warning)
+                            .font(.mCaption).foregroundStyle(Tokens.warningInk)
                             .fixedSize(horizontal: false, vertical: true)
                             .padding(Tokens.Space.s3)
                             .background(Tokens.warningSoft, in: RoundedRectangle(cornerRadius: Tokens.Radius.sm))
@@ -376,7 +376,7 @@ struct ChatScreen: View {
     private func failedCard(_ why: String) -> some View {
         VStack(alignment: .leading, spacing: Tokens.Space.s3) {
             Label("엔진을 열지 못했어요", systemImage: "exclamationmark.triangle")
-                .font(.mBodyB).foregroundStyle(Tokens.danger)
+                .font(.mBodyB).foregroundStyle(Tokens.dangerInk)
             Text(why).font(.mCaption).foregroundStyle(Tokens.text3)
             // 실패를 읽는 것으로 끝내지 않는다 — 여기서 바로 다시 열 수 있다
             Button("다시 시도") { tutor.reloadModel() }
@@ -454,7 +454,7 @@ struct ChatScreen: View {
                 }
             }
             if let e = photoError {
-                Text(e).font(.mCaption).foregroundStyle(Tokens.danger)
+                Text(e).font(.mCaption).foregroundStyle(Tokens.dangerInk)
                     .fixedSize(horizontal: false, vertical: true)
             }
             // 첨부 대기 중인 사진 미리보기
@@ -571,7 +571,7 @@ struct ChatScreen: View {
             if tutor.isGenerating {
                 Button { tutor.stop() } label: {
                     Image(systemName: "stop.circle.fill")
-                        .font(.system(size: 30)).foregroundStyle(Tokens.danger)
+                        .font(.system(size: 30)).foregroundStyle(Tokens.dangerInk)
                 }
                 .buttonStyle(.plain)
                 .frame(width: 44, height: 44)

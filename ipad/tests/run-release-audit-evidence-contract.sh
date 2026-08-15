@@ -3,7 +3,16 @@ set -eu
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 work="$(mktemp -d /tmp/matths-release-audit.XXXXXX)"
-trap 'rm -rf "$work"' EXIT
+cleanup_work() {
+  # APFS/metadata helpers can briefly recreate a file while the large fixture is
+  # being removed. Retry the exact mktemp target so a successful contract does
+  # not become flaky during cleanup.
+  rm -rf "$work" 2>/dev/null || {
+    sleep 1
+    rm -rf "$work"
+  }
+}
+trap cleanup_work EXIT
 source_root="$work/source"
 mkdir -p "$source_root/Matths/RankMotion" "$source_root/scripts"
 cp "$root/Matths/RankMotion/rank-promotion-assets.json" \

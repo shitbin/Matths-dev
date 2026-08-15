@@ -354,7 +354,7 @@ struct KiceExamScreen: View {
                     .background(Tokens.primary, in: RoundedRectangle(cornerRadius: Tokens.Radius.sm))
             } else {
                 Text("만점입니다. 실전에서도 이 페이스면 됩니다.")
-                    .font(.mCaption).foregroundStyle(Tokens.success)
+                    .font(.mCaption).foregroundStyle(Tokens.successInk)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -661,7 +661,7 @@ private struct KiceDebugShortcut: View {
             Text("DEBUG").font(.mMicro).foregroundStyle(Tokens.text4)
 
             Button("정답 채우기") { fill(correct: true) }
-                .font(.mCaption).foregroundStyle(Tokens.success)
+                .font(.mCaption).foregroundStyle(Tokens.successInk)
                 .padding(.horizontal, Tokens.Space.s3)
                 .frame(minHeight: 34)
                 .overlay(RoundedRectangle(cornerRadius: Tokens.Radius.sm)

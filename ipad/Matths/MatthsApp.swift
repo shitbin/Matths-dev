@@ -98,7 +98,10 @@ struct MatthsApp: App {
                     } else if phase == .active {
                         LocalAIBackgroundExecution.shared.didBecomeActive()
                         GoatArenaClientReviewOutbox.recoverCompleted(store.cheatingReviews)
-                        Task { await GoatArenaClientReviewOutbox.flush() }
+                        Task {
+                            await store.refreshNotificationAuthorization()
+                            await GoatArenaClientReviewOutbox.flush()
+                        }
                     }
                 }
                 .task {
@@ -424,6 +427,32 @@ final class AppStore: ObservableObject {
         }
     }
 
+    /// iOS 설정에서 알림 권한을 끈 뒤 앱으로 돌아왔을 때 토글이 켜진 척하지 않게 한다.
+    /// 예약이 가능한 권한만 켬 상태로 인정하고, 거부·미결정 상태는 저장값도 함께 내린다.
+    func refreshNotificationAuthorization() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        let canSchedule: Bool
+        switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            canSchedule = true
+        case .denied, .notDetermined:
+            canSchedule = false
+        @unknown default:
+            canSchedule = false
+        }
+        if reviewReminderOn && !canSchedule {
+            reviewReminderOn = false
+        }
+    }
+
+    // 오답노트의 검색·필터·펼침 상태는 라우트 화면보다 오래 살아야 한다.
+    // RootView의 route 교체로 WrongNotesScreen이 재생성되어도 여기서 이어 간다.
+    @Published var wrongNoteExpanded: Set<String> = []
+    @Published var wrongNoteFilterUnit: String?
+    @Published var wrongNoteFilterError: String?
+    @Published var wrongNoteQuery = ""
+    @Published var wrongNoteSortKey: WrongNoteSort = .latest
+
     /// 화면 모션 (전환·등장·피드백 애니메이션). 기본 켬.
     /// 시스템 "동작 줄이기" 는 이 값과 무관하게 항상 이긴다 (Motion.swift).
     @Published var motionOn: Bool = UserDefaults.standard.object(forKey: "matths.motion") as? Bool ?? true {
@@ -541,6 +570,7 @@ final class AppStore: ObservableObject {
         rankPromotionPresentation = nil
         coach = CoachEngine()
         coachLine = nil
+        coachGuidance = nil
         divergenceStep = nil
         selectedConceptV2ID = nil
         examSourceConceptV2ID = nil
@@ -836,6 +866,8 @@ final class AppStore: ObservableObject {
     @Published var coach = CoachEngine()
     /// 채점 직후 코치가 한 말. 결과 화면 말풍선에 표시된다.
     @Published var coachLine: String?
+    /// 무작위 대사 대신 결과 화면에 표시하는 관찰·이유·다음 행동.
+    @Published var coachGuidance: CoachGuidance?
 
     /// 학생이 "여기서부터 갈라졌다" 고 짚은 풀이 단계 (1부터). nil = 아직 선택 안 함.
     /// 이 값이 errorAnalysis.firstErrorStep 후보로 서버에 가고,
@@ -1097,8 +1129,13 @@ final class AppStore: ObservableObject {
                     requiresWork: !p.isMultipleChoice))
         }
         let ok = p.matches(input)
-        // 코치 반응 — 연속 오답 추적과 자동 완화는 엔진이 알아서 한다
-        coachLine = ok ? coach.onCorrect() : coach.onWrong()
+        // 코치는 채점하지 않는다. 정오 결과를 받아 관찰 → 점검 이유 → 다음 행동만 만든다.
+        coachGuidance = coach.guidance(
+            problem: p,
+            studentInput: input,
+            correct: ok
+        )
+        coachLine = nil
         divergenceStep = nil          // 문항마다 새로 짚는다
         // "같은 유형 새 수치" 확인 문항은 **기록 없는 확인**이 규약이다(16차 ②).
         // 여기서 빠져나가지 않으면 확인용 1문항이 새 오답을 만들어(복습이 끝나지 않는다)

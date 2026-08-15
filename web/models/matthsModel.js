@@ -441,6 +441,31 @@ const userSchema = new Schema(
     },
 
     withdrawal: {
+      startedAt: {
+        type: Date,
+        default: null,
+      },
+      completedAt: {
+        type: Date,
+        default: null,
+      },
+      stage: {
+        type: String,
+        enum: [
+          "started",
+          "private-data-removed",
+          "uploads-removed",
+          "public-data-anonymized",
+          "owned-data-purged",
+          "completed",
+          null,
+        ],
+        default: null,
+      },
+      lastErrorAt: {
+        type: Date,
+        default: null,
+      },
       anonymizedAt: {
         type: Date,
         default: null,

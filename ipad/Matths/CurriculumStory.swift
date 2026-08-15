@@ -58,6 +58,56 @@ struct CurriculumStudentStoryScene: Identifiable, Equatable {
     let title: String
     let subtitle: String
     let narration: String
+    let motion: CurriculumMotionDirective?
+
+    init(
+        id: String,
+        kind: CurriculumStorySceneKind,
+        title: String,
+        subtitle: String,
+        narration: String,
+        motion: CurriculumMotionDirective? = nil
+    ) {
+        self.id = id
+        self.kind = kind
+        self.title = title
+        self.subtitle = subtitle
+        self.narration = narration
+        self.motion = motion
+    }
+}
+
+struct CurriculumMotionDirective: Codable, Equatable {
+    let version: Int
+    let mode: String
+    let focus: String
+    let instruction: String
+    let beats: [CurriculumMotionBeat]
+    let mild: CurriculumMotionExplanation
+    let spicy: CurriculumMotionExplanation
+    let check: CurriculumMotionCheck
+}
+
+struct CurriculumMotionBeat: Codable, Equatable, Identifiable {
+    let id: String
+    let action: String
+    let target: String
+    let expression: String
+    let result: String?
+    let caption: String
+    let durationMs: Int
+}
+
+struct CurriculumMotionExplanation: Codable, Equatable {
+    let explanation: String
+}
+
+struct CurriculumMotionCheck: Codable, Equatable {
+    let prompt: String
+    let choices: [String]
+    let answerIndex: Int
+    let correctFeedback: String
+    let retryFeedback: String
 }
 
 enum CurriculumStoryAvailability: String, Equatable {
@@ -363,8 +413,51 @@ enum CurriculumStoryCatalog {
             if chunks.isEmpty || chunks.contains(where: { $0.count > quality.maximumSpeechChunkCharacters }) {
                 issues.append("speech chunk")
             }
+            issues.append(contentsOf: validateMotion(scene.motion))
         }
         return Array(Set(issues)).sorted()
+    }
+
+    private static func validateMotion(_ motion: CurriculumMotionDirective?) -> [String] {
+        guard let motion else { return [] }
+        var issues: [String] = []
+        let modes = Set(["equation", "blocks", "graph", "geometry", "plot"])
+        let actions = Set(["place", "group", "point", "highlight", "transform", "verify"])
+        let studentCopy = [
+            motion.focus,
+            motion.instruction,
+            motion.mild.explanation,
+            motion.spicy.explanation,
+            motion.check.prompt,
+            motion.check.correctFeedback,
+            motion.check.retryFeedback,
+        ] + motion.check.choices + motion.beats.flatMap {
+            [$0.target, $0.expression, $0.result ?? "", $0.caption]
+        }
+
+        if motion.version != 1 { issues.append("motion version") }
+        if !modes.contains(motion.mode) { issues.append("motion mode") }
+        if !(3...5).contains(motion.beats.count) { issues.append("motion beat 개수") }
+        if Set(motion.beats.map(\.id)).count != motion.beats.count { issues.append("motion beat id") }
+        if motion.beats.contains(where: {
+            !actions.contains($0.action)
+                || !(650...5_000).contains($0.durationMs)
+                || $0.target.isEmpty
+                || $0.expression.isEmpty
+                || $0.caption.count < 12
+        }) { issues.append("motion beat") }
+        if motion.focus.count < 2 || motion.focus.count > 48
+            || motion.instruction.count < 15 || motion.instruction.count > 140 {
+            issues.append("motion focus/instruction")
+        }
+        if motion.check.choices.count != 3
+            || !motion.check.choices.indices.contains(motion.check.answerIndex) {
+            issues.append("motion check")
+        }
+        if CurriculumStudentProjectionTextGuard.containsStudioTag(in: studentCopy) {
+            issues.append("motion 학생 projection tag")
+        }
+        return issues
     }
 
     private static func decodeResource<T: Decodable>(name: String, subdirectory: String?) throws -> T {
@@ -505,7 +598,8 @@ private struct RawStory: Decodable {
                     kind: scene.kind,
                     title: scene.title,
                     subtitle: scene.subtitle,
-                    narration: scene.narration
+                    narration: scene.narration,
+                    motion: scene.motion
                 )
             }
         )
@@ -524,6 +618,7 @@ private struct RawScene: Decodable {
     let subtitle: String
     let narration: String
     let studioScript: String
+    let motion: CurriculumMotionDirective?
 }
 
 private func storyKey(courseID: String, unitID: String, conceptID: String) -> String {

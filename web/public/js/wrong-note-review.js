@@ -407,6 +407,8 @@
 
   function feedbackContent(result) {
     const strong = document.createElement("strong");
+    const coach = document.createElement("div");
+    coach.className = "review-coach-guidance";
     const body = document.createElement("div");
     body.className = "math-content";
 
@@ -420,19 +422,23 @@
     }
 
     body.textContent = result.solution || "";
-    const coachMessage =
-      result.coachFeedback?.message;
-
-    if (coachMessage) {
-      strong.textContent +=
-        ` ${coachMessage}`;
+    for (const line of coachGuidanceLines(result.coachFeedback)) {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = line;
+      coach.append(paragraph);
     }
-    feedback.replaceChildren(strong, body);
+    feedback.replaceChildren(strong, coach, body);
     feedback.hidden = false;
     feedback.className = `retry-feedback ${
       result.correct ? "correct" : "wrong"
     }`;
     typesetMath(body);
+  }
+
+  function coachGuidanceLines(value) {
+    return [value?.observation, value?.reason, value?.nextAction]
+      .map((line) => String(line || "").trim())
+      .filter(Boolean);
   }
 
   async function submitAnswer(event) {
@@ -447,10 +453,9 @@
     if (!answer) {
       feedback.hidden = false;
       feedback.className = "retry-feedback wrong";
-      feedback.textContent =
+      feedback.textContent = coachGuidanceLines(
         currentProblem.coachPrompt
-          ?.message ||
-        "정답을 먼저 입력해주세요.";
+      ).join("\n") || "정답을 먼저 입력해주세요.";
       answerArea.querySelector("input")?.focus();
       return;
     }
@@ -2821,9 +2826,9 @@
         ? "현재 숫자로 그래프를 그려봤어요."
         : "현재 숫자를 식에 넣는 순서부터 볼게요.";
       if (coachHintMessage) {
-        coachHintMessage.textContent =
+        coachHintMessage.textContent = coachGuidanceLines(
           currentProblem.coachPrompt
-            ?.message || "";
+        ).join("\n");
         coachHintMessage.hidden =
           !coachHintMessage.textContent;
       }

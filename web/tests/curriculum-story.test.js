@@ -19,6 +19,9 @@ const {
   validateStoryCurriculumAuthority,
 } = require("../services/curriculumStoryService");
 const narration = require("../public/js/curriculum-narration.js");
+const {
+  buildCurriculumMotionLesson,
+} = require("../services/curriculumMotionLessonService");
 
 const root = path.resolve(__dirname, "..");
 
@@ -180,13 +183,25 @@ class FakeSpeechProvider {
     [...catalog.publishedStoryByKey.values()][0],
   );
   const partialPath = path.join(root, "views", "partials", "curriculum-story-timeline.ejs");
+  const representativeMotionLesson = buildCurriculumMotionLesson(
+    representativeStory,
+    ["대수 타일을 같은 항끼리 모아 합치는 장면"],
+  );
   const html = await ejs.renderFile(partialPath, {
-    curriculumStory: { story: representativeStory, status: "published" },
+    curriculumStory: {
+      story: representativeStory,
+      motionLesson: representativeMotionLesson,
+      status: "published",
+    },
     curriculumNarrationScope: "0123456789abcdef",
   });
-  assert.match(html, /풀이 기억선/u);
-  assert.match(html, /data-memory-kind="misconception"/u);
-  assert.match(html, /해설 원문 읽기/u);
+  assert.match(html, /선생님 보드/u);
+  assert.match(html, /data-curriculum-teacher-stage/u);
+  assert.match(html, /지금 볼 곳/u);
+  assert.match(html, /순한맛으로 다시/u);
+  assert.match(html, /매운맛 핵심/u);
+  assert.doesNotMatch(html, /data-memory-kind=/u);
+  assert.doesNotMatch(html, /해설 원문 읽기/u);
   assert.doesNotMatch(html, /studioScript/u);
   assert.doesNotMatch(html, /\[(?:침착하게|따뜻하게|궁금한 듯|강조해서|낮은 목소리로|아쉬운 듯)\]/u);
   assert.doesNotMatch(html, /(?:1단계|2단계|STEP\s*0?1)/iu);

@@ -266,8 +266,17 @@
     initStepPreview();
 
     const activeConcept = document.querySelector(".concept-nav-item.active");
-    if (activeConcept) {
-      activeConcept.scrollIntoView({ block: "nearest" });
+    const conceptNav = activeConcept?.closest(".concept-nav");
+    if (
+      activeConcept &&
+      conceptNav &&
+      conceptNav.scrollHeight > conceptNav.clientHeight
+    ) {
+      // 선택 개념을 찾겠다고 전체 문서를 목록 위치로 점프시키지 않는다.
+      // 목록 자체에 내부 스크롤이 있을 때만 그 컨테이너를 조정한다.
+      const targetTop = activeConcept.offsetTop -
+        Math.max(0, (conceptNav.clientHeight - activeConcept.offsetHeight) / 2);
+      conceptNav.scrollTop = Math.max(0, targetTop);
     }
   }
 
