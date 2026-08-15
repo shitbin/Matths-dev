@@ -24,7 +24,11 @@
     "contracts": "64/64 passed in canonical workspace",
     "debugSimulatorBuild": "passed",
     "releaseSimulatorBuild": "passed",
-    "currentSignedIpadBuild": "pending final exact-source device rebuild after the sync branch is pushed",
+    "currentSignedIpadBuild": "signed Debug build from exact 2819dbe source passed codesign and installed on physical iPad",
+    "lastSignedExecutableSha256": "b7d522cb3bcad64f62e7f310edaaf0c78f3414715d8d55540e7394256911878d",
+    "lastPhysicalIpadInstall": "passed 2026-08-15 15:06 KST",
+    "lastPhysicalIpadLaunch": "blocked only because the connected device was locked",
+    "ling3DeviceArtifact": "Documents/models/Ling-3.0-tiny-Q3_K_M.gguf present, 3.58 GB; inference rerun pending unlocked device",
     "physicalIphone": "not yet verified"
   },
   "principlesAndSmellReview": {
